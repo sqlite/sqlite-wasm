@@ -39,7 +39,8 @@
     "clean": "shx rm -rf sqlite-wasm",
     "build": "npm run clean && node bin/index.js",
     "start": "npx http-server --coop",
-    "fix": "npx prettier . --write"
+    "fix": "npx prettier . --write",
+    "deploy": "npm run prepare && npm publish --access public"
   },
   "repository": {
     "type": "git",
