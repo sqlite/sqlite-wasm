@@ -1,5 +1,5 @@
 {
-  "name": "@sqlite_org/sqlite-wasm",
+  "name": "@sqlite.org/sqlite-wasm",
   "version": "0.0.1",
   "description": "SQLite Wasm ESM",
   "main": "index.mjs",
