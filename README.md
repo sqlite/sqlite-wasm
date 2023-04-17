@@ -110,6 +110,14 @@ Check out a
 [sample project](https://stackblitz.com/edit/vitejs-vite-3rk63d?file=main.js)
 that shows this in action.
 
+## Demo
+
+See the [demo](https://github.com/tomayac/sqlite-wasm/tree/main/demo) folder for
+examples of how to use this in the main thread and in a worker. (Note that the
+worker variant requires special HTTP headers, so it can't be hosted on GitHub
+Pages.) An example that shows how to use this with vite is available on
+[StackBlitz](https://stackblitz.com/edit/vitejs-vite-3rk63d?file=main.js).
+
 ## Deploying a new version
 
 (These steps can only be executed by maintainers.)
@@ -120,9 +128,8 @@ that shows this in action.
    something like `3.41.2-build1`.
 1. Run `npm run build` to build the ES Module. This downloads the latest SQLite
    Wasm binary and builds the ES Module.
-1. Run `git commit -am "Release v<version>"` to commit the changes.
-1. Run `git push` to push the changes to GitHub.
-1. Run `npm publish --access-public` to publish the new version to npm.
+1. Run `npm run deploy` to commit the changes, push to GitHub, and publish the
+   new version to npm.
 
 ## License
 
