@@ -91,6 +91,25 @@ sqlite3InitModule({
 });
 ```
 
+## Usage with vite
+
+If you are using [vite](https://vitejs.dev/), you need to add the following
+config option:
+
+```js
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  optimizeDeps: {
+    exclude: ['@sqlite.org/sqlite-wasm'],
+  },
+});
+```
+
+Check out a
+[sample project](https://stackblitz.com/edit/vitejs-vite-3rk63d?file=main.js)
+that shows this in action.
+
 ## Deploying a new version
 
 (These steps can only be executed by maintainers.)
