@@ -1,6 +1,7 @@
 import sqlite3InitModule from '../index.mjs';
 
 const container = document.querySelector('.main-thread');
+
 const logHtml = function (cssClass, ...args) {
   const div = document.createElement('div');
   if (cssClass) div.classList.add(cssClass);
