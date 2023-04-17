@@ -47,7 +47,8 @@ In a worker (with OPFS if available):
 > **Warning** For this to work, you need to set the following headers on your
 > server:
 >
-> `Cross-Origin-Opener-Policy: same-origin` >
+> `Cross-Origin-Opener-Policy: same-origin`
+>
 > `Cross-Origin-Embedder-Policy: require-corp`
 
 ```js
@@ -93,7 +94,7 @@ sqlite3InitModule({
 
 (These steps can only be executed by maintainers.)
 
-1. Update the version number in `package.json` reflecting the
+1. Update the version number in `package.json` reflecting the current
    [SQLite version number](https://sqlite.org/download.html) and add a build
    identifier suffix like `-build1`. The complete version number should read
    something like `3.41.2-build1`.
