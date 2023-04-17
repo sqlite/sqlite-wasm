@@ -37,7 +37,7 @@
     "build": "npm run clean && node bin/index.js",
     "start": "npx http-server --coop",
     "fix": "npx prettier . --write",
-    "deploy": "npm run prepare && npm publish --access public"
+    "deploy": "npm run prepare && git commit -am 'New release' && git push && npm publish --access public"
   },
   "repository": {
     "type": "git",
