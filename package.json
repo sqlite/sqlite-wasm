@@ -1,7 +1,18 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.41.2-build5",
+  "version": "3.41.2-build6",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
+  "keywords": [
+    "sqlite",
+    "sqlite3",
+    "sqlite-wasm",
+    "sqlite3-wasm",
+    "webassembly",
+    "wasm",
+    "esm",
+    "opfs",
+    "origin-private-file-system"
+  ],
   "main": "index.mjs",
   "type": "module",
   "files": [
