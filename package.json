@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "SQLite Wasm ESM",
   "main": "index.mjs",
   "type": "module",
@@ -37,7 +37,9 @@
     "url": "https://github.com/tomayac/sqlite-wasm/issues"
   },
   "homepage": "https://github.com/tomayac/sqlite-wasm#readme",
-  "dependencies": {
+  "devDependencies": {
+    "publint": "^0.1.11",
+    "shx": "^0.3.4",
     "cheerio": "^1.0.0-rc.12",
     "decompress": "^4.2.1",
     "http-server": "github:vapier/http-server",
@@ -46,9 +48,5 @@
     "node-fetch": "^3.3.1",
     "prettier": "^2.8.7",
     "subworkers": "github:dmihal/Subworkers"
-  },
-  "devDependencies": {
-    "publint": "^0.1.11",
-    "shx": "^0.3.4"
   }
 }
