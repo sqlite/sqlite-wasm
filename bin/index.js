@@ -1,6 +1,6 @@
 import fs from 'fs';
 import fetch from 'node-fetch';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 import decompress from 'decompress';
 
 async function getSqliteWasmDownloadLink() {
@@ -23,7 +23,8 @@ async function downloadAndUnzipSqliteWasm(sqliteWasmDownloadLink) {
   fs.writeFileSync('sqlite-wasm.zip', Buffer.from(buffer));
   const files = await decompress('sqlite-wasm.zip', 'sqlite-wasm', {
     strip: 1,
-    filter: (file) => /jswasm/.test(file.path),
+    filter: (file) =>
+      /jswasm/.test(file.path) && /(?:\.mjs|\.wasm|proxy\.js)$/.test(file.path),
   });
   console.log(
     `Downloaded and unzipped:\n${files

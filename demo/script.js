@@ -1,25 +1,27 @@
+const container = document.querySelector('.worker');
+
 const logHtml = (cssClass, ...args) => {
   const div = document.createElement('div');
   if (cssClass) div.classList.add(cssClass);
   div.append(document.createTextNode(args.join(' ')));
-  document.body.append(div);
+  container.append(div);
 };
 
 (async () => {
-  // From https://stackoverflow.com/a/62963963/6255000.
-const supportsWorkerType = () => {
-  let supports = false;
-  const tester = {
-    get type() {
-      supports = true;
-    },
+  // Module Worker polyfill from https://stackoverflow.com/a/62963963/6255000.
+  const supportsWorkerType = () => {
+    let supports = false;
+    const tester = {
+      get type() {
+        supports = true;
+      },
+    };
+    try {
+      new Worker('data:,""', tester);
+    } finally {
+      return supports;
+    }
   };
-  try {
-    new Worker('data:,', tester);
-  } finally {
-    return supports;
-  }
-};
   if (!supportsWorkerType()) {
     await import(
       '../.././node_modules/module-workers-polyfill/module-workers-polyfill.min.js'

@@ -1,15 +1,29 @@
 {
-  "name": "sqlite-wasm",
-  "version": "3.41.2",
+  "name": "@sqlite_org/sqlite-wasm",
+  "version": "0.0.1",
   "description": "SQLite Wasm ESM",
-  "main": "index.js",
+  "main": "index.mjs",
   "type": "module",
+  "files": [
+    "index.mjs",
+    "sqlite-wasm/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "main": "./index.mjs",
+      "browser": "./index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
     "sqlite-wasm": "bin/index.js"
   },
   "scripts": {
-    "prepare": "npm run build && npm run fix",
-    "build": "node bin/index.js",
+    "prepare": "npm run build && npm run fix && npm run publint",
+    "publint": "npx publint",
+    "clean": "shx rm -rf sqlite-wasm",
+    "build": "npm run clean && node bin/index.js",
     "start": "npx http-server --coop",
     "fix": "npx prettier . --write"
   },
@@ -28,7 +42,13 @@
     "decompress": "^4.2.1",
     "http-server": "github:vapier/http-server",
     "module-workers-polyfill": "^0.3.2",
+    "nested-worker": "github:johanholmerin/nested-worker",
     "node-fetch": "^3.3.1",
-    "prettier": "^2.8.7"
+    "prettier": "^2.8.7",
+    "subworkers": "github:dmihal/Subworkers"
+  },
+  "devDependencies": {
+    "publint": "^0.1.11",
+    "shx": "^0.3.4"
   }
 }

@@ -1,10 +1,11 @@
 import sqlite3InitModule from '../index.mjs';
 
+const container = document.querySelector('.main-thread');
 const logHtml = function (cssClass, ...args) {
-  postMessage({
-    type: 'log',
-    payload: { cssClass, args },
-  });
+  const div = document.createElement('div');
+  if (cssClass) div.classList.add(cssClass);
+  div.append(document.createTextNode(args.join(' ')));
+  container.append(div);
 };
 
 const log = (...args) => logHtml('', ...args);
@@ -12,14 +13,9 @@ const error = (...args) => logHtml('error', ...args);
 
 const start = function (sqlite3) {
   log('Running SQLite3 version', sqlite3.version.libVersion);
-  let db;
-  if ('opfs' in sqlite3) {
-    db = new sqlite3.oo1.OpfsDb('/mydb.sqlite3');
-    log('OPFS is available, created persisted database at', db.filename);
-  } else {
-    db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
-    log('OPFS is not available, created transient database', db.filename);
-  }
+  const db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
+  log('Created transient database', db.filename);
+
   try {
     log('Creating a table...');
     db.exec('CREATE TABLE IF NOT EXISTS t(a,b)');
