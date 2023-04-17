@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.41.2-build7",
+  "version": "3.41.2-build8",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
   "keywords": [
     "sqlite",
@@ -24,9 +24,9 @@
       "import": "./index.mjs",
       "main": "./index.mjs",
       "browser": "./index.mjs",
-      "sqlite3-bundler-friendly.mjs": "./sqlite-wasm/jswasm/sqlite3-bundler-friendly.mjs",
-      "sqlite3-opfs-async-proxy.js": "./sqlite-wasm/jswasm/sqlite3-opfs-async-proxy.js",
-      "sqlite3.wasm": "./sqlite-wasm/jswasm/sqlite3.wasm"
+      "./sqlite3-bundler-friendly.mjs": "./sqlite-wasm/jswasm/sqlite3-bundler-friendly.mjs",
+      "./sqlite3-opfs-async-proxy.js": "./sqlite-wasm/jswasm/sqlite3-opfs-async-proxy.js",
+      "./sqlite3.wasm": "./sqlite-wasm/jswasm/sqlite3.wasm"
     },
     "./package.json": "./package.json"
   },
