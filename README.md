@@ -10,9 +10,10 @@ npm install @sqlite.org/sqlite-wasm
 
 ## Usage
 
-There are two ways to use SQLite Wasm: [in the main thread](#in-the-main-thread-without-opfs) and [in a worker](#in-a-worker-with-opfs-if-available). Only
-the worker version allows you to use the origin private file system (OPFS)
-storage back-end.
+There are two ways to use SQLite Wasm:
+[in the main thread](#in-the-main-thread-without-opfs) and
+[in a worker](#in-a-worker-with-opfs-if-available). Only the worker version
+allows you to use the origin private file system (OPFS) storage back-end.
 
 ### In the main thread (without OPFS):
 
