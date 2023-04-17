@@ -94,8 +94,11 @@ sqlite3InitModule({
 (These steps can only be executed by maintainers.)
 
 1. Update the version number in `package.json` reflecting the
-   [SQLite version number](https://sqlite.org/download.html).
-1. Run `npm run build` to build the ES Module.
+   [SQLite version number](https://sqlite.org/download.html) and add a build
+   identifier suffix like `-build1`. The complete version number should read
+   something like `3.41.2-build1`.
+1. Run `npm run build` to build the ES Module. This downloads the latest SQLite
+   Wasm binary and builds the ES Module.
 1. Run `git commit -am "Release v<version>"` to commit the changes.
 1. Run `git push` to push the changes to GitHub.
 1. Run `npm publish --access-public` to publish the new version to npm.
