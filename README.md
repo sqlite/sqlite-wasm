@@ -2,7 +2,9 @@
 
 SQLite Wasm conveniently wrapped as an ES Module.
 
-> **Note** This project wraps the code of
+> **Note**
+>
+> This project wraps the code of
 > [SQLite Wasm](https://sqlite.org/wasm/doc/trunk/index.md) with _no_ changes.
 > Please do _not_ file issues or feature requests regarding the underlying
 > SQLite Wasm code here. Instead, please follow the
