@@ -13,17 +13,19 @@
     "opfs",
     "origin-private-file-system"
   ],
-  "main": "index.mjs",
+  "main": "dist/sqlite.js",
+  "types": "dist/sqlite.d.ts",
   "type": "module",
   "files": [
-    "index.mjs",
-    "sqlite-wasm/"
+    "sqlite-wasm/",
+    "dist",
+    "bundle"
   ],
   "exports": {
     ".": {
-      "import": "./index.mjs",
-      "main": "./index.mjs",
-      "browser": "./index.mjs"
+      "import": "./dist/sqlite.js",
+      "main": "./dist/sqlite.js",
+      "browser": "./bundle/sqlite.js"
     },
     "./package.json": "./package.json"
   },
@@ -34,7 +36,7 @@
     "prepare": "npm run build && npm run fix && npm run publint",
     "publint": "npx publint",
     "clean": "shx rm -rf sqlite-wasm",
-    "build": "npm run clean && node bin/index.js",
+    "build": "npm run clean && node bin/index.js && tsc -p tsconfig.json && rollup -c rollup.config.js --compact",
     "start": "npx http-server --coop",
     "fix": "npx prettier . --write",
     "deploy": "npm run prepare && git commit -am 'New release' && git push && npm publish --access public"
@@ -44,6 +46,9 @@
     "url": "git+https://github.com/tomayac/sqlite-wasm.git"
   },
   "author": "Thomas Steiner (tomac@google.com)",
+  "contributors": [
+    "Etienne Noël (etiennenoel@gmail.com)"
+  ],
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/tomayac/sqlite-wasm/issues"
@@ -57,6 +62,14 @@
     "node-fetch": "^3.3.1",
     "prettier": "^2.8.8",
     "publint": "^0.1.11",
-    "shx": "^0.3.4"
+    "shx": "^0.3.4",
+    "typescript": "^5.0.4",
+    "@rollup/plugin-commonjs": "^24.0.1",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "rollup": "^3.16.0",
+    "rollup-plugin-cleanup": "^3.2.1",
+    "rollup-plugin-ignore": "^1.0.10",
+    "rollup-plugin-typescript2": "^0.34.1"
   }
 }

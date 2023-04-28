@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "es6",
+    "module": "es2020",
+    "lib": ["es2020", "dom"],
+    "strictNullChecks": true,
+    "sourceMap": true,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "removeComments": true,
+    "outDir": "dist",
+    "typeRoots": ["node_modules/@types"],
+
+    "skipLibCheck": true
+  },
+  "ts-node": {
+    "esm": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "./**/*.spec.ts", "dist"],
+  "typeAcquisition": {
+    "include": ["jest"]
+  }
+}

@@ -18,6 +18,42 @@ npm install @sqlite.org/sqlite-wasm
 
 ## Usage
 
+### Using the bundled Sqlite client
+
+1- Import the `@sqlite.org/sqlite-wasm` library in your code and use it as such:
+
+```
+import {Sqlite} from "@sqlite.org/sqlite-wasm";
+
+const sqliteWorkerPath = "assets/js/sqlite-worker.js"; // Must correspond to the path in your final deployed build.
+const filename = "/test.sqlite3"; // This is the name of your database. It corresponds to the path in the OPFS.
+
+const sqlite = new Sqlite(filename, sqliteWorkerPath)
+await sqlite.init();
+
+await sqlite.executeSql("CREATE TABLE IF NOT EXISTS test(a,b)");
+await sqlite.executeSql("INSERT INTO test VALUES(?, ?)", [6,7]);
+const results = await sqlite.executeSql("SELECT * FROM test");
+```
+
+3- Copy the `node_modules/@sqlite.org/sqlite-wasm/bundle/sqlite-worker.js` to your final bundle
+This is dependent on the framework you are using but the idea is that this .js file should be copied and available in 
+your build.
+
+4- Copy the files `sqlite-wasm/jswasm/` file to your final bundle, in the same folder of your final bundle next to 
+`sqlite-worker.js`.
+
+5- **Warning** Your server must set the following Http headers when serving your files
+
+`Cross-Origin-Opener-Policy: same-origin`
+
+`Cross-Origin-Embedder-Policy: require-corp`
+
+#### Demo
+See the code [demos](https://github.com/magieno/web-sqlite-demo).
+
+### Directly using the source Sqlite. 
+
 There are two ways to use SQLite Wasm:
 [in the main thread](#in-the-main-thread-without-opfs) and
 [in a worker](#in-a-worker-with-opfs-if-available). Only the worker version
@@ -125,6 +161,7 @@ examples of how to use this in the main thread and in a worker. (Note that the
 worker variant requires special HTTP headers, so it can't be hosted on GitHub
 Pages.) An example that shows how to use this with vite is available on
 [StackBlitz](https://stackblitz.com/edit/vitejs-vite-3rk63d?file=main.js).
+
 
 ## Deploying a new version
 
