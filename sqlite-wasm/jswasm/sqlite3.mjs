@@ -76,6 +76,10 @@ delete self.sqlite3InitModuleState;
 sqlite3InitModuleState.debugModule('self.location =',self.location);
 
 
+Module['locateFile'] = function(path, prefix) {
+  return new URL(path, import.meta.url).href;
+}.bind(sqlite3InitModuleState);
+
 
 const xNameOfInstantiateWasm = false
       ? 'instantiateWasm'
@@ -10839,7 +10843,7 @@ const installOpfsVfs = function callee(options){
       return promiseReject_(err);
     };
     const W =
-    new Worker(new URL("sqlite3-opfs-async-proxy.js", import.meta.url));
+    new Worker(new URL(options.proxyUri, import.meta.url));
     W._originalOnError = W.onerror ;
     W.onerror = function(err){
       
