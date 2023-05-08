@@ -12309,6 +12309,7 @@ var sqlite3InitModule = (() => {
             };
             const W = new Worker(
               new URL('sqlite3-opfs-async-proxy.js', import.meta.url),
+              /* @vite-ignore */
             );
             W._originalOnError = W.onerror;
             W.onerror = function (err) {
