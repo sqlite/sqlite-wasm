@@ -24,8 +24,7 @@ async function downloadAndUnzipSqliteWasm(sqliteWasmDownloadLink) {
   const files = await decompress('sqlite-wasm.zip', 'sqlite-wasm', {
     strip: 1,
     filter: (file) =>
-        /jswasm/.test(file.path) &&
-        /(\.mjs|\.wasm|\.js)$/.test(file.path),
+      /jswasm/.test(file.path) && /(\.mjs|\.wasm|\.js)$/.test(file.path),
   });
   console.log(
     `Downloaded and unzipped:\n${files
