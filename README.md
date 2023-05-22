@@ -102,12 +102,18 @@ sqlite3InitModule({
 ## Usage with vite
 
 If you are using [vite](https://vitejs.dev/), you need to add the following
-config option:
+config option in `vite.config.js`:
 
 ```js
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
   optimizeDeps: {
     exclude: ['@sqlite.org/sqlite-wasm'],
   },
