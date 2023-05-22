@@ -23,7 +23,9 @@
 */
 'use strict';
 
-self.sqlite3Worker1Promiser = function callee(config = callee.defaultConfig) {
+globalThis.sqlite3Worker1Promiser = function callee(
+  config = callee.defaultConfig,
+) {
   if (1 === arguments.length && 'function' === typeof arguments[0]) {
     const f = config;
     config = Object.assign(Object.create(null), callee.defaultConfig);
@@ -134,11 +136,13 @@ self.sqlite3Worker1Promiser = function callee(config = callee.defaultConfig) {
     return p;
   };
 };
-self.sqlite3Worker1Promiser.defaultConfig = {
+globalThis.sqlite3Worker1Promiser.defaultConfig = {
   worker: function () {
-    return new Worker('sqlite3-worker1.js');
+    return new Worker('sqlite3-worker1-bundler-friendly.mjs', {
+      type: 'module',
+    });
   }.bind({
-    currentScript: self?.document?.currentScript,
+    currentScript: globalThis?.document?.currentScript,
   }),
   onerror: (...args) => console.error('worker1 promiser error', ...args),
 };

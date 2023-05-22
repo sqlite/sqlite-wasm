@@ -8,7 +8,7 @@ async function getSqliteWasmDownloadLink() {
   const html = await response.text();
   const $ = cheerio.load(html);
   const fileName = $('a[name="wasm"]').closest('tr').next().find('a').text();
-  const sqliteWasmLink = `https://sqlite.org/${fileName}`;
+  const sqliteWasmLink = `https://sqlite.org/${new Date().getFullYear()}/${fileName}`;
   console.log(`Found SQLite Wasm download link: ${sqliteWasmLink}`);
   return sqliteWasmLink;
 }

@@ -39,8 +39,6 @@ var sqlite3InitModule = (() => {
   return function (config) {
     var sqlite3InitModule = config || {};
 
-    ('use strict');
-
     var Module =
       typeof sqlite3InitModule != 'undefined' ? sqlite3InitModule : {};
 
@@ -51,12 +49,15 @@ var sqlite3InitModule = (() => {
     });
 
     const sqlite3InitModuleState =
-      self.sqlite3InitModuleState ||
+      globalThis.sqlite3InitModuleState ||
       Object.assign(Object.create(null), {
         debugModule: () => {},
       });
-    delete self.sqlite3InitModuleState;
-    sqlite3InitModuleState.debugModule('self.location =', self.location);
+    delete globalThis.sqlite3InitModuleState;
+    sqlite3InitModuleState.debugModule(
+      'globalThis.location =',
+      globalThis.location,
+    );
 
     Module['locateFile'] = function (path, prefix) {
       'use strict';
@@ -5652,8 +5653,9 @@ var sqlite3InitModule = (() => {
       'use strict';
 
       'use strict';
-      self.sqlite3ApiBootstrap = function sqlite3ApiBootstrap(
-        apiConfig = self.sqlite3ApiConfig || sqlite3ApiBootstrap.defaultConfig,
+      globalThis.sqlite3ApiBootstrap = function sqlite3ApiBootstrap(
+        apiConfig = globalThis.sqlite3ApiConfig ||
+          sqlite3ApiBootstrap.defaultConfig,
       ) {
         if (sqlite3ApiBootstrap.sqlite3) {
           console.warn(
@@ -5671,7 +5673,7 @@ var sqlite3InitModule = (() => {
               if ('undefined' !== typeof Module) {
                 return !!Module.HEAPU64;
               }
-              return !!self.BigInt64Array;
+              return !!globalThis.BigInt64Array;
             })(),
             debug: console.debug.bind(console),
             warn: console.warn.bind(console),
@@ -5935,7 +5937,8 @@ var sqlite3InitModule = (() => {
           isSQLableTypedArray,
           isTypedArray,
           typedArrayToString,
-          isUIThread: () => self.window === self && !!self.document,
+          isUIThread: () =>
+            globalThis.window === globalThis && !!globalThis.document,
 
           isSharedTypedArray,
           toss: function (...args) {
@@ -6167,9 +6170,9 @@ var sqlite3InitModule = (() => {
           );
           if (
             !pdir ||
-            !self.FileSystemHandle ||
-            !self.FileSystemDirectoryHandle ||
-            !self.FileSystemFileHandle
+            !globalThis.FileSystemHandle ||
+            !globalThis.FileSystemDirectoryHandle ||
+            !globalThis.FileSystemFileHandle
           ) {
             return (__wasmfsOpfsDir = '');
           }
@@ -6343,9 +6346,9 @@ var sqlite3InitModule = (() => {
             rc.prefix = 'kvvfs-' + which;
             rc.stores = [];
             if ('session' === which || '' === which)
-              rc.stores.push(self.sessionStorage);
+              rc.stores.push(globalThis.sessionStorage);
             if ('local' === which || '' === which)
-              rc.stores.push(self.localStorage);
+              rc.stores.push(globalThis.localStorage);
             return rc;
           };
 
@@ -6382,7 +6385,7 @@ var sqlite3InitModule = (() => {
           };
         }
 
-        capi.sqlite3_db_config = function f(pDb, op, ...args) {
+        capi.sqlite3_db_config = function (pDb, op, ...args) {
           if (!this.s) {
             this.s = wasm.xWrap('sqlite3_wasm_db_config_s', 'int', [
               'sqlite3*',
@@ -6403,31 +6406,32 @@ var sqlite3InitModule = (() => {
               '*',
             ]);
           }
-          const c = capi;
           switch (op) {
-            case c.SQLITE_DBCONFIG_ENABLE_FKEY:
-            case c.SQLITE_DBCONFIG_ENABLE_TRIGGER:
-            case c.SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER:
-            case c.SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION:
-            case c.SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE:
-            case c.SQLITE_DBCONFIG_ENABLE_QPSG:
-            case c.SQLITE_DBCONFIG_TRIGGER_EQP:
-            case c.SQLITE_DBCONFIG_RESET_DATABASE:
-            case c.SQLITE_DBCONFIG_DEFENSIVE:
-            case c.SQLITE_DBCONFIG_WRITABLE_SCHEMA:
-            case c.SQLITE_DBCONFIG_LEGACY_ALTER_TABLE:
-            case c.SQLITE_DBCONFIG_DQS_DML:
-            case c.SQLITE_DBCONFIG_DQS_DDL:
-            case c.SQLITE_DBCONFIG_ENABLE_VIEW:
-            case c.SQLITE_DBCONFIG_LEGACY_FILE_FORMAT:
-            case c.SQLITE_DBCONFIG_TRUSTED_SCHEMA:
+            case capi.SQLITE_DBCONFIG_ENABLE_FKEY:
+            case capi.SQLITE_DBCONFIG_ENABLE_TRIGGER:
+            case capi.SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER:
+            case capi.SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION:
+            case capi.SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE:
+            case capi.SQLITE_DBCONFIG_ENABLE_QPSG:
+            case capi.SQLITE_DBCONFIG_TRIGGER_EQP:
+            case capi.SQLITE_DBCONFIG_RESET_DATABASE:
+            case capi.SQLITE_DBCONFIG_DEFENSIVE:
+            case capi.SQLITE_DBCONFIG_WRITABLE_SCHEMA:
+            case capi.SQLITE_DBCONFIG_LEGACY_ALTER_TABLE:
+            case capi.SQLITE_DBCONFIG_DQS_DML:
+            case capi.SQLITE_DBCONFIG_DQS_DDL:
+            case capi.SQLITE_DBCONFIG_ENABLE_VIEW:
+            case capi.SQLITE_DBCONFIG_LEGACY_FILE_FORMAT:
+            case capi.SQLITE_DBCONFIG_TRUSTED_SCHEMA:
+            case capi.SQLITE_DBCONFIG_STMT_SCANSTATUS:
+            case capi.SQLITE_DBCONFIG_REVERSE_SCANORDER:
               return this.ip(pDb, op, args[0], args[1] || 0);
-            case c.SQLITE_DBCONFIG_LOOKASIDE:
+            case capi.SQLITE_DBCONFIG_LOOKASIDE:
               return this.pii(pDb, op, args[0], args[1], args[2]);
-            case c.SQLITE_DBCONFIG_MAINDBNAME:
+            case capi.SQLITE_DBCONFIG_MAINDBNAME:
               return this.s(pDb, op, args[0]);
             default:
-              return c.SQLITE_MISUSE;
+              return capi.SQLITE_MISUSE;
           }
         }.bind(Object.create(null));
 
@@ -6673,15 +6677,15 @@ var sqlite3InitModule = (() => {
         return sqlite3;
       };
 
-      self.sqlite3ApiBootstrap.initializers = [];
+      globalThis.sqlite3ApiBootstrap.initializers = [];
 
-      self.sqlite3ApiBootstrap.initializersAsync = [];
+      globalThis.sqlite3ApiBootstrap.initializersAsync = [];
 
-      self.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
+      globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 
-      self.sqlite3ApiBootstrap.sqlite3 = undefined;
+      globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 
-      self.WhWasmUtilInstaller = function (target) {
+      globalThis.WhWasmUtilInstaller = function (target) {
         'use strict';
         if (undefined === target.bigIntEnabled) {
           target.bigIntEnabled = !!self['BigInt64Array'];
@@ -7750,7 +7754,7 @@ var sqlite3InitModule = (() => {
         return target;
       };
 
-      self.WhWasmUtilInstaller.yawl = function (config) {
+      globalThis.WhWasmUtilInstaller.yawl = function (config) {
         const wfetch = () => fetch(config.uri, { credentials: 'same-origin' });
         const wui = this;
         const finalThen = function (arg) {
@@ -7801,10 +7805,10 @@ var sqlite3InitModule = (() => {
                 .then(finalThen);
             };
         return loadWasm;
-      }.bind(self.WhWasmUtilInstaller);
+      }.bind(globalThis.WhWasmUtilInstaller);
 
       ('use strict');
-      self.Jaccwabyt = function StructBinderFactory(config) {
+      globalThis.Jaccwabyt = function StructBinderFactory(config) {
         const toss = (...args) => {
           throw new Error(args.join(' '));
         };
@@ -8504,7 +8508,7 @@ var sqlite3InitModule = (() => {
         return StructBinder;
       };
 
-      self.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
+      globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         'use strict';
         const toss = (...args) => {
           throw new Error(args.join(' '));
@@ -8513,8 +8517,8 @@ var sqlite3InitModule = (() => {
         const capi = sqlite3.capi,
           wasm = sqlite3.wasm,
           util = sqlite3.util;
-        self.WhWasmUtilInstaller(wasm);
-        delete self.WhWasmUtilInstaller;
+        globalThis.WhWasmUtilInstaller(wasm);
+        delete globalThis.WhWasmUtilInstaller;
 
         if (0) {
           const dealloc = wasm.exports[sqlite3.config.deallocExportName];
@@ -8829,6 +8833,16 @@ var sqlite3InitModule = (() => {
             'string',
             'sqlite3_stmt*',
           ]);
+        }
+
+        if (wasm.exports.sqlite3_activate_see instanceof Function) {
+          wasm.bindingSignatures.push(
+            ['sqlite3_key', 'int', 'sqlite3*', 'string', 'int'],
+            ['sqlite3_key_v2', 'int', 'sqlite3*', 'string', '*', 'int'],
+            ['sqlite3_rekey', 'int', 'sqlite3*', 'string', 'int'],
+            ['sqlite3_rekey_v2', 'int', 'sqlite3*', 'string', '*', 'int'],
+            ['sqlite3_activate_see', undefined, 'string'],
+          );
         }
 
         wasm.bindingSignatures.int64 = [
@@ -9287,14 +9301,14 @@ var sqlite3InitModule = (() => {
           ['sqlite3_wasm_vfs_unlink', 'int', 'sqlite3_vfs*', 'string'],
         ];
 
-        sqlite3.StructBinder = self.Jaccwabyt({
+        sqlite3.StructBinder = globalThis.Jaccwabyt({
           heap: 0 ? wasm.memory : wasm.heap8u,
           alloc: wasm.alloc,
           dealloc: wasm.dealloc,
           bigIntEnabled: wasm.bigIntEnabled,
           memberPrefix: '$',
         });
-        delete self.Jaccwabyt;
+        delete globalThis.Jaccwabyt;
 
         {
           const __xString = wasm.xWrap.argAdapter('string');
@@ -10394,17 +10408,17 @@ var sqlite3InitModule = (() => {
         wasm.xWrap.FuncPtrAdapter.warnOnUse = true;
       });
 
-      self.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
+      globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.41.2',
-          libVersionNumber: 3041002,
+          libVersion: '3.42.0',
+          libVersionNumber: 3042000,
           sourceId:
-            '2023-03-22 11:56:21 0d1fc92f94cb6b76bffe3ec34d69cffde2924203304e8ffc4155597af0c191da',
-          downloadVersion: 3410200,
+            '2023-05-16 12:36:15 831d0fb2836b71c9bc51067c49fee4b8f18047814f2ff22d817d25195cf350b0',
+          downloadVersion: 3420000,
         };
       });
 
-      self.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
+      globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         const toss = (...args) => {
           throw new Error(args.join(' '));
         };
@@ -11534,13 +11548,13 @@ var sqlite3InitModule = (() => {
         }
       });
 
-      self.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
+      globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.initWorker1API = function () {
           'use strict';
           const toss = (...args) => {
             throw new Error(args.join(' '));
           };
-          if ('function' !== typeof importScripts) {
+          if (!(globalThis.WorkerGlobalScope instanceof Function)) {
             toss('initWorker1API() must be run from a Worker thread.');
           }
           const self = this.self;
@@ -11586,10 +11600,10 @@ var sqlite3InitModule = (() => {
 
             post: function (msg, xferList) {
               if (xferList && xferList.length) {
-                self.postMessage(msg, Array.from(xferList));
+                globalThis.postMessage(msg, Array.from(xferList));
                 xferList.length = 0;
               } else {
-                self.postMessage(msg);
+                globalThis.postMessage(msg);
               }
             },
 
@@ -11778,7 +11792,7 @@ var sqlite3InitModule = (() => {
             },
           };
 
-          self.onmessage = async function (ev) {
+          globalThis.onmessage = async function (ev) {
             ev = ev.data;
             let result,
               dbId = ev.dbId,
@@ -11833,18 +11847,22 @@ var sqlite3InitModule = (() => {
               wState.xfer,
             );
           };
-          self.postMessage({ type: 'sqlite3-api', result: 'worker1-ready' });
+          globalThis.postMessage({
+            type: 'sqlite3-api',
+            result: 'worker1-ready',
+          });
         }.bind({ self, sqlite3 });
       });
 
       ('use strict');
-      self.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
+      globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         const wasm = sqlite3.wasm,
           capi = sqlite3.capi,
           toss = sqlite3.util.toss3;
         const vfs = Object.create(null),
           vtab = Object.create(null);
 
+        const StructBinder = sqlite3.StructBinder;
         sqlite3.vfs = vfs;
         sqlite3.vtab = vtab;
 
@@ -11879,7 +11897,7 @@ var sqlite3InitModule = (() => {
           func,
           applyArgcCheck = callee.installMethodArgcCheck,
         ) {
-          if (!(tgt instanceof sqlite3.StructBinder.StructType)) {
+          if (!(tgt instanceof StructBinder.StructType)) {
             toss('Usage error: target object is-not-a StructType.');
           } else if (!(func instanceof Function) && !wasm.isPtr(func)) {
             toss('Usage errror: expecting a Function or WASM pointer to one.');
@@ -11976,18 +11994,17 @@ var sqlite3InitModule = (() => {
           return structInstance;
         };
 
-        sqlite3.StructBinder.StructType.prototype.installMethod =
-          function callee(
-            name,
-            func,
-            applyArgcCheck = installMethod.installMethodArgcCheck,
-          ) {
-            return arguments.length < 3 && name && 'object' === typeof name
-              ? installMethods(this, ...arguments)
-              : installMethod(this, ...arguments);
-          };
+        StructBinder.StructType.prototype.installMethod = function callee(
+          name,
+          func,
+          applyArgcCheck = installMethod.installMethodArgcCheck,
+        ) {
+          return arguments.length < 3 && name && 'object' === typeof name
+            ? installMethods(this, ...arguments)
+            : installMethod(this, ...arguments);
+        };
 
-        sqlite3.StructBinder.StructType.prototype.installMethods = function (
+        StructBinder.StructType.prototype.installMethods = function (
           methods,
           applyArgcCheck = installMethod.installMethodArgcCheck,
         ) {
@@ -12207,9 +12224,9 @@ var sqlite3InitModule = (() => {
       });
 
       ('use strict');
-      self.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
+      globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         const installOpfsVfs = function callee(options) {
-          if (!self.SharedArrayBuffer || !self.Atomics) {
+          if (!globalThis.SharedArrayBuffer || !globalThis.Atomics) {
             return Promise.reject(
               new Error(
                 'Cannot install OPFS: Missing SharedArrayBuffer and/or Atomics. ' +
@@ -12217,7 +12234,7 @@ var sqlite3InitModule = (() => {
                   'See https://sqlite.org/wasm/doc/trunk/persistence.md#coop-coep',
               ),
             );
-          } else if (self.window === self && self.document) {
+          } else if ('undefined' === typeof WorkerGlobalScope) {
             return Promise.reject(
               new Error(
                 'The OPFS sqlite3_vfs cannot run in the main thread ' +
@@ -12225,18 +12242,18 @@ var sqlite3InitModule = (() => {
               ),
             );
           } else if (
-            !self.FileSystemHandle ||
-            !self.FileSystemDirectoryHandle ||
-            !self.FileSystemFileHandle ||
-            !self.FileSystemFileHandle.prototype.createSyncAccessHandle ||
-            !navigator.storage.getDirectory
+            !globalThis.FileSystemHandle ||
+            !globalThis.FileSystemDirectoryHandle ||
+            !globalThis.FileSystemFileHandle ||
+            !globalThis.FileSystemFileHandle.prototype.createSyncAccessHandle ||
+            !navigator?.storage?.getDirectory
           ) {
             return Promise.reject(new Error('Missing required OPFS APIs.'));
           }
           if (!options || 'object' !== typeof options) {
             options = Object.create(null);
           }
-          const urlParams = new URL(self.location.href).searchParams;
+          const urlParams = new URL(globalThis.location.href).searchParams;
           if (undefined === options.verbose) {
             options.verbose = urlParams.has('opfs-verbose')
               ? +urlParams.get('opfs-verbose') || 2
@@ -12253,13 +12270,13 @@ var sqlite3InitModule = (() => {
             options.proxyUri = options.proxyUri();
           }
           const thePromise = new Promise(function (
-            promiseResolve,
+            promiseResolve_,
             promiseReject_,
           ) {
             const loggers = {
-              0: sqlite3.config.error.bind(console),
-              1: sqlite3.config.warn.bind(console),
-              2: sqlite3.config.log.bind(console),
+              0: sqlite3.config.error,
+              1: sqlite3.config.warn,
+              2: sqlite3.config.log,
             };
             const logImpl = (level, ...args) => {
               if (options.verbose > level)
@@ -12279,11 +12296,12 @@ var sqlite3InitModule = (() => {
 
             const thisThreadHasOPFS = () => {
               return (
-                self.FileSystemHandle &&
-                self.FileSystemDirectoryHandle &&
-                self.FileSystemFileHandle &&
-                self.FileSystemFileHandle.prototype.createSyncAccessHandle &&
-                navigator.storage.getDirectory
+                globalThis.FileSystemHandle &&
+                globalThis.FileSystemDirectoryHandle &&
+                globalThis.FileSystemFileHandle &&
+                globalThis.FileSystemFileHandle.prototype
+                  .createSyncAccessHandle &&
+                navigator?.storage?.getDirectory
               );
             };
 
@@ -12302,9 +12320,9 @@ var sqlite3InitModule = (() => {
                   m.avgWait = m.count && m.wait ? m.wait / m.count : 0;
                 }
                 sqlite3.config.log(
-                  self.location.href,
+                  globalThis.location.href,
                   'metrics for',
-                  self.location.href,
+                  globalThis.location.href,
                   ':',
                   metrics,
                   '\nTotal of',
@@ -12331,11 +12349,26 @@ var sqlite3InitModule = (() => {
             };
             const opfsVfs = new sqlite3_vfs();
             const opfsIoMethods = new sqlite3_io_methods();
-            const promiseReject = function (err) {
+            let promiseWasRejected = undefined;
+            const promiseReject = (err) => {
+              promiseWasRejected = true;
               opfsVfs.dispose();
               return promiseReject_(err);
             };
+            const promiseResolve = (value) => {
+              promiseWasRejected = false;
+              return promiseResolve_(value);
+            };
             const W = new Worker(options.proxyUri);
+            setTimeout(() => {
+              if (undefined === promiseWasRejected) {
+                promiseReject(
+                  new Error(
+                    'Timeout while waiting for OPFS async proxy worker.',
+                  ),
+                );
+              }
+            }, 4000);
             W._originalOnError = W.onerror;
             W.onerror = function (err) {
               error('Error initializing OPFS asyncer:', err);
@@ -12400,7 +12433,6 @@ var sqlite3InitModule = (() => {
               state.opIds.xClose = i++;
               state.opIds.xDelete = i++;
               state.opIds.xDeleteNoWait = i++;
-              state.opIds.xFileControl = i++;
               state.opIds.xFileSize = i++;
               state.opIds.xLock = i++;
               state.opIds.xOpen = i++;
@@ -12668,13 +12700,7 @@ var sqlite3InitModule = (() => {
                 return capi.SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN;
               },
               xFileControl: function (pFile, opId, pArg) {
-                mTimeStart('xFileControl');
-                const rc =
-                  capi.SQLITE_FCNTL_SYNC === opId
-                    ? opRun('xSync', pFile, 0)
-                    : capi.SQLITE_NOTFOUND;
-                mTimeEnd();
-                return rc;
+                return capi.SQLITE_NOTFOUND;
               },
               xFileSize: function (pFile, pSz64) {
                 mTimeStart('xFileSize');
@@ -12722,8 +12748,11 @@ var sqlite3InitModule = (() => {
                 return rc;
               },
               xSync: function (pFile, flags) {
+                mTimeStart('xSync');
                 ++metrics.xSync.count;
-                return 0;
+                const rc = opRun('xSync', pFile, flags);
+                mTimeEnd();
+                return rc;
               },
               xTruncate: function (pFile, sz64) {
                 mTimeStart('xTruncate');
@@ -13095,6 +13124,9 @@ var sqlite3InitModule = (() => {
                   W.postMessage({ type: 'opfs-async-init', args: state });
                   break;
                 case 'opfs-async-inited': {
+                  if (true === promiseWasRejected) {
+                    break;
+                  }
                   try {
                     sqlite3.vfs.installVfs({
                       io: { struct: opfsIoMethods, methods: ioSyncWrappers },
@@ -13139,34 +13171,40 @@ var sqlite3InitModule = (() => {
                   }
                   break;
                 }
-                default:
-                  promiseReject(e);
-                  error('Unexpected message from the async worker:', data);
+                default: {
+                  const errMsg =
+                    'Unexpected message from the OPFS async worker: ' +
+                    JSON.stringify(data);
+                  error(errMsg);
+                  promiseReject(new Error(errMsg));
                   break;
+                }
               }
             };
           });
           return thePromise;
         };
         installOpfsVfs.defaultProxyUri = 'sqlite3-opfs-async-proxy.js';
-        self.sqlite3ApiBootstrap.initializersAsync.push(async (sqlite3) => {
-          try {
-            let proxyJs = installOpfsVfs.defaultProxyUri;
-            if (sqlite3.scriptInfo.sqlite3Dir) {
-              installOpfsVfs.defaultProxyUri =
-                sqlite3.scriptInfo.sqlite3Dir + proxyJs;
+        globalThis.sqlite3ApiBootstrap.initializersAsync.push(
+          async (sqlite3) => {
+            try {
+              let proxyJs = installOpfsVfs.defaultProxyUri;
+              if (sqlite3.scriptInfo.sqlite3Dir) {
+                installOpfsVfs.defaultProxyUri =
+                  sqlite3.scriptInfo.sqlite3Dir + proxyJs;
+              }
+              return installOpfsVfs().catch((e) => {
+                sqlite3.config.warn(
+                  'Ignoring inability to install OPFS sqlite3_vfs:',
+                  e.message,
+                );
+              });
+            } catch (e) {
+              sqlite3.config.error('installOpfsVfs() exception:', e);
+              throw e;
             }
-            return installOpfsVfs().catch((e) => {
-              sqlite3.config.warn(
-                'Ignoring inability to install OPFS sqlite3_vfs:',
-                e.message,
-              );
-            });
-          } catch (e) {
-            sqlite3.config.error('installOpfsVfs() exception:', e);
-            throw e;
-          }
-        });
+          },
+        );
       });
 
       ('use strict');
@@ -13177,26 +13215,26 @@ var sqlite3InitModule = (() => {
             exports: Module['asm'],
             memory: Module.wasmMemory,
           },
-          self.sqlite3ApiConfig || {},
+          globalThis.sqlite3ApiConfig || {},
         );
 
-        self.sqlite3ApiConfig = SABC;
+        globalThis.sqlite3ApiConfig = SABC;
         let sqlite3;
         try {
-          sqlite3 = self.sqlite3ApiBootstrap();
+          sqlite3 = globalThis.sqlite3ApiBootstrap();
         } catch (e) {
           console.error('sqlite3ApiBootstrap() error:', e);
           throw e;
         } finally {
-          delete self.sqlite3ApiBootstrap;
-          delete self.sqlite3ApiConfig;
+          delete globalThis.sqlite3ApiBootstrap;
+          delete globalThis.sqlite3ApiConfig;
         }
 
         Module.sqlite3 = sqlite3;
       } else {
         console.warn(
           'This is not running in an Emscripten module context, so',
-          'self.sqlite3ApiBootstrap() is _not_ being called due to lack',
+          'globalThis.sqlite3ApiBootstrap() is _not_ being called due to lack',
           'of config info for the WASM environment.',
           'It must be called manually.',
         );
@@ -13219,17 +13257,19 @@ else if (typeof exports === 'object')
   const originalInit = sqlite3InitModule;
   if (!originalInit) {
     throw new Error(
-      'Expecting self.sqlite3InitModule to be defined by the Emscripten build.',
+      'Expecting globalThis.sqlite3InitModule to be defined by the Emscripten build.',
     );
   }
 
-  const initModuleState = (self.sqlite3InitModuleState = Object.assign(
+  const initModuleState = (globalThis.sqlite3InitModuleState = Object.assign(
     Object.create(null),
     {
-      moduleScript: self?.document?.currentScript,
+      moduleScript: globalThis?.document?.currentScript,
       isWorker: 'undefined' !== typeof WorkerGlobalScope,
-      location: self.location,
-      urlParams: new URL(self.location.href).searchParams,
+      location: globalThis.location,
+      urlParams: globalThis?.location?.href
+        ? new URL(globalThis.location.href).searchParams
+        : new URLSearchParams(),
     },
   ));
   initModuleState.debugModule = initModuleState.urlParams.has(
@@ -13247,15 +13287,15 @@ else if (typeof exports === 'object')
     initModuleState.sqlite3Dir = li.join('/') + '/';
   }
 
-  self.sqlite3InitModule = function ff(...args) {
+  globalThis.sqlite3InitModule = function ff(...args) {
     return originalInit(...args)
       .then((EmscriptenModule) => {
         if (
-          self.window !== self &&
+          'undefined' !== typeof WorkerGlobalScope &&
           (EmscriptenModule['ENVIRONMENT_IS_PTHREAD'] ||
             EmscriptenModule['_pthread_self'] ||
             'function' === typeof threadAlert ||
-            self.location.pathname.endsWith('.worker.js'))
+            globalThis?.location?.pathname?.endsWith?.('.worker.js'))
         ) {
           return EmscriptenModule;
         }
@@ -13272,10 +13312,10 @@ else if (typeof exports === 'object')
         throw e;
       });
   };
-  self.sqlite3InitModule.ready = originalInit.ready;
+  globalThis.sqlite3InitModule.ready = originalInit.ready;
 
-  if (self.sqlite3InitModuleState.moduleScript) {
-    const sim = self.sqlite3InitModuleState;
+  if (globalThis.sqlite3InitModuleState.moduleScript) {
+    const sim = globalThis.sqlite3InitModuleState;
     let src = sim.moduleScript.src.split('/');
     src.pop();
     sim.scriptDir = src.join('/') + '/';
@@ -13283,7 +13323,7 @@ else if (typeof exports === 'object')
   initModuleState.debugModule('sqlite3InitModuleState =', initModuleState);
   if (0) {
     console.warn('Replaced sqlite3InitModule()');
-    console.warn('self.location.href =', self.location.href);
+    console.warn('globalThis.location.href =', globalThis.location.href);
     if ('undefined' !== typeof document) {
       console.warn(
         'document.currentScript.src =',
@@ -13298,5 +13338,5 @@ else if (typeof exports === 'object')
     exports['sqlite3InitModule'] = sqlite3InitModule;
   }
 
-  return self.sqlite3InitModule;
+  return globalThis.sqlite3InitModule;
 })();
