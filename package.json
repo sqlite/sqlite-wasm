@@ -58,5 +58,6 @@
     "prettier": "^2.8.8",
     "publint": "^0.1.12",
     "shx": "^0.3.4"
-  }
+  },
+  "dependencies": {}
 }
