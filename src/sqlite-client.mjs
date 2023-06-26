@@ -1,4 +1,3 @@
-import * as Comlink from 'https://unpkg.com/comlink/dist/esm/comlink.mjs';
 const log = (...args) => console.log(...args);
 const error = (...args) => console.error(...args);
 
@@ -50,7 +49,7 @@ export default class SqliteClient {
       );
     }
 
-    if (Array.isArray(bindParameters) === false) {
+    if (!Array.isArray(bindParameters)) {
       return error(
         "The 'bindParameters' parameter passed to the 'executeSql' method of the SqliteClient must be of type 'array'. Instead, you passed: '" +
           typeof bindParameters +
@@ -58,10 +57,14 @@ export default class SqliteClient {
       );
     }
 
-    return new Promise(async resolve => {
-      await this.sqliteWorker.executeSql(sqlStatement, bindParameters, Comlink.proxy((rows) => {
-        return resolve(rows);
-      }));
-    })
+    return new Promise(async (resolve) => {
+      await this.sqliteWorker.executeSql(
+        sqlStatement,
+        bindParameters,
+        Comlink.proxy((rows) => {
+          return resolve(rows);
+        }),
+      );
+    });
   }
 }
