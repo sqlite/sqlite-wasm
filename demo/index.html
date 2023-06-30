@@ -5,7 +5,7 @@
     <title>SQLite Wasm Demo</title>
     <script type="module" src="script.js"></script>
     <script type="module" src="main-thread.js"></script>
-    <script type="module" src="sqlite-client.js"></script>
+    <script type="module" src="comlink.js"></script>
   </head>
   <body>
     <h1>SQLite Wasm Demo</h1>
@@ -13,7 +13,7 @@
     <div class="main-thread"></div>
     <h2>Worker</h2>
     <div class="worker"></div>
-    <h2>Built-in SQLite Client</h2>
-    <div id="sqlite-client"></div>
+    <h2>Main thread using Worker via Comlink</h2>
+    <div class="comlink"></div>
   </body>
 </html>

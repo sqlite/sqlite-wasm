@@ -1,5 +1,4 @@
-const log = (...args) => console.log(...args);
-const error = (...args) => console.error(...args);
+import * as Comlink from '../node_modules/comlink/dist/esm/comlink.mjs';
 
 export default class SqliteClient {
   sqliteWorker;
@@ -9,18 +8,14 @@ export default class SqliteClient {
 
   constructor(dbFile, sqliteWorkerPath) {
     if (typeof dbFile !== 'string') {
-      return error(
-        "The 'dbFile' parameter passed to the SqliteClient constructor must be of type 'string'. Instead, you passed: '" +
-          typeof dbFile +
-          "'",
+      throw new Error(
+        `The 'dbFile' parameter passed to the 'SqliteClient' constructor must be of type 'string'. Instead, you passed: '${typeof dbFile}'.`,
       );
     }
 
     if (typeof sqliteWorkerPath !== 'string') {
-      return error(
-        "The 'sqliteWorkerPath' parameter passed to the SqliteClient constructor must be of type 'string'. Instead, you passed: '" +
-          typeof sqliteWorkerPath +
-          "'",
+      throw new Error(
+        `The 'sqliteWorkerPath' parameter passed to the 'SqliteClient' constructor must be of type 'string'. Instead, you passed: '${typeof sqliteWorkerPath}'.`,
       );
     }
 
@@ -42,18 +37,14 @@ export default class SqliteClient {
 
   async executeSql(sqlStatement, bindParameters = []) {
     if (typeof sqlStatement !== 'string') {
-      return error(
-        "The 'sqlStatement' parameter passed to the 'executeSql' method of the SqliteClient must be of type 'string'. Instead, you passed: '" +
-          typeof sqlStatement +
-          "'",
+      throw new Error(
+        `The 'sqlStatement' parameter passed to the 'executeSql' method of the 'SqliteClient' must be of type 'string'. Instead, you passed: '${typeof sqlStatement}'.`,
       );
     }
 
     if (!Array.isArray(bindParameters)) {
-      return error(
-        "The 'bindParameters' parameter passed to the 'executeSql' method of the SqliteClient must be of type 'array'. Instead, you passed: '" +
-          typeof bindParameters +
-          "'",
+      throw new Error(
+        `The 'bindParameters' parameter passed to the 'executeSql' method of the 'SqliteClient' must be of type 'array'. Instead, you passed: '${typeof bindParameters}'.`,
       );
     }
 
