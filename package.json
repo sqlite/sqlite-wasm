@@ -15,11 +15,7 @@
   ],
   "main": "index.mjs",
   "type": "module",
-  "files": [
-    "index.mjs",
-    "sqlite-wasm/",
-    "src/"
-  ],
+  "files": ["index.mjs", "sqlite-wasm/", "src/"],
   "exports": {
     ".": {
       "import": "./index.mjs",
@@ -32,7 +28,6 @@
     "sqlite-wasm": "bin/index.js"
   },
   "scripts": {
-    "prepare": "npm run build && npm run fix && npm run publint",
     "publint": "npx publint",
     "clean": "shx rm -rf sqlite-wasm",
     "build": "npm run clean && node bin/index.js",
