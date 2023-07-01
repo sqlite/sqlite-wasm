@@ -8,7 +8,7 @@ async function getSqliteWasmDownloadLink() {
   const html = await response.text();
   const $ = cheerio.load(html);
   const fileName = $('a[name="wasm"]').closest('tr').next().find('a').text();
-  const sqliteWasmLink = `https://sqlite.org/${fileName}`;
+  const sqliteWasmLink = `https://sqlite.org/${new Date().getFullYear()}/${fileName}`;
   console.log(`Found SQLite Wasm download link: ${sqliteWasmLink}`);
   return sqliteWasmLink;
 }
@@ -24,9 +24,7 @@ async function downloadAndUnzipSqliteWasm(sqliteWasmDownloadLink) {
   const files = await decompress('sqlite-wasm.zip', 'sqlite-wasm', {
     strip: 1,
     filter: (file) =>
-      !file.path.endsWith('sqlite3.mjs') &&
-      /jswasm/.test(file.path) &&
-      /(?:\.mjs|\.wasm|proxy\.js)$/.test(file.path),
+      /jswasm/.test(file.path) && /(\.mjs|\.wasm|\.js)$/.test(file.path),
   });
   console.log(
     `Downloaded and unzipped:\n${files

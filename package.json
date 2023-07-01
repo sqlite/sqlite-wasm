@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.41.2-build11",
+  "version": "3.42.0-build2",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
   "keywords": [
     "sqlite",
@@ -15,11 +15,7 @@
   ],
   "main": "index.mjs",
   "type": "module",
-  "files": [
-    "index.d.ts",
-    "index.mjs",
-    "sqlite-wasm/"
-  ],
+  "files": ["index.d.ts", "index.mjs", "sqlite-wasm/", "src/"],
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -34,13 +30,12 @@
     "sqlite-wasm": "bin/index.js"
   },
   "scripts": {
-    "prepare": "npm run build && npm run fix && npm run publint",
     "publint": "npx publint",
     "clean": "shx rm -rf sqlite-wasm",
     "build": "npm run clean && node bin/index.js",
     "start": "npx http-server --coop",
     "fix": "npx prettier . --write",
-    "deploy": "npm run prepare && git commit -am 'New release' && git push && npm publish --access public"
+    "deploy": "npm run prepare && git add . && git commit -am 'New release' && git push && npm publish --access public"
   },
   "repository": {
     "type": "git",
@@ -58,8 +53,11 @@
     "http-server": "github:vapier/http-server",
     "module-workers-polyfill": "^0.3.2",
     "node-fetch": "^3.3.1",
-    "prettier": "^2.8.7",
-    "publint": "^0.1.11",
+    "prettier": "^2.8.8",
+    "publint": "^0.1.13",
     "shx": "^0.3.4"
+  },
+  "dependencies": {
+    "comlink": "^4.4.1"
   }
 }

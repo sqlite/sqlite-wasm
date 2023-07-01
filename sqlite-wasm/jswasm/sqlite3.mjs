@@ -56,6 +56,10 @@ var sqlite3InitModule = (() => {
       globalThis.location,
     );
 
+    Module['locateFile'] = function (path, prefix) {
+      return new URL(path, import.meta.url).href;
+    }.bind(sqlite3InitModuleState);
+
     const xNameOfInstantiateWasm = false
       ? 'instantiateWasm'
       : 'emscripten-bug-17951';
@@ -12331,9 +12335,7 @@ var sqlite3InitModule = (() => {
               promiseWasRejected = false;
               return promiseResolve_(value);
             };
-            const W = new Worker(
-              new URL('sqlite3-opfs-async-proxy.js', import.meta.url),
-            );
+            const W = new Worker(new URL(options.proxyUri, import.meta.url));
             setTimeout(() => {
               if (undefined === promiseWasRejected) {
                 promiseReject(

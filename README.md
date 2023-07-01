@@ -2,6 +2,14 @@
 
 SQLite Wasm conveniently wrapped as an ES Module.
 
+> **Note**
+>
+> This project wraps the code of
+> [SQLite Wasm](https://sqlite.org/wasm/doc/trunk/index.md) with _no_ changes.
+> Please do _not_ file issues or feature requests regarding the underlying
+> SQLite Wasm code here. Instead, please follow the
+> [SQLite bug filing instructions](https://www.sqlite.org/src/wiki?name=Bug+Reports).
+
 ## Installation
 
 ```bash
@@ -94,12 +102,18 @@ sqlite3InitModule({
 ## Usage with vite
 
 If you are using [vite](https://vitejs.dev/), you need to add the following
-config option:
+config option in `vite.config.js`:
 
 ```js
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
   optimizeDeps: {
     exclude: ['@sqlite.org/sqlite-wasm'],
   },

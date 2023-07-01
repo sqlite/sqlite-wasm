@@ -52,12 +52,12 @@ const installAsyncProxy = function (self) {
   const toss = function (...args) {
     throw new Error(args.join(' '));
   };
-  if (self.window === self) {
+  if (globalThis.window === globalThis) {
     toss(
       'This code cannot run from the main thread.',
       'Load it as a Worker from a separate Worker.',
     );
-  } else if (!navigator.storage.getDirectory) {
+  } else if (!navigator?.storage?.getDirectory) {
     toss('This API requires navigator.storage.getDirectory.');
   }
 
@@ -114,9 +114,9 @@ const installAsyncProxy = function (self) {
       m.avgTime = m.count && m.time ? m.time / m.count : 0;
     }
     console.log(
-      self.location.href,
+      globalThis?.location?.href,
       'metrics for',
-      self.location.href,
+      globalThis?.location?.href,
       ':\n',
       metrics,
       '\nTotal of',
@@ -943,7 +943,7 @@ const installAsyncProxy = function (self) {
     .getDirectory()
     .then(function (d) {
       state.rootDir = d;
-      self.onmessage = function ({ data }) {
+      globalThis.onmessage = function ({ data }) {
         switch (data.type) {
           case 'opfs-async-init': {
             /* Receive shared state from synchronous partner */
@@ -991,24 +991,24 @@ const installAsyncProxy = function (self) {
     })
     .catch((e) => error('error initializing OPFS asyncer:', e));
 }; /*installAsyncProxy()*/
-if (!self.SharedArrayBuffer) {
+if (!globalThis.SharedArrayBuffer) {
   wPost(
     'opfs-unavailable',
     'Missing SharedArrayBuffer API.',
     'The server must emit the COOP/COEP response headers to enable that.',
   );
-} else if (!self.Atomics) {
+} else if (!globalThis.Atomics) {
   wPost(
     'opfs-unavailable',
     'Missing Atomics API.',
     'The server must emit the COOP/COEP response headers to enable that.',
   );
 } else if (
-  !self.FileSystemHandle ||
-  !self.FileSystemDirectoryHandle ||
-  !self.FileSystemFileHandle ||
-  !self.FileSystemFileHandle.prototype.createSyncAccessHandle ||
-  !navigator.storage.getDirectory
+  !globalThis.FileSystemHandle ||
+  !globalThis.FileSystemDirectoryHandle ||
+  !globalThis.FileSystemFileHandle ||
+  !globalThis.FileSystemFileHandle.prototype.createSyncAccessHandle ||
+  !navigator?.storage?.getDirectory
 ) {
   wPost('opfs-unavailable', 'Missing required OPFS APIs.');
 } else {
