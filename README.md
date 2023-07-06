@@ -99,6 +99,33 @@ sqlite3InitModule({
 });
 ```
 
+## Usage with the bundled SQLiteClient
+
+1- Import the `@sqlite.org/sqlite-wasm` library in your code and use it as such:
+
+ ```
+ import {SqliteClient} from "@sqlite.org/sqlite-wasm";
+ const sqliteWorkerPath = "assets/js/sqlite-worker.js"; // Must correspond to the path in your final deployed build.
+ const filename = "/test.sqlite3"; // This is the name of your database. It corresponds to the path in the OPFS.
+ const sqlite = new Sqlite(filename, sqliteWorkerPath)
+ await sqlite.init();
+ await sqlite.executeSql("CREATE TABLE IF NOT EXISTS test(a,b)");
+ await sqlite.executeSql("INSERT INTO test VALUES(?, ?)", [6,7]);
+ const results = await sqlite.executeSql("SELECT * FROM test");
+ ```
+
+2- Copy the `node_modules/@sqlite.org/sqlite-wasm/bundle/sqlite-worker.js` to your final deployment.
+This is dependent on the framework you are using but the idea is that this `.js` file should be copied and available in
+your build.
+
+3- Copy the files `sqlite-wasm/jswasm/` to your final bundle in the same folder as `sqlite-worker.js`.
+
+4- **Warning** Your server must set the following Http headers when serving your files
+
+`Cross-Origin-Opener-Policy: same-origin`
+
+`Cross-Origin-Embedder-Policy: require-corp`
+
 ## Usage with vite
 
 If you are using [vite](https://vitejs.dev/), you need to add the following
