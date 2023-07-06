@@ -55,7 +55,7 @@
     "publint": "^0.1.13",
     "shx": "^0.3.4"
   },
-  "dependencies": {
+  "optionalDependencies": {
     "comlink": "^4.4.1"
   }
 }
