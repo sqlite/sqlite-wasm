@@ -30,7 +30,7 @@
  ** Using the Emscripten SDK version 3.1.30.
  */
 
-var sqlite3InitModule = (() => {
+export var sqlite3InitModule = (() => {
   var _scriptDir = import.meta.url;
 
   return function (config) {
