@@ -99,18 +99,33 @@ sqlite3InitModule({
 });
 ```
 
-## Usage with the bundled `SQLiteClient`
+## Usage with the bundled `SQLiteClient` (with OPFS if available):
 
-1. Import the `@sqlite.org/sqlite-wasm` library in your code and use it as such:
-   ```js
-   import {SqliteClient} from "@sqlite.org/sqlite-wasm";
-   const sqliteWorkerPath = "assets/js/sqlite-worker.js"; // Must correspond to the path in your final deployed build.
-   const filename = "/test.sqlite3"; // This is the name of your database. It corresponds to the path in the OPFS.
-   const sqlite = new Sqlite(filename, sqliteWorkerPath)
-   await sqlite.init();
-   await sqlite.executeSql("CREATE TABLE IF NOT EXISTS test(a,b)");
-   await sqlite.executeSql("INSERT INTO test VALUES(?, ?)", [6,7]);
-   const results = await sqlite.executeSql("SELECT * FROM test");
+> **Warning** For this to work, you need to set the following headers on your
+> server:
+>
+> `Cross-Origin-Opener-Policy: same-origin`
+>
+> `Cross-Origin-Embedder-Policy: require-corp`
+
+Import the `@sqlite.org/sqlite-wasm` library in your code and use it as such:
+
+```js
+import {SqliteClient} from "@sqlite.org/sqlite-wasm";
+
+// Must correspond to the path in your final deployed build.
+const sqliteWorkerPath = 'assets/js/sqlite-worker.js';
+// This is the name of your database. It corresponds to the path in the OPFS.
+const filename = '/test.sqlite3';
+
+const sqlite = new Sqlite(filename, sqliteWorkerPath)
+await sqlite.init();
+
+await sqlite.executeSql("CREATE TABLE IF NOT EXISTS test(a,b)");
+await sqlite.executeSql("INSERT INTO test VALUES(?, ?)", [6,7]);
+const results = await sqlite.executeSql("SELECT * FROM test");
+```
+
 ## Usage with vite
 
 If you are using [vite](https://vitejs.dev/), you need to add the following
