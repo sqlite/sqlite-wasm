@@ -111,19 +111,19 @@ sqlite3InitModule({
 Import the `@sqlite.org/sqlite-wasm` library in your code and use it as such:
 
 ```js
-import {SqliteClient} from "@sqlite.org/sqlite-wasm";
+import { SqliteClient } from '@sqlite.org/sqlite-wasm';
 
 // Must correspond to the path in your final deployed build.
 const sqliteWorkerPath = 'assets/js/sqlite-worker.js';
 // This is the name of your database. It corresponds to the path in the OPFS.
 const filename = '/test.sqlite3';
 
-const sqlite = new Sqlite(filename, sqliteWorkerPath)
+const sqlite = new Sqlite(filename, sqliteWorkerPath);
 await sqlite.init();
 
-await sqlite.executeSql("CREATE TABLE IF NOT EXISTS test(a,b)");
-await sqlite.executeSql("INSERT INTO test VALUES(?, ?)", [6,7]);
-const results = await sqlite.executeSql("SELECT * FROM test");
+await sqlite.executeSql('CREATE TABLE IF NOT EXISTS test(a,b)');
+await sqlite.executeSql('INSERT INTO test VALUES(?, ?)', [6, 7]);
+const results = await sqlite.executeSql('SELECT * FROM test');
 ```
 
 ## Usage with vite

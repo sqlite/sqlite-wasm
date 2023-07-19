@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.42.0-build2",
+  "version": "3.42.0-build3",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
   "keywords": [
     "sqlite",
@@ -15,7 +15,11 @@
   ],
   "main": "index.mjs",
   "type": "module",
-  "files": ["index.mjs", "sqlite-wasm/", "src/"],
+  "files": [
+    "index.mjs",
+    "sqlite-wasm/",
+    "src/"
+  ],
   "exports": {
     ".": {
       "import": "./index.mjs",
@@ -33,6 +37,7 @@
     "build": "npm run clean && node bin/index.js",
     "start": "npx http-server --coop",
     "fix": "npx prettier . --write",
+    "prepare": "npm run build && npm run fix && npm run publint",
     "deploy": "npm run prepare && git add . && git commit -am 'New release' && git push && npm publish --access public"
   },
   "repository": {
@@ -51,8 +56,8 @@
     "http-server": "github:vapier/http-server",
     "module-workers-polyfill": "^0.3.2",
     "node-fetch": "^3.3.1",
-    "prettier": "^2.8.8",
-    "publint": "^0.1.13",
+    "prettier": "^3.0.0",
+    "publint": "^0.1.16",
     "shx": "^0.3.4"
   },
   "optionalDependencies": {
