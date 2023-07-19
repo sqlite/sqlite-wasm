@@ -1,4 +1,4 @@
-import * as Comlink from 'comlink';
+import * as Comlink from '../node_modules/comlink/dist/esm/comlink.mjs';
 
 export default class SqliteClient {
   sqliteWorker;
