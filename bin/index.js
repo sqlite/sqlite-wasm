@@ -47,11 +47,7 @@ async function main() {
       './demo/module-workers-polyfill.min.js',
     );
   } catch (err) {
-    console.error(
-      'Unable to copy Comlink to `src/comlink.mjs`.',
-      err.name,
-      err.message,
-    );
+    console.error(err.name, err.message);
   }
 }
 
