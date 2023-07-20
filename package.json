@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.42.0-build3",
+  "version": "3.42.0-build4",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
   "keywords": [
     "sqlite",

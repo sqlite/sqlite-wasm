@@ -1,4 +1,4 @@
-import * as Comlink from '../node_modules/comlink/dist/esm/comlink.mjs';
+import * as Comlink from './comlink.mjs';
 import { default as sqlite3InitModule } from '../index.mjs';
 
 const log = (...args) => console.log(...args);
