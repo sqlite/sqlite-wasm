@@ -1,6 +1,6 @@
 import * as Comlink from './comlink.mjs';
 
-export default class SqliteClient {
+export class SqliteClient {
   sqliteWorker;
 
   dbFile = '';
