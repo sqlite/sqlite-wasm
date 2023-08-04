@@ -43,6 +43,10 @@ async function main() {
       './src/comlink.mjs',
     );
     fs.copyFileSync(
+      './node_modules/comlink/dist/esm/comlink.mjs.map',
+      './src/comlink.mjs.map',
+    );
+    fs.copyFileSync(
       './node_modules/module-workers-polyfill/module-workers-polyfill.min.js',
       './demo/module-workers-polyfill.min.js',
     );
