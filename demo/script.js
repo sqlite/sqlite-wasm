@@ -23,9 +23,7 @@ const logHtml = (cssClass, ...args) => {
     }
   };
   if (!supportsWorkerType()) {
-    await import(
-      '../.././node_modules/module-workers-polyfill/module-workers-polyfill.min.js'
-    );
+    await import('./module-workers-polyfill.min.js');
   }
 
   const worker = new Worker('/demo/worker.js', {

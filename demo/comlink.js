@@ -1,4 +1,4 @@
-import SqliteClient from '/src/sqlite-client.mjs';
+import { SqliteClient } from '/src/sqlite-client.mjs';
 
 const sqliteClient = new SqliteClient('/db.sqlite3', '/src/sqlite-worker.mjs');
 

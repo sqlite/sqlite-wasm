@@ -2,7 +2,7 @@
 
 SQLite Wasm conveniently wrapped as an ES Module.
 
-> **Note**
+> **Warning**
 >
 > This project wraps the code of
 > [SQLite Wasm](https://sqlite.org/wasm/doc/trunk/index.md) with _no_ changes.
@@ -53,7 +53,8 @@ sqlite3InitModule({
 
 ### In a worker (with OPFS if available):
 
-> **Warning** For this to work, you need to set the following headers on your
+> **Warning**
+> For this to work, you need to set the following headers on your
 > server:
 >
 > `Cross-Origin-Opener-Policy: same-origin`
@@ -99,6 +100,34 @@ sqlite3InitModule({
 });
 ```
 
+## Usage with the bundled `SQLiteClient` (with OPFS if available):
+
+> **Warning**
+> For this to work, you need to set the following headers on your
+> server:
+>
+> `Cross-Origin-Opener-Policy: same-origin`
+>
+> `Cross-Origin-Embedder-Policy: require-corp`
+
+Import the `@sqlite.org/sqlite-wasm` library in your code and use it as such:
+
+```js
+import { SqliteClient } from '@sqlite.org/sqlite-wasm';
+
+// Must correspond to the path in your final deployed build.
+const sqliteWorkerPath = 'assets/js/sqlite-worker.js';
+// This is the name of your database. It corresponds to the path in the OPFS.
+const filename = '/test.sqlite3';
+
+const sqlite = new Sqlite(filename, sqliteWorkerPath);
+await sqlite.init();
+
+await sqlite.executeSql('CREATE TABLE IF NOT EXISTS test(a,b)');
+await sqlite.executeSql('INSERT INTO test VALUES(?, ?)', [6, 7]);
+const results = await sqlite.executeSql('SELECT * FROM test');
+```
+
 ## Usage with vite
 
 If you are using [vite](https://vitejs.dev/), you need to add the following
@@ -121,7 +150,7 @@ export default defineConfig({
 ```
 
 Check out a
-[sample project](https://stackblitz.com/edit/vitejs-vite-3rk63d?file=main.js)
+[sample project](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=main.js)
 that shows this in action.
 
 ## Demo
@@ -130,7 +159,7 @@ See the [demo](https://github.com/tomayac/sqlite-wasm/tree/main/demo) folder for
 examples of how to use this in the main thread and in a worker. (Note that the
 worker variant requires special HTTP headers, so it can't be hosted on GitHub
 Pages.) An example that shows how to use this with vite is available on
-[StackBlitz](https://stackblitz.com/edit/vitejs-vite-3rk63d?file=main.js).
+[StackBlitz](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=main.js).
 
 ## Deploying a new version
 
