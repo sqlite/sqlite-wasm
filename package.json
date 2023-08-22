@@ -62,6 +62,7 @@
     "node-fetch": "^3.3.2",
     "prettier": "^3.0.2",
     "publint": "^0.2.2",
+    "prettier-plugin-jsdoc": "^1.0.1",
     "shx": "^0.3.4"
   },
   "optionalDependencies": {
