@@ -8,13 +8,12 @@ declare type SqlValue =
   | ArrayBuffer;
 
 /** Internal data types supported by SQLite3. */
-declare enum SQLiteDataType {
-  SQLITE_INTEGER = 1,
-  SQLITE_FLOAT,
-  SQLITE_TEXT,
-  SQLITE_BLOB,
-  SQLITE_NULL,
-}
+declare type SQLiteDataType =
+  | CAPI['SQLITE_INTEGER']
+  | CAPI['SQLITE_FLOAT']
+  | CAPI['SQLITE_TEXT']
+  | CAPI['SQLITE_BLOB']
+  | CAPI['SQLITE_NULL'];
 
 /** Specifies parameter bindings. */
 declare type BindingSpec =
@@ -1049,9 +1048,25 @@ declare class Database {
    */
   selectValue(
     sql: FlexibleString,
-    bind?: BindingSpec,
-    asType?: SQLiteDataType,
-  ): SqlValue | undefined;
+    bind: BindingSpec | undefined,
+    asType: CAPI['SQLITE_INTEGER'] | CAPI['SQLITE_FLOAT'],
+  ): number | undefined;
+  selectValue(
+    sql: FlexibleString,
+    bind: BindingSpec | undefined,
+    asType: CAPI['SQLITE_TEXT'],
+  ): string | undefined;
+  selectValue(
+    sql: FlexibleString,
+    bind: BindingSpec | undefined,
+    asType: CAPI['SQLITE_BLOB'],
+  ): Uint8Array | undefined;
+  selectValue(
+    sql: FlexibleString,
+    bind: BindingSpec | undefined,
+    asType: CAPI['SQLITE_NULL'],
+  ): null | undefined;
+  selectValue(sql: FlexibleString, bind?: BindingSpec): SqlValue | undefined;
 
   /**
    * Runs the given query and returns an array of the values from the first
@@ -1478,6 +1493,8 @@ declare class sqlite3_vfs extends SQLiteStruct {
   pNext: WasmPointer;
   zName: WasmPointer;
   pAppData: WasmPointer;
+
+  constructor(pointer?: WasmPointer);
   xOpen: (
     vfsPtr: WasmPointer,
     zName: WasmPointer,
@@ -1530,6 +1547,8 @@ declare class sqlite3_vfs extends SQLiteStruct {
 
 declare class sqlite3_io_methods extends SQLiteStruct {
   iVersion: number;
+
+  constructor(pointer?: WasmPointer);
   xClose: (file: WasmPointer) => number;
   xRead: (
     file: WasmPointer,
@@ -1578,20 +1597,28 @@ declare class sqlite3_io_methods extends SQLiteStruct {
 
 declare class sqlite3_file extends SQLiteStruct {
   pMethods: WasmPointer;
+
+  constructor(pointer?: WasmPointer);
 }
 
 declare class sqlite3_vtab extends SQLiteStruct {
   pModule: WasmPointer;
   nRef: number;
   zErrMsg: WasmPointer;
+
+  constructor(pointer?: WasmPointer);
 }
 
 declare class sqlite3_vtab_cursor extends SQLiteStruct {
   pVtab: WasmPointer;
+
+  constructor(pointer?: WasmPointer);
 }
 
 declare class sqlite3_module extends SQLiteStruct {
   iVersion: number;
+
+  constructor(pointer?: WasmPointer);
   xCreate: (
     db: WasmPointer,
     pAux: WasmPointer,
@@ -1658,16 +1685,22 @@ declare class sqlite3_index_constraint extends SQLiteStruct {
   op: number;
   usable: number;
   iTermOffset: number;
+
+  constructor(pointer?: WasmPointer);
 }
 
 declare class sqlite3_index_constraint_usage extends SQLiteStruct {
   argvIndex: number;
   omit: number;
+
+  constructor(pointer?: WasmPointer);
 }
 
 declare class sqlite3_index_orderby extends SQLiteStruct {
   iColumn: number;
   desc: number;
+
+  constructor(pointer?: WasmPointer);
 }
 
 declare class sqlite3_index_info extends SQLiteStruct {
@@ -1687,6 +1720,8 @@ declare class sqlite3_index_info extends SQLiteStruct {
   sqlite3_index_constraint: sqlite3_index_constraint;
   sqlite3_index_orderby: sqlite3_index_orderby;
   sqlite3_index_constraint_usage: sqlite3_index_constraint_usage;
+
+  constructor(pointer?: WasmPointer);
 }
 
 declare type Sqlite3Static = {
@@ -1946,6 +1981,7 @@ declare type Sqlite3Static = {
 };
 
 declare type InitOptions = {
+  locateFile?: (path: string, prefix: string) => string;
   print?: (msg: string) => void;
   printErr?: (msg: string) => void;
 };
@@ -2334,7 +2370,7 @@ declare type WASM_API = {
      * However, when all pointers involved point to "small" data, it is safe to
      * pass a falsy value to save a tiny bit of memory.
      */
-    allocPtr(howMany: 1 | undefined, safePtrSize?: boolean): WasmPointer;
+    allocPtr(howMany?: 1 | undefined, safePtrSize?: boolean): WasmPointer;
     allocPtr(howMany: number, safePtrSize?: boolean): WasmPointer[];
 
     /**
@@ -2754,8 +2790,8 @@ declare type WASM_API = {
    * With the exception that `xCall()` throws if the argument count does not
    * match that of the WASM-exported function.
    */
-  xCall(functionName: string, ...args: any[]): any;
-  xCall(functionName: string, args: any[]): any;
+  xCall(fn: string | Function, ...args: any[]): any;
+  xCall(fn: string | Function, args: any[]): any;
 
   /**
    * Functions like `xCall()` but performs argument and result type conversions
@@ -3119,622 +3155,1442 @@ declare type CAPI = {
   sqlite3_vtab_cursor: typeof sqlite3_vtab_cursor;
   sqlite3_module: typeof sqlite3_module;
   sqlite3_index_info: typeof sqlite3_index_info;
-  sqlite3_bind_blob: any;
-  sqlite3_bind_text: any;
-  sqlite3_create_function_v2: any;
-  sqlite3_create_function: any;
-  sqlite3_create_window_function: any;
-  sqlite3_prepare_v3: any;
-  sqlite3_prepare_v2: any;
-  sqlite3_exec: any;
-  sqlite3_randomness: any;
-  sqlite3_wasmfs_opfs_dir: any;
-  sqlite3_wasmfs_filename_is_persistent: any;
-  sqlite3_js_db_uses_vfs: any;
-  sqlite3_js_vfs_list: any;
-  sqlite3_js_db_export: any;
-  sqlite3_js_db_vfs: any;
-  sqlite3_js_aggregate_context: any;
-  sqlite3_js_vfs_create_file: any;
-  sqlite3_db_config: any;
-  sqlite3_value_to_js: any;
-  sqlite3_values_to_js: any;
-  sqlite3_result_error_js: any;
-  sqlite3_result_js: any;
-  sqlite3_column_js: any;
-  sqlite3_preupdate_new_js: any;
-  sqlite3_preupdate_old_js: any;
-  sqlite3changeset_new_js: any;
-  sqlite3changeset_old_js: any;
-  sqlite3_aggregate_context: any;
-  sqlite3_bind_double: any;
-  sqlite3_bind_int: any;
-  sqlite3_bind_null: any;
-  sqlite3_bind_parameter_count: any;
-  sqlite3_bind_parameter_index: any;
-  sqlite3_bind_pointer: any;
-  sqlite3_busy_handler: any;
-  sqlite3_busy_timeout: any;
-  sqlite3_changes: any;
-  sqlite3_clear_bindings: any;
-  sqlite3_collation_needed: any;
-  sqlite3_column_blob: any;
-  sqlite3_column_bytes: any;
-  sqlite3_column_count: any;
-  sqlite3_column_double: any;
-  sqlite3_column_int: any;
-  sqlite3_column_name: any;
-  sqlite3_column_text: any;
-  sqlite3_column_type: any;
-  sqlite3_column_value: any;
-  sqlite3_commit_hook: any;
-  sqlite3_compileoption_get: any;
-  sqlite3_compileoption_used: any;
-  sqlite3_complete: any;
-  sqlite3_context_db_handle: any;
-  sqlite3_data_count: any;
-  sqlite3_db_filename: any;
-  sqlite3_db_handle: any;
-  sqlite3_db_name: any;
-  sqlite3_db_status: any;
-  sqlite3_errcode: any;
-  sqlite3_errmsg: any;
-  sqlite3_error_offset: any;
-  sqlite3_errstr: any;
-  sqlite3_expanded_sql: any;
-  sqlite3_extended_errcode: any;
-  sqlite3_extended_result_codes: any;
-  sqlite3_file_control: any;
-  sqlite3_finalize: any;
-  sqlite3_free: any;
-  sqlite3_get_auxdata: any;
-  sqlite3_initialize: any;
-  sqlite3_keyword_count: any;
-  sqlite3_keyword_name: any;
-  sqlite3_keyword_check: any;
-  sqlite3_libversion: any;
-  sqlite3_libversion_number: any;
-  sqlite3_limit: any;
-  sqlite3_malloc: any;
-  sqlite3_open: any;
-  sqlite3_open_v2: any;
-  sqlite3_progress_handler: any;
-  sqlite3_realloc: any;
-  sqlite3_reset: any;
-  sqlite3_result_blob: any;
-  sqlite3_result_double: any;
-  sqlite3_result_error: any;
-  sqlite3_result_error_code: any;
-  sqlite3_result_error_nomem: any;
-  sqlite3_result_error_toobig: any;
-  sqlite3_result_int: any;
-  sqlite3_result_null: any;
-  sqlite3_result_pointer: any;
-  sqlite3_result_subtype: any;
-  sqlite3_result_text: any;
-  sqlite3_result_zeroblob: any;
-  sqlite3_rollback_hook: any;
-  sqlite3_set_authorizer: any;
-  sqlite3_set_auxdata: any;
-  sqlite3_shutdown: any;
-  sqlite3_sourceid: any;
-  sqlite3_sql: any;
-  sqlite3_status: any;
-  sqlite3_step: any;
-  sqlite3_stmt_isexplain: any;
-  sqlite3_stmt_readonly: any;
-  sqlite3_stmt_status: any;
-  sqlite3_strglob: any;
-  sqlite3_stricmp: any;
-  sqlite3_strlike: any;
-  sqlite3_strnicmp: any;
-  sqlite3_table_column_metadata: any;
-  sqlite3_total_changes: any;
-  sqlite3_trace_v2: any;
-  sqlite3_txn_state: any;
-  sqlite3_uri_boolean: any;
-  sqlite3_uri_key: any;
-  sqlite3_uri_parameter: any;
-  sqlite3_user_data: any;
-  sqlite3_value_blob: any;
-  sqlite3_value_bytes: any;
-  sqlite3_value_double: any;
-  sqlite3_value_dup: any;
-  sqlite3_value_free: any;
-  sqlite3_value_frombind: any;
-  sqlite3_value_int: any;
-  sqlite3_value_nochange: any;
-  sqlite3_value_numeric_type: any;
-  sqlite3_value_pointer: any;
-  sqlite3_value_subtype: any;
-  sqlite3_value_text: any;
-  sqlite3_value_type: any;
-  sqlite3_vfs_find: any;
-  sqlite3_vfs_register: any;
-  sqlite3_vfs_unregister: any;
-  sqlite3_bind_int64: any;
-  sqlite3_changes64: any;
-  sqlite3_column_int64: any;
-  sqlite3_create_module: any;
-  sqlite3_create_module_v2: any;
-  sqlite3_declare_vtab: any;
-  sqlite3_deserialize: any;
-  sqlite3_drop_modules: any;
-  sqlite3_last_insert_rowid: any;
-  sqlite3_malloc64: any;
-  sqlite3_msize: any;
-  sqlite3_overload_function: any;
-  sqlite3_preupdate_blobwrite: any;
-  sqlite3_preupdate_count: any;
-  sqlite3_preupdate_depth: any;
-  sqlite3_preupdate_hook: any;
-  sqlite3_preupdate_new: any;
-  sqlite3_preupdate_old: any;
-  sqlite3_realloc64: any;
-  sqlite3_result_int64: any;
-  sqlite3_result_zeroblob64: any;
-  sqlite3_serialize: any;
-  sqlite3_set_last_insert_rowid: any;
-  sqlite3_status64: any;
-  sqlite3_total_changes64: any;
-  sqlite3_update_hook: any;
-  sqlite3_uri_int64: any;
-  sqlite3_value_int64: any;
-  sqlite3_vtab_collation: any;
-  sqlite3_vtab_distinct: any;
-  sqlite3_vtab_in: any;
-  sqlite3_vtab_in_first: any;
-  sqlite3_vtab_in_next: any;
-  sqlite3_vtab_nochange: any;
-  sqlite3_vtab_on_conflict: any;
-  sqlite3_vtab_rhs_value: any;
-  sqlite3changegroup_add: any;
-  sqlite3changegroup_add_strm: any;
-  sqlite3changegroup_delete: any;
-  sqlite3changegroup_new: any;
-  sqlite3changegroup_output: any;
-  sqlite3changegroup_output_strm: any;
-  sqlite3changeset_apply: any;
-  sqlite3changeset_apply_strm: any;
-  sqlite3changeset_apply_v2: any;
-  sqlite3changeset_apply_v2_strm: any;
-  sqlite3changeset_concat: any;
-  sqlite3changeset_concat_strm: any;
-  sqlite3changeset_conflict: any;
-  sqlite3changeset_finalize: any;
-  sqlite3changeset_fk_conflicts: any;
-  sqlite3changeset_invert: any;
-  sqlite3changeset_invert_strm: any;
-  sqlite3changeset_new: any;
-  sqlite3changeset_next: any;
-  sqlite3changeset_old: any;
-  sqlite3changeset_op: any;
-  sqlite3changeset_pk: any;
-  sqlite3changeset_start: any;
-  sqlite3changeset_start_strm: any;
-  sqlite3changeset_start_v2: any;
-  sqlite3changeset_start_v2_strm: any;
-  sqlite3session_attach: any;
-  sqlite3session_changeset: any;
-  sqlite3session_changeset_size: any;
-  sqlite3session_changeset_strm: any;
-  sqlite3session_config: any;
-  sqlite3session_create: any;
-  sqlite3session_diff: any;
-  sqlite3session_enable: any;
-  sqlite3session_indirect: any;
-  sqlite3session_isempty: any;
-  sqlite3session_memory_used: any;
-  sqlite3session_object_config: any;
-  sqlite3session_patchset: any;
-  sqlite3session_patchset_strm: any;
-  sqlite3session_table_filter: any;
-  SQLITE_ACCESS_EXISTS: any;
-  SQLITE_ACCESS_READWRITE: any;
-  SQLITE_ACCESS_READ: any;
-  SQLITE_DENY: any;
-  SQLITE_IGNORE: any;
-  SQLITE_CREATE_INDEX: any;
-  SQLITE_CREATE_TABLE: any;
-  SQLITE_CREATE_TEMP_INDEX: any;
-  SQLITE_CREATE_TEMP_TABLE: any;
-  SQLITE_CREATE_TEMP_TRIGGER: any;
-  SQLITE_CREATE_TEMP_VIEW: any;
-  SQLITE_CREATE_TRIGGER: any;
-  SQLITE_CREATE_VIEW: any;
-  SQLITE_DELETE: any;
-  SQLITE_DROP_INDEX: any;
-  SQLITE_DROP_TABLE: any;
-  SQLITE_DROP_TEMP_INDEX: any;
-  SQLITE_DROP_TEMP_TABLE: any;
-  SQLITE_DROP_TEMP_TRIGGER: any;
-  SQLITE_DROP_TEMP_VIEW: any;
-  SQLITE_DROP_TRIGGER: any;
-  SQLITE_DROP_VIEW: any;
-  SQLITE_INSERT: any;
-  SQLITE_PRAGMA: any;
-  SQLITE_READ: any;
-  SQLITE_SELECT: any;
-  SQLITE_TRANSACTION: any;
-  SQLITE_UPDATE: any;
-  SQLITE_ATTACH: any;
-  SQLITE_DETACH: any;
-  SQLITE_ALTER_TABLE: any;
-  SQLITE_REINDEX: any;
-  SQLITE_ANALYZE: any;
-  SQLITE_CREATE_VTABLE: any;
-  SQLITE_DROP_VTABLE: any;
-  SQLITE_FUNCTION: any;
-  SQLITE_SAVEPOINT: any;
-  SQLITE_RECURSIVE: any;
-  SQLITE_STATIC: any;
-  SQLITE_TRANSIENT: any;
-  SQLITE_WASM_DEALLOC: any;
-  SQLITE_CHANGESETSTART_INVERT: any;
-  SQLITE_CHANGESETAPPLY_NOSAVEPOINT: any;
-  SQLITE_CHANGESETAPPLY_INVERT: any;
-  SQLITE_CHANGESET_DATA: any;
-  SQLITE_CHANGESET_NOTFOUND: any;
-  SQLITE_CHANGESET_CONFLICT: any;
-  SQLITE_CHANGESET_CONSTRAINT: any;
-  SQLITE_CHANGESET_FOREIGN_KEY: any;
-  SQLITE_CHANGESET_OMIT: any;
-  SQLITE_CHANGESET_REPLACE: any;
-  SQLITE_CHANGESET_ABORT: any;
-  SQLITE_CONFIG_SINGLETHREAD: any;
-  SQLITE_CONFIG_MULTITHREAD: any;
-  SQLITE_CONFIG_SERIALIZED: any;
-  SQLITE_CONFIG_MALLOC: any;
-  SQLITE_CONFIG_GETMALLOC: any;
-  SQLITE_CONFIG_SCRATCH: any;
-  SQLITE_CONFIG_PAGECACHE: any;
-  SQLITE_CONFIG_HEAP: any;
-  SQLITE_CONFIG_MEMSTATUS: any;
-  SQLITE_CONFIG_MUTEX: any;
-  SQLITE_CONFIG_GETMUTEX: any;
-  SQLITE_CONFIG_LOOKASIDE: any;
-  SQLITE_CONFIG_PCACHE: any;
-  SQLITE_CONFIG_GETPCACHE: any;
-  SQLITE_CONFIG_LOG: any;
-  SQLITE_CONFIG_URI: any;
-  SQLITE_CONFIG_PCACHE2: any;
-  SQLITE_CONFIG_GETPCACHE2: any;
-  SQLITE_CONFIG_COVERING_INDEX_SCAN: any;
-  SQLITE_CONFIG_SQLLOG: any;
-  SQLITE_CONFIG_MMAP_SIZE: any;
-  SQLITE_CONFIG_WIN32_HEAPSIZE: any;
-  SQLITE_CONFIG_PCACHE_HDRSZ: any;
-  SQLITE_CONFIG_PMASZ: any;
-  SQLITE_CONFIG_STMTJRNL_SPILL: any;
-  SQLITE_CONFIG_SMALL_MALLOC: any;
-  SQLITE_CONFIG_SORTERREF_SIZE: any;
-  SQLITE_CONFIG_MEMDB_MAXSIZE: any;
-  SQLITE_INTEGER: any;
-  SQLITE_FLOAT: any;
-  SQLITE_TEXT: any;
-  SQLITE_BLOB: any;
-  SQLITE_NULL: any;
-  SQLITE_DBCONFIG_MAINDBNAME: any;
-  SQLITE_DBCONFIG_LOOKASIDE: any;
-  SQLITE_DBCONFIG_ENABLE_FKEY: any;
-  SQLITE_DBCONFIG_ENABLE_TRIGGER: any;
-  SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER: any;
-  SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION: any;
-  SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE: any;
-  SQLITE_DBCONFIG_ENABLE_QPSG: any;
-  SQLITE_DBCONFIG_TRIGGER_EQP: any;
-  SQLITE_DBCONFIG_RESET_DATABASE: any;
-  SQLITE_DBCONFIG_DEFENSIVE: any;
-  SQLITE_DBCONFIG_WRITABLE_SCHEMA: any;
-  SQLITE_DBCONFIG_LEGACY_ALTER_TABLE: any;
-  SQLITE_DBCONFIG_DQS_DML: any;
-  SQLITE_DBCONFIG_DQS_DDL: any;
-  SQLITE_DBCONFIG_ENABLE_VIEW: any;
-  SQLITE_DBCONFIG_LEGACY_FILE_FORMAT: any;
-  SQLITE_DBCONFIG_TRUSTED_SCHEMA: any;
-  SQLITE_DBCONFIG_MAX: any;
-  SQLITE_DBSTATUS_LOOKASIDE_USED: any;
-  SQLITE_DBSTATUS_CACHE_USED: any;
-  SQLITE_DBSTATUS_SCHEMA_USED: any;
-  SQLITE_DBSTATUS_STMT_USED: any;
-  SQLITE_DBSTATUS_LOOKASIDE_HIT: any;
-  SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE: any;
-  SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL: any;
-  SQLITE_DBSTATUS_CACHE_HIT: any;
-  SQLITE_DBSTATUS_CACHE_MISS: any;
-  SQLITE_DBSTATUS_CACHE_WRITE: any;
-  SQLITE_DBSTATUS_DEFERRED_FKS: any;
-  SQLITE_DBSTATUS_CACHE_USED_SHARED: any;
-  SQLITE_DBSTATUS_CACHE_SPILL: any;
-  SQLITE_DBSTATUS_MAX: any;
-  SQLITE_UTF8: any;
-  SQLITE_UTF16LE: any;
-  SQLITE_UTF16BE: any;
-  SQLITE_UTF16: any;
-  SQLITE_UTF16_ALIGNED: any;
-  SQLITE_FCNTL_LOCKSTATE: any;
-  SQLITE_FCNTL_GET_LOCKPROXYFILE: any;
-  SQLITE_FCNTL_SET_LOCKPROXYFILE: any;
-  SQLITE_FCNTL_LAST_ERRNO: any;
-  SQLITE_FCNTL_SIZE_HINT: any;
-  SQLITE_FCNTL_CHUNK_SIZE: any;
-  SQLITE_FCNTL_FILE_POINTER: any;
-  SQLITE_FCNTL_SYNC_OMITTED: any;
-  SQLITE_FCNTL_WIN32_AV_RETRY: any;
-  SQLITE_FCNTL_PERSIST_WAL: any;
-  SQLITE_FCNTL_OVERWRITE: any;
-  SQLITE_FCNTL_VFSNAME: any;
-  SQLITE_FCNTL_POWERSAFE_OVERWRITE: any;
-  SQLITE_FCNTL_PRAGMA: any;
-  SQLITE_FCNTL_BUSYHANDLER: any;
-  SQLITE_FCNTL_TEMPFILENAME: any;
-  SQLITE_FCNTL_MMAP_SIZE: any;
-  SQLITE_FCNTL_TRACE: any;
-  SQLITE_FCNTL_HAS_MOVED: any;
-  SQLITE_FCNTL_SYNC: any;
-  SQLITE_FCNTL_COMMIT_PHASETWO: any;
-  SQLITE_FCNTL_WIN32_SET_HANDLE: any;
-  SQLITE_FCNTL_WAL_BLOCK: any;
-  SQLITE_FCNTL_ZIPVFS: any;
-  SQLITE_FCNTL_RBU: any;
-  SQLITE_FCNTL_VFS_POINTER: any;
-  SQLITE_FCNTL_JOURNAL_POINTER: any;
-  SQLITE_FCNTL_WIN32_GET_HANDLE: any;
-  SQLITE_FCNTL_PDB: any;
-  SQLITE_FCNTL_BEGIN_ATOMIC_WRITE: any;
-  SQLITE_FCNTL_COMMIT_ATOMIC_WRITE: any;
-  SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE: any;
-  SQLITE_FCNTL_LOCK_TIMEOUT: any;
-  SQLITE_FCNTL_DATA_VERSION: any;
-  SQLITE_FCNTL_SIZE_LIMIT: any;
-  SQLITE_FCNTL_CKPT_DONE: any;
-  SQLITE_FCNTL_RESERVE_BYTES: any;
-  SQLITE_FCNTL_CKPT_START: any;
-  SQLITE_FCNTL_EXTERNAL_READER: any;
-  SQLITE_FCNTL_CKSM_FILE: any;
-  SQLITE_LOCK_NONE: any;
-  SQLITE_LOCK_SHARED: any;
-  SQLITE_LOCK_RESERVED: any;
-  SQLITE_LOCK_PENDING: any;
-  SQLITE_LOCK_EXCLUSIVE: any;
-  SQLITE_IOCAP_ATOMIC: any;
-  SQLITE_IOCAP_ATOMIC512: any;
-  SQLITE_IOCAP_ATOMIC1K: any;
-  SQLITE_IOCAP_ATOMIC2K: any;
-  SQLITE_IOCAP_ATOMIC4K: any;
-  SQLITE_IOCAP_ATOMIC8K: any;
-  SQLITE_IOCAP_ATOMIC16K: any;
-  SQLITE_IOCAP_ATOMIC32K: any;
-  SQLITE_IOCAP_ATOMIC64K: any;
-  SQLITE_IOCAP_SAFE_APPEND: any;
-  SQLITE_IOCAP_SEQUENTIAL: any;
-  SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN: any;
-  SQLITE_IOCAP_POWERSAFE_OVERWRITE: any;
-  SQLITE_IOCAP_IMMUTABLE: any;
-  SQLITE_IOCAP_BATCH_ATOMIC: any;
-  SQLITE_MAX_ALLOCATION_SIZE: any;
-  SQLITE_LIMIT_LENGTH: any;
-  SQLITE_MAX_LENGTH: any;
-  SQLITE_LIMIT_SQL_LENGTH: any;
-  SQLITE_MAX_SQL_LENGTH: any;
-  SQLITE_LIMIT_COLUMN: any;
-  SQLITE_MAX_COLUMN: any;
-  SQLITE_LIMIT_EXPR_DEPTH: any;
-  SQLITE_MAX_EXPR_DEPTH: any;
-  SQLITE_LIMIT_COMPOUND_SELECT: any;
-  SQLITE_MAX_COMPOUND_SELECT: any;
-  SQLITE_LIMIT_VDBE_OP: any;
-  SQLITE_MAX_VDBE_OP: any;
-  SQLITE_LIMIT_FUNCTION_ARG: any;
-  SQLITE_MAX_FUNCTION_ARG: any;
-  SQLITE_LIMIT_ATTACHED: any;
-  SQLITE_MAX_ATTACHED: any;
-  SQLITE_LIMIT_LIKE_PATTERN_LENGTH: any;
-  SQLITE_MAX_LIKE_PATTERN_LENGTH: any;
-  SQLITE_LIMIT_VARIABLE_NUMBER: any;
-  SQLITE_MAX_VARIABLE_NUMBER: any;
-  SQLITE_LIMIT_TRIGGER_DEPTH: any;
-  SQLITE_MAX_TRIGGER_DEPTH: any;
-  SQLITE_LIMIT_WORKER_THREADS: any;
-  SQLITE_MAX_WORKER_THREADS: any;
-  SQLITE_OPEN_READONLY: any;
-  SQLITE_OPEN_READWRITE: any;
-  SQLITE_OPEN_CREATE: any;
-  SQLITE_OPEN_URI: any;
-  SQLITE_OPEN_MEMORY: any;
-  SQLITE_OPEN_NOMUTEX: any;
-  SQLITE_OPEN_FULLMUTEX: any;
-  SQLITE_OPEN_SHAREDCACHE: any;
-  SQLITE_OPEN_PRIVATECACHE: any;
-  SQLITE_OPEN_EXRESCODE: any;
-  SQLITE_OPEN_NOFOLLOW: any;
-  SQLITE_OPEN_MAIN_DB: any;
-  SQLITE_OPEN_MAIN_JOURNAL: any;
-  SQLITE_OPEN_TEMP_DB: any;
-  SQLITE_OPEN_TEMP_JOURNAL: any;
-  SQLITE_OPEN_TRANSIENT_DB: any;
-  SQLITE_OPEN_SUBJOURNAL: any;
-  SQLITE_OPEN_SUPER_JOURNAL: any;
-  SQLITE_OPEN_WAL: any;
-  SQLITE_OPEN_DELETEONCLOSE: any;
-  SQLITE_OPEN_EXCLUSIVE: any;
-  SQLITE_PREPARE_PERSISTENT: any;
-  SQLITE_PREPARE_NORMALIZE: any;
-  SQLITE_PREPARE_NO_VTAB: any;
-  SQLITE_OK: any;
-  SQLITE_ERROR: any;
-  SQLITE_INTERNAL: any;
-  SQLITE_PERM: any;
-  SQLITE_ABORT: any;
-  SQLITE_BUSY: any;
-  SQLITE_LOCKED: any;
-  SQLITE_NOMEM: any;
-  SQLITE_READONLY: any;
-  SQLITE_INTERRUPT: any;
-  SQLITE_IOERR: any;
-  SQLITE_CORRUPT: any;
-  SQLITE_NOTFOUND: any;
-  SQLITE_FULL: any;
-  SQLITE_CANTOPEN: any;
-  SQLITE_PROTOCOL: any;
-  SQLITE_EMPTY: any;
-  SQLITE_SCHEMA: any;
-  SQLITE_TOOBIG: any;
-  SQLITE_CONSTRAINT: any;
-  SQLITE_MISMATCH: any;
-  SQLITE_MISUSE: any;
-  SQLITE_NOLFS: any;
-  SQLITE_AUTH: any;
-  SQLITE_FORMAT: any;
-  SQLITE_RANGE: any;
-  SQLITE_NOTADB: any;
-  SQLITE_NOTICE: any;
-  SQLITE_WARNING: any;
-  SQLITE_ROW: any;
-  SQLITE_DONE: any;
-  SQLITE_ERROR_MISSING_COLLSEQ: any;
-  SQLITE_ERROR_RETRY: any;
-  SQLITE_ERROR_SNAPSHOT: any;
-  SQLITE_IOERR_READ: any;
-  SQLITE_IOERR_SHORT_READ: any;
-  SQLITE_IOERR_WRITE: any;
-  SQLITE_IOERR_FSYNC: any;
-  SQLITE_IOERR_DIR_FSYNC: any;
-  SQLITE_IOERR_TRUNCATE: any;
-  SQLITE_IOERR_FSTAT: any;
-  SQLITE_IOERR_UNLOCK: any;
-  SQLITE_IOERR_RDLOCK: any;
-  SQLITE_IOERR_DELETE: any;
-  SQLITE_IOERR_BLOCKED: any;
-  SQLITE_IOERR_NOMEM: any;
-  SQLITE_IOERR_ACCESS: any;
-  SQLITE_IOERR_CHECKRESERVEDLOCK: any;
-  SQLITE_IOERR_LOCK: any;
-  SQLITE_IOERR_CLOSE: any;
-  SQLITE_IOERR_DIR_CLOSE: any;
-  SQLITE_IOERR_SHMOPEN: any;
-  SQLITE_IOERR_SHMSIZE: any;
-  SQLITE_IOERR_SHMLOCK: any;
-  SQLITE_IOERR_SHMMAP: any;
-  SQLITE_IOERR_SEEK: any;
-  SQLITE_IOERR_DELETE_NOENT: any;
-  SQLITE_IOERR_MMAP: any;
-  SQLITE_IOERR_GETTEMPPATH: any;
-  SQLITE_IOERR_CONVPATH: any;
-  SQLITE_IOERR_VNODE: any;
-  SQLITE_IOERR_AUTH: any;
-  SQLITE_IOERR_BEGIN_ATOMIC: any;
-  SQLITE_IOERR_COMMIT_ATOMIC: any;
-  SQLITE_IOERR_ROLLBACK_ATOMIC: any;
-  SQLITE_IOERR_DATA: any;
-  SQLITE_IOERR_CORRUPTFS: any;
-  SQLITE_LOCKED_SHAREDCACHE: any;
-  SQLITE_LOCKED_VTAB: any;
-  SQLITE_BUSY_RECOVERY: any;
-  SQLITE_BUSY_SNAPSHOT: any;
-  SQLITE_BUSY_TIMEOUT: any;
-  SQLITE_CANTOPEN_NOTEMPDIR: any;
-  SQLITE_CANTOPEN_ISDIR: any;
-  SQLITE_CANTOPEN_FULLPATH: any;
-  SQLITE_CANTOPEN_CONVPATH: any;
-  SQLITE_CANTOPEN_SYMLINK: any;
-  SQLITE_CORRUPT_VTAB: any;
-  SQLITE_CORRUPT_SEQUENCE: any;
-  SQLITE_CORRUPT_INDEX: any;
-  SQLITE_READONLY_RECOVERY: any;
-  SQLITE_READONLY_CANTLOCK: any;
-  SQLITE_READONLY_ROLLBACK: any;
-  SQLITE_READONLY_DBMOVED: any;
-  SQLITE_READONLY_CANTINIT: any;
-  SQLITE_READONLY_DIRECTORY: any;
-  SQLITE_ABORT_ROLLBACK: any;
-  SQLITE_CONSTRAINT_CHECK: any;
-  SQLITE_CONSTRAINT_COMMITHOOK: any;
-  SQLITE_CONSTRAINT_FOREIGNKEY: any;
-  SQLITE_CONSTRAINT_FUNCTION: any;
-  SQLITE_CONSTRAINT_NOTNULL: any;
-  SQLITE_CONSTRAINT_PRIMARYKEY: any;
-  SQLITE_CONSTRAINT_TRIGGER: any;
-  SQLITE_CONSTRAINT_UNIQUE: any;
-  SQLITE_CONSTRAINT_VTAB: any;
-  SQLITE_CONSTRAINT_ROWID: any;
-  SQLITE_CONSTRAINT_PINNED: any;
-  SQLITE_CONSTRAINT_DATATYPE: any;
-  SQLITE_NOTICE_RECOVER_WAL: any;
-  SQLITE_NOTICE_RECOVER_ROLLBACK: any;
-  SQLITE_WARNING_AUTOINDEX: any;
-  SQLITE_AUTH_USER: any;
-  SQLITE_OK_LOAD_PERMANENTLY: any;
-  SQLITE_STATUS_MEMORY_USED: any;
-  SQLITE_STATUS_PAGECACHE_USED: any;
-  SQLITE_STATUS_PAGECACHE_OVERFLOW: any;
-  SQLITE_STATUS_MALLOC_SIZE: any;
-  SQLITE_STATUS_PARSER_STACK: any;
-  SQLITE_STATUS_PAGECACHE_SIZE: any;
-  SQLITE_STATUS_MALLOC_COUNT: any;
-  SQLITE_STMTSTATUS_FULLSCAN_STEP: any;
-  SQLITE_STMTSTATUS_SORT: any;
-  SQLITE_STMTSTATUS_AUTOINDEX: any;
-  SQLITE_STMTSTATUS_VM_STEP: any;
-  SQLITE_STMTSTATUS_REPREPARE: any;
-  SQLITE_STMTSTATUS_RUN: any;
-  SQLITE_STMTSTATUS_FILTER_MISS: any;
-  SQLITE_STMTSTATUS_FILTER_HIT: any;
-  SQLITE_STMTSTATUS_MEMUSED: any;
-  SQLITE_SYNC_NORMAL: any;
-  SQLITE_SYNC_FULL: any;
-  SQLITE_SYNC_DATAONLY: any;
-  SQLITE_TRACE_STMT: any;
-  SQLITE_TRACE_PROFILE: any;
-  SQLITE_TRACE_ROW: any;
-  SQLITE_TRACE_CLOSE: any;
-  SQLITE_TXN_NONE: any;
-  SQLITE_TXN_READ: any;
-  SQLITE_TXN_WRITE: any;
-  SQLITE_DETERMINISTIC: any;
-  SQLITE_DIRECTONLY: any;
-  SQLITE_INNOCUOUS: any;
-  SQLITE_VERSION_NUMBER: any;
-  SQLITE_VERSION: any;
-  SQLITE_SOURCE_ID: any;
-  SQLITE_SERIALIZE_NOCOPY: any;
-  SQLITE_DESERIALIZE_FREEONCLOSE: any;
-  SQLITE_DESERIALIZE_READONLY: any;
-  SQLITE_DESERIALIZE_RESIZEABLE: any;
-  SQLITE_SESSION_CONFIG_STRMSIZE: any;
-  SQLITE_SESSION_OBJCONFIG_SIZE: any;
-  SQLITE_INDEX_SCAN_UNIQUE: any;
-  SQLITE_INDEX_CONSTRAINT_EQ: any;
-  SQLITE_INDEX_CONSTRAINT_GT: any;
-  SQLITE_INDEX_CONSTRAINT_LE: any;
-  SQLITE_INDEX_CONSTRAINT_LT: any;
-  SQLITE_INDEX_CONSTRAINT_GE: any;
-  SQLITE_INDEX_CONSTRAINT_MATCH: any;
-  SQLITE_INDEX_CONSTRAINT_LIKE: any;
-  SQLITE_INDEX_CONSTRAINT_GLOB: any;
-  SQLITE_INDEX_CONSTRAINT_REGEXP: any;
-  SQLITE_INDEX_CONSTRAINT_NE: any;
-  SQLITE_INDEX_CONSTRAINT_ISNOT: any;
-  SQLITE_INDEX_CONSTRAINT_ISNOTNULL: any;
-  SQLITE_INDEX_CONSTRAINT_ISNULL: any;
-  SQLITE_INDEX_CONSTRAINT_IS: any;
-  SQLITE_INDEX_CONSTRAINT_LIMIT: any;
-  SQLITE_INDEX_CONSTRAINT_OFFSET: any;
-  SQLITE_INDEX_CONSTRAINT_FUNCTION: any;
-  SQLITE_VTAB_CONSTRAINT_SUPPORT: any;
-  SQLITE_VTAB_INNOCUOUS: any;
-  SQLITE_VTAB_DIRECTONLY: any;
-  SQLITE_ROLLBACK: any;
-  SQLITE_FAIL: any;
-  SQLITE_REPLACE: any;
-  sqlite3_js_rc_str: any;
-  sqlite3_vtab_config: any;
-  sqlite3_close_v2: any;
-  sqlite3session_delete: any;
-  sqlite3_create_collation_v2: any;
-  sqlite3_create_collation: any;
-  sqlite3_config: any;
-  sqlite3_auto_extension: any;
-  sqlite3_cancel_auto_extension: any;
-  sqlite3_reset_auto_extension: any;
+  sqlite3_bind_blob: (
+    stmt: PreparedStatement | WasmPointer,
+    idx: number,
+    blob: WasmPointer,
+    n: number,
+    dtor:
+      | (() => void)
+      | WasmPointer
+      | CAPI['SQLITE_STATIC']
+      | CAPI['SQLITE_TRANSIENT']
+      | CAPI['SQLITE_WASM_DEALLOC'],
+  ) => number;
+  sqlite3_bind_text: (
+    stmt: PreparedStatement | WasmPointer,
+    idx: number,
+    text: string,
+    n: number,
+    dtor:
+      | (() => void)
+      | WasmPointer
+      | CAPI['SQLITE_STATIC']
+      | CAPI['SQLITE_TRANSIENT']
+      | CAPI['SQLITE_WASM_DEALLOC'],
+  ) => number;
+  sqlite3_create_function_v2: (
+    db: Database | WasmPointer,
+    functionName: string | WasmPointer,
+    nArg: number,
+    eTextRep: number,
+    pApp: WasmPointer,
+    xFunc:
+      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | WasmPointer,
+    xStep:
+      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | WasmPointer,
+    xFinal: ((ctx: WasmPointer) => void) | WasmPointer,
+    xDestroy: (() => void) | WasmPointer,
+  ) => number;
+  sqlite3_create_function: (
+    db: Database | WasmPointer,
+    functionName: string | WasmPointer,
+    nArg: number,
+    eTextRep: number,
+    pApp: WasmPointer,
+    xFunc:
+      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | WasmPointer,
+    xStep:
+      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | WasmPointer,
+    xFinal: ((ctx: WasmPointer) => void) | WasmPointer,
+  ) => number;
+  sqlite3_create_window_function: (
+    db: Database | WasmPointer,
+    functionName: string | WasmPointer,
+    nArg: number,
+    eTextRep: number,
+    pApp: WasmPointer,
+    xStep:
+      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | WasmPointer,
+    xFinal: ((ctx: WasmPointer) => void) | WasmPointer,
+    xValue: ((ctx: WasmPointer) => void) | WasmPointer,
+    xInverse:
+      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | WasmPointer,
+    xDestroy: (() => void) | WasmPointer,
+  ) => number;
+  sqlite3_prepare_v3: (
+    db: Database | WasmPointer,
+    sql: string | WasmPointer,
+    nByte: number,
+    prepFlags: number,
+    ppStmt: WasmPointer,
+    pzTail: WasmPointer,
+  ) => number;
+  sqlite3_prepare_v2: (
+    db: Database | WasmPointer,
+    sql: string | WasmPointer,
+    nByte: number,
+    ppStmt: WasmPointer,
+    pzTail: WasmPointer,
+  ) => number;
+  sqlite3_exec: (
+    db: Database | WasmPointer,
+    sql: string | WasmPointer,
+    callback:
+      | ((
+          cbArg: WasmPointer,
+          nColumns: number,
+          values: WasmPointer,
+          names: WasmPointer,
+        ) => number)
+      | WasmPointer,
+    cbArg: WasmPointer,
+    pzErrMsg: WasmPointer,
+  ) => number;
+  sqlite3_randomness: (N: number, P: WasmPointer) => void;
+  sqlite3_wasmfs_opfs_dir: () => string;
+  sqlite3_wasmfs_filename_is_persistent: (name: string) => boolean;
+  sqlite3_js_db_uses_vfs: (
+    db: Database | WasmPointer,
+    vfsName: string,
+    dbName: string,
+  ) => boolean;
+  sqlite3_js_vfs_list: () => string[];
+  sqlite3_js_db_export: (
+    db: Database | WasmPointer,
+    schema?: string | WasmPointer,
+  ) => Uint8Array;
+  sqlite3_js_db_vfs: (
+    db: Database | WasmPointer,
+    dbName?: string | WasmPointer,
+  ) => WasmPointer;
+  sqlite3_js_aggregate_context: (
+    ctx: WasmPointer,
+    nBytes: number,
+  ) => WasmPointer;
+  sqlite3_js_vfs_create_file: (
+    vfs: string | WasmPointer | sqlite3_vfs,
+    name: string | WasmPointer,
+    data: undefined | WasmPointer | Uint8Array | ArrayBuffer,
+    dataLen?: number,
+  ) => void;
+  sqlite3_db_config: (
+    db: Database | WasmPointer,
+    op:
+      | CAPI['SQLITE_DBCONFIG_LOOKASIDE']
+      | CAPI['SQLITE_DBCONFIG_ENABLE_FKEY']
+      | CAPI['SQLITE_DBCONFIG_ENABLE_TRIGGER']
+      | CAPI['SQLITE_DBCONFIG_ENABLE_VIEW']
+      | CAPI['SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER']
+      | CAPI['SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION']
+      | CAPI['SQLITE_DBCONFIG_MAINDBNAME']
+      | CAPI['SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE']
+      | CAPI['SQLITE_DBCONFIG_ENABLE_QPSG']
+      | CAPI['SQLITE_DBCONFIG_TRIGGER_EQP']
+      | CAPI['SQLITE_DBCONFIG_RESET_DATABASE']
+      | CAPI['SQLITE_DBCONFIG_DEFENSIVE']
+      | CAPI['SQLITE_DBCONFIG_WRITABLE_SCHEMA']
+      | CAPI['SQLITE_DBCONFIG_LEGACY_ALTER_TABLE']
+      | CAPI['SQLITE_DBCONFIG_DQS_DML']
+      | CAPI['SQLITE_DBCONFIG_DQS_DDL']
+      | CAPI['SQLITE_DBCONFIG_TRUSTED_SCHEMA']
+      | CAPI['SQLITE_DBCONFIG_LEGACY_FILE_FORMAT'],
+    ...args: number[]
+  ) => number;
+  sqlite3_value_to_js(
+    sqliteValue: WasmPointer,
+    throwIfCannotConvert?: true,
+  ): SqlValue;
+  sqlite3_value_to_js(
+    sqliteValue: WasmPointer,
+    throwIfCannotConvert: false,
+  ): SqlValue | undefined;
+  sqlite3_values_to_js(
+    numVals: number,
+    sqliteValues: WasmPointer,
+    throwIfCannotConvert?: true,
+  ): SqlValue[];
+  sqlite3_values_to_js(
+    numVals: number,
+    sqliteValues: WasmPointer,
+    throwIfCannotConvert: false,
+  ): (SqlValue | undefined)[];
+  sqlite3_result_error_js: (ctx: WasmPointer, err: Error) => void;
+  sqlite3_result_js: (
+    ctx: WasmPointer,
+    val:
+      | Error
+      | null
+      | boolean
+      | number
+      | BigInt
+      | string
+      | Uint8Array
+      | Int8Array
+      | undefined,
+  ) => void;
+  sqlite3_column_js(
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+    throwIfCannotConvert?: true,
+  ): SqlValue;
+  sqlite3_column_js(
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+    throwIfCannotConvert: false,
+  ): SqlValue | undefined;
+  sqlite3_preupdate_new_js: (
+    db: Database | WasmPointer,
+    colIdx: number,
+  ) => SqlValue;
+  sqlite3_preupdate_old_js: (
+    db: Database | WasmPointer,
+    colIdx: number,
+  ) => SqlValue;
+  sqlite3changeset_new_js: (
+    pChangeSetIter: WasmPointer,
+    colIdx: number,
+  ) => SqlValue;
+  sqlite3changeset_old_js: (
+    pChangeSetIter: WasmPointer,
+    colIdx: number,
+  ) => SqlValue;
+  sqlite3_aggregate_context: (ctx: WasmPointer, nBytes: number) => WasmPointer;
+  sqlite3_bind_double: (
+    stmt: PreparedStatement | WasmPointer,
+    idx: number,
+    value: number,
+  ) => number;
+  sqlite3_bind_int: (
+    stmt: PreparedStatement | WasmPointer,
+    idx: number,
+    value: number,
+  ) => number;
+  sqlite3_bind_null: (
+    stmt: PreparedStatement | WasmPointer,
+    idx: number,
+  ) => number;
+  sqlite3_bind_parameter_count: (
+    stmt: PreparedStatement | WasmPointer,
+  ) => number;
+  sqlite3_bind_parameter_index: (
+    stmt: PreparedStatement | WasmPointer,
+    name: string | WasmPointer,
+  ) => number;
+  sqlite3_bind_pointer: (
+    stmt: PreparedStatement | WasmPointer,
+    idx: number,
+    value: WasmPointer,
+    type: string | WasmPointer,
+    dtor:
+      | (() => void)
+      | WasmPointer
+      | CAPI['SQLITE_STATIC']
+      | CAPI['SQLITE_TRANSIENT']
+      | CAPI['SQLITE_WASM_DEALLOC'],
+  ) => number;
+  sqlite3_busy_handler: (
+    db: Database | WasmPointer,
+    callback: ((cbArg: WasmPointer, nTries: number) => number) | WasmPointer,
+    cbArg: WasmPointer,
+  ) => number;
+  sqlite3_busy_timeout: (db: Database | WasmPointer, ms: number) => number;
+  sqlite3_changes: (db: Database | WasmPointer) => number;
+  sqlite3_clear_bindings: (db: Database | WasmPointer) => number;
+  sqlite3_collation_needed: (
+    db: Database | WasmPointer,
+    cbArg: WasmPointer,
+    callback:
+      | ((
+          cbArg: WasmPointer,
+          db: Database | WasmPointer,
+          eTextRep: number,
+          name: string | WasmPointer,
+        ) => void)
+      | WasmPointer,
+  ) => number;
+  sqlite3_column_blob: (
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+  ) => WasmPointer;
+  sqlite3_column_bytes: (
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+  ) => number;
+  sqlite3_column_count: (stmt: PreparedStatement | WasmPointer) => number;
+  sqlite3_column_double: (
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+  ) => number;
+  sqlite3_column_int: (
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+  ) => number;
+  sqlite3_column_name: (
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+  ) => string;
+  sqlite3_column_text: (
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+  ) => string;
+  sqlite3_column_type: (
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+  ) => number;
+  sqlite3_column_value: (
+    stmt: PreparedStatement | WasmPointer,
+    colIdx: number,
+  ) => WasmPointer;
+
+  sqlite3_commit_hook: (
+    db: Database | WasmPointer,
+    hook: ((cbArg: WasmPointer) => number) | WasmPointer,
+    cbArg: WasmPointer,
+  ) => void;
+  sqlite3_compileoption_get: (idx: number) => string;
+  sqlite3_compileoption_used: (optName: string) => number;
+  sqlite3_complete: (sql: string | WasmPointer) => number;
+  sqlite3_context_db_handle: (ctx: WasmPointer) => WasmPointer;
+  sqlite3_data_count: (stmt: PreparedStatement | WasmPointer) => number;
+  sqlite3_db_filename: (
+    db: Database | WasmPointer,
+    dbName: string | WasmPointer,
+  ) => string;
+  sqlite3_db_handle: (stmt: PreparedStatement | WasmPointer) => WasmPointer;
+  sqlite3_db_name: (db: Database | WasmPointer, dbIdx: number) => string;
+  sqlite3_db_status: (
+    db: Database | WasmPointer,
+    op:
+      | CAPI['SQLITE_DBSTATUS_LOOKASIDE_USED']
+      | CAPI['SQLITE_DBSTATUS_CACHE_USED']
+      | CAPI['SQLITE_DBSTATUS_SCHEMA_USED']
+      | CAPI['SQLITE_DBSTATUS_STMT_USED']
+      | CAPI['SQLITE_DBSTATUS_LOOKASIDE_HIT']
+      | CAPI['SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE']
+      | CAPI['SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL']
+      | CAPI['SQLITE_DBSTATUS_CACHE_HIT']
+      | CAPI['SQLITE_DBSTATUS_CACHE_MISS']
+      | CAPI['SQLITE_DBSTATUS_CACHE_WRITE']
+      | CAPI['SQLITE_DBSTATUS_DEFERRED_FKS']
+      | CAPI['SQLITE_DBSTATUS_CACHE_USED_SHARED']
+      | CAPI['SQLITE_DBSTATUS_CACHE_SPILL']
+      | CAPI['SQLITE_DBSTATUS_MAX'],
+    pCur: WasmPointer,
+    pHighWater: WasmPointer,
+    resetFlag: number,
+  ) => number;
+  sqlite3_errcode: (db: Database | WasmPointer) => number;
+  sqlite3_errmsg: (db: Database | WasmPointer) => string;
+  sqlite3_error_offset: (db: Database | WasmPointer) => number;
+  sqlite3_errstr: (rc: number) => string;
+  sqlite3_expanded_sql: (stmt: PreparedStatement | WasmPointer) => string;
+  sqlite3_extended_errcode: (db: Database | WasmPointer) => number;
+  sqlite3_extended_result_codes: (
+    db: Database | WasmPointer,
+    onoff: number,
+  ) => number;
+  sqlite3_file_control: (
+    db: Database | WasmPointer,
+    dbName: string | WasmPointer,
+    op:
+      | CAPI['SQLITE_FCNTL_BEGIN_ATOMIC_WRITE']
+      | CAPI['SQLITE_FCNTL_LOCKSTATE']
+      | CAPI['SQLITE_FCNTL_GET_LOCKPROXYFILE']
+      | CAPI['SQLITE_FCNTL_SET_LOCKPROXYFILE']
+      | CAPI['SQLITE_FCNTL_LAST_ERRNO']
+      | CAPI['SQLITE_FCNTL_SIZE_HINT']
+      | CAPI['SQLITE_FCNTL_CHUNK_SIZE']
+      | CAPI['SQLITE_FCNTL_FILE_POINTER']
+      | CAPI['SQLITE_FCNTL_SYNC_OMITTED']
+      | CAPI['SQLITE_FCNTL_WIN32_AV_RETRY']
+      | CAPI['SQLITE_FCNTL_PERSIST_WAL']
+      | CAPI['SQLITE_FCNTL_OVERWRITE']
+      | CAPI['SQLITE_FCNTL_VFSNAME']
+      | CAPI['SQLITE_FCNTL_POWERSAFE_OVERWRITE']
+      | CAPI['SQLITE_FCNTL_PRAGMA']
+      | CAPI['SQLITE_FCNTL_BUSYHANDLER']
+      | CAPI['SQLITE_FCNTL_TEMPFILENAME']
+      | CAPI['SQLITE_FCNTL_MMAP_SIZE']
+      | CAPI['SQLITE_FCNTL_TRACE']
+      | CAPI['SQLITE_FCNTL_HAS_MOVED']
+      | CAPI['SQLITE_FCNTL_SYNC']
+      | CAPI['SQLITE_FCNTL_COMMIT_PHASETWO']
+      | CAPI['SQLITE_FCNTL_WIN32_SET_HANDLE']
+      | CAPI['SQLITE_FCNTL_WAL_BLOCK']
+      | CAPI['SQLITE_FCNTL_ZIPVFS']
+      | CAPI['SQLITE_FCNTL_RBU']
+      | CAPI['SQLITE_FCNTL_VFS_POINTER']
+      | CAPI['SQLITE_FCNTL_JOURNAL_POINTER']
+      | CAPI['SQLITE_FCNTL_WIN32_GET_HANDLE']
+      | CAPI['SQLITE_FCNTL_PDB']
+      | CAPI['SQLITE_FCNTL_BEGIN_ATOMIC_WRITE']
+      | CAPI['SQLITE_FCNTL_COMMIT_ATOMIC_WRITE']
+      | CAPI['SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE']
+      | CAPI['SQLITE_FCNTL_LOCK_TIMEOUT']
+      | CAPI['SQLITE_FCNTL_DATA_VERSION']
+      | CAPI['SQLITE_FCNTL_SIZE_LIMIT']
+      | CAPI['SQLITE_FCNTL_CKPT_DONE']
+      | CAPI['SQLITE_FCNTL_RESERVE_BYTES']
+      | CAPI['SQLITE_FCNTL_CKPT_START']
+      | CAPI['SQLITE_FCNTL_EXTERNAL_READER']
+      | CAPI['SQLITE_FCNTL_CKSM_FILE']
+      | CAPI['SQLITE_FCNTL_RESET_CACHE'],
+    arg: WasmPointer,
+  ) => number;
+  sqlite3_finalize: (stmt: PreparedStatement | WasmPointer) => number;
+  sqlite3_free: (ptr: WasmPointer) => void;
+  sqlite3_get_auxdata: (ctx: WasmPointer, n: number) => WasmPointer;
+  sqlite3_initialize: () => number;
+  sqlite3_keyword_count: () => number;
+  sqlite3_keyword_name: (
+    i: number,
+    pOut: WasmPointer,
+    pOutLen: WasmPointer,
+  ) => number;
+  sqlite3_keyword_check: (name: string | WasmPointer, n: number) => number;
+  sqlite3_libversion: () => string;
+  sqlite3_libversion_number: () => number;
+  sqlite3_limit: (
+    db: Database | WasmPointer,
+    id: number,
+    newVal: number,
+  ) => number;
+  sqlite3_malloc: (size: number) => WasmPointer;
+  sqlite3_open: (filename: string | WasmPointer, ppDb: WasmPointer) => number;
+  sqlite3_open_v2: (
+    filename: string | WasmPointer,
+    ppDb: WasmPointer,
+    flags: number,
+    vfs: string | WasmPointer,
+  ) => number;
+  sqlite3_progress_handler: (
+    db: Database | WasmPointer,
+    nOps: number,
+    callback: ((cbArg: WasmPointer) => number) | WasmPointer,
+    cbArg: WasmPointer,
+  ) => void;
+  sqlite3_realloc: (ptr: WasmPointer, size: number) => WasmPointer;
+  sqlite3_reset: (stmt: PreparedStatement | WasmPointer) => number;
+
+  sqlite3_result_blob: (
+    ctx: WasmPointer,
+    blob: WasmPointer,
+    blobLen: number,
+    dtor:
+      | (() => void)
+      | WasmPointer
+      | CAPI['SQLITE_STATIC']
+      | CAPI['SQLITE_TRANSIENT']
+      | CAPI['SQLITE_WASM_DEALLOC'],
+  ) => void;
+  sqlite3_result_double: (ctx: WasmPointer, value: number) => void;
+  sqlite3_result_error: (
+    ctx: WasmPointer,
+    msg: string | WasmPointer,
+    msgLen: number,
+  ) => void;
+  sqlite3_result_error_code: (ctx: WasmPointer, code: number) => void;
+  sqlite3_result_error_nomem: (ctx: WasmPointer) => void;
+  sqlite3_result_error_toobig: (ctx: WasmPointer) => void;
+  sqlite3_result_int: (ctx: WasmPointer, value: number) => void;
+  sqlite3_result_null: (ctx: WasmPointer) => void;
+  sqlite3_result_pointer: (
+    ctx: WasmPointer,
+    value: WasmPointer,
+    type: string | WasmPointer,
+    dtor:
+      | (() => void)
+      | WasmPointer
+      | CAPI['SQLITE_STATIC']
+      | CAPI['SQLITE_TRANSIENT']
+      | CAPI['SQLITE_WASM_DEALLOC'],
+  ) => void;
+  sqlite3_result_subtype: (ctx: WasmPointer, subtype: number) => void;
+  sqlite3_result_text: (
+    ctx: WasmPointer,
+    text: string | WasmPointer,
+    textLen: number,
+    dtor:
+      | (() => void)
+      | WasmPointer
+      | CAPI['SQLITE_STATIC']
+      | CAPI['SQLITE_TRANSIENT']
+      | CAPI['SQLITE_WASM_DEALLOC'],
+  ) => void;
+  sqlite3_result_zeroblob: (ctx: WasmPointer, blobLen: number) => void;
+
+  sqlite3_rollback_hook: (
+    db: Database | WasmPointer,
+    hook: ((cbArg: WasmPointer) => number) | WasmPointer,
+    cbArg: WasmPointer,
+  ) => void;
+  sqlite3_set_authorizer: (
+    db: Database | WasmPointer,
+    xAuth: (
+      cbArg: WasmPointer,
+      actionCode: number,
+      arg1: string | 0,
+      arg2: string | 0,
+      arg3: string | 0,
+      arg4: string | 0,
+    ) => number,
+    cbArg: WasmPointer,
+  ) => number;
+  sqlite3_set_auxdata: (
+    ctx: WasmPointer,
+    n: number,
+    pAux: WasmPointer,
+    xDelete: (() => void) | WasmPointer,
+  ) => void;
+  sqlite3_shutdown: () => number;
+  sqlite3_sourceid: () => string;
+  sqlite3_sql: (stmt: PreparedStatement | WasmPointer) => string;
+  sqlite3_status: (
+    op:
+      | CAPI['SQLITE_STATUS_MEMORY_USED']
+      | CAPI['SQLITE_STATUS_MALLOC_SIZE']
+      | CAPI['SQLITE_STATUS_MALLOC_COUNT']
+      | CAPI['SQLITE_STATUS_PAGECACHE_USED']
+      | CAPI['SQLITE_STATUS_PAGECACHE_OVERFLOW']
+      | CAPI['SQLITE_STATUS_PAGECACHE_SIZE']
+      | CAPI['SQLITE_STATUS_SCRATCH_USED']
+      | CAPI['SQLITE_STATUS_SCRATCH_OVERFLOW']
+      | CAPI['SQLITE_STATUS_SCRATCH_SIZE'],
+    pCurrent: WasmPointer,
+    pHighwater: WasmPointer,
+    resetFlag: number,
+  ) => number;
+  sqlite3_step: (stmt: PreparedStatement | WasmPointer) => number;
+  sqlite3_stmt_isexplain: (stmt: PreparedStatement | WasmPointer) => number;
+  sqlite3_stmt_readonly: (stmt: PreparedStatement | WasmPointer) => number;
+  sqlite3_stmt_status: (
+    stmt: PreparedStatement | WasmPointer,
+    op:
+      | CAPI['SQLITE_STMTSTATUS_FULLSCAN_STEP']
+      | CAPI['SQLITE_STMTSTATUS_SORT']
+      | CAPI['SQLITE_STMTSTATUS_AUTOINDEX']
+      | CAPI['SQLITE_STMTSTATUS_VM_STEP']
+      | CAPI['SQLITE_STMTSTATUS_REPREPARE']
+      | CAPI['SQLITE_STMTSTATUS_RUN']
+      | CAPI['SQLITE_STMTSTATUS_FILTER_MISS']
+      | CAPI['SQLITE_STMTSTATUS_FILTER_HIT']
+      | CAPI['SQLITE_STMTSTATUS_MEMUSED'],
+    resetFlag: number,
+  ) => number;
+  sqlite3_strglob: (
+    glob: string | WasmPointer,
+    str: string | WasmPointer,
+  ) => number;
+  sqlite3_stricmp: (
+    str1: string | WasmPointer,
+    str2: string | WasmPointer,
+  ) => number;
+  sqlite3_strlike: (
+    glob: string | WasmPointer,
+    str: string | WasmPointer,
+    esc: number,
+  ) => number;
+  sqlite3_strnicmp: (
+    str1: string | WasmPointer,
+    str2: string | WasmPointer,
+    n: number,
+  ) => number;
+  sqlite3_table_column_metadata: (
+    db: Database | WasmPointer,
+    dbName: string | WasmPointer,
+    tblName: string | WasmPointer,
+    colName: string | WasmPointer,
+    pDataType: WasmPointer,
+    pCollSeq: WasmPointer,
+    pNotNull: WasmPointer,
+    pPrimaryKey: WasmPointer,
+    pAutoinc: WasmPointer,
+  ) => number;
+  sqlite3_total_changes: (db: Database | WasmPointer) => number;
+  sqlite3_trace_v2: (
+    db: Database | WasmPointer,
+    mask: number,
+    xCallback: (
+      reason:
+        | CAPI['SQLITE_TRACE_CLOSE']
+        | CAPI['SQLITE_TRACE_PROFILE']
+        | CAPI['SQLITE_TRACE_ROW']
+        | CAPI['SQLITE_TRACE_STMT'],
+      cbArg: WasmPointer,
+      arg1: WasmPointer,
+      arg2: WasmPointer,
+    ) => number,
+  ) => number;
+  sqlite3_txn_state: (
+    db: Database | WasmPointer,
+    schema: string | WasmPointer,
+  ) =>
+    | CAPI['SQLITE_TXN_NONE']
+    | CAPI['SQLITE_TXN_READ']
+    | CAPI['SQLITE_TXN_WRITE']
+    | -1;
+  sqlite3_uri_boolean: (
+    uri: string | WasmPointer,
+    param: string | WasmPointer,
+    dflt: number,
+  ) => number;
+  sqlite3_uri_key: (uri: string | WasmPointer, idx: number) => string;
+  sqlite3_uri_parameter: (
+    uri: string | WasmPointer,
+    param: string | WasmPointer,
+  ) => string;
+  sqlite3_user_data: (ctx: WasmPointer) => WasmPointer;
+
+  sqlite3_value_blob: (sqliteValue: WasmPointer) => WasmPointer;
+  sqlite3_value_bytes: (sqliteValue: WasmPointer) => number;
+  sqlite3_value_double: (sqliteValue: WasmPointer) => number;
+  sqlite3_value_dup: (sqliteValue: WasmPointer) => WasmPointer;
+  sqlite3_value_free: (sqliteValue: WasmPointer) => void;
+  sqlite3_value_frombind: (sqliteValue: WasmPointer) => number;
+  sqlite3_value_int: (sqliteValue: WasmPointer) => number;
+  sqlite3_value_nochange: (sqliteValue: WasmPointer) => number;
+  sqlite3_value_numeric_type: (sqliteValue: WasmPointer) => number;
+  sqlite3_value_pointer: (
+    sqliteValue: WasmPointer,
+    type: string | WasmPointer,
+  ) => WasmPointer;
+  sqlite3_value_subtype: (sqliteValue: WasmPointer) => number;
+  sqlite3_value_text: (sqliteValue: WasmPointer) => string;
+  sqlite3_value_type: (sqliteValue: WasmPointer) => number;
+  sqlite3_value_int64: (sqliteValue: WasmPointer) => BigInt;
+
+  sqlite3_vfs_find: (vfsName: string) => sqlite3_vfs;
+  sqlite3_vfs_register: (
+    vfs: sqlite3_vfs | WasmPointer,
+    makeDflt: number,
+  ) => number;
+  sqlite3_vfs_unregister: (vfs: sqlite3_vfs | WasmPointer) => number;
+  sqlite3_bind_int64: (stmt: WasmPointer, idx: number, value: BigInt) => number;
+  sqlite3_changes64: (db: Database | WasmPointer) => BigInt;
+  sqlite3_column_int64: (db: Database | WasmPointer, colIdx: number) => BigInt;
+  sqlite3_create_module: (
+    db: Database | WasmPointer,
+    name: string,
+    module: WasmPointer | sqlite3_module,
+    clientData: WasmPointer,
+  ) => number;
+  sqlite3_create_module_v2: (
+    db: Database | WasmPointer,
+    name: string,
+    module: WasmPointer | sqlite3_module,
+    clientData: WasmPointer,
+    destroy?: () => void,
+  ) => number;
+  sqlite3_declare_vtab: (
+    db: Database | WasmPointer,
+    sql: string | WasmPointer,
+  ) => number;
+  sqlite3_deserialize: (
+    db: Database | WasmPointer,
+    schema: string | WasmPointer,
+    data: Uint8Array | Int8Array | ArrayBuffer | WasmPointer,
+    dbSize: number,
+    bufferSize: number,
+    flags: number,
+  ) => number;
+  sqlite3_drop_modules: (
+    db: Database | WasmPointer,
+    azKeep: WasmPointer,
+  ) => number;
+  sqlite3_last_insert_rowid: (db: Database | WasmPointer) => BigInt;
+  sqlite3_malloc64: (numBytes: BigInt) => WasmPointer;
+  sqlite3_msize: (ptr: WasmPointer) => BigInt;
+  sqlite3_overload_function: (
+    db: Database | WasmPointer,
+    funcName: string,
+    nArgs: number,
+  ) => number;
+
+  sqlite3_preupdate_blobwrite: (db: Database | WasmPointer) => number;
+  sqlite3_preupdate_count: (db: Database | WasmPointer) => number;
+  sqlite3_preupdate_depth: (db: Database | WasmPointer) => number;
+  sqlite3_preupdate_hook: (
+    db: Database | WasmPointer,
+    xPreUpdate: (
+      ctx: WasmPointer,
+      db: WasmPointer,
+      op: CAPI['SQLITE_UPDATE'] | CAPI['SQLITE_DELETE'] | CAPI['SQLITE_INSERT'],
+      dbName: string,
+      tableName: string,
+      oldRowid: BigInt,
+      newRowid: BigInt,
+    ) => void,
+  ) => void;
+  sqlite3_preupdate_new: (
+    db: Database | WasmPointer,
+    colIdx: number,
+    sqlValues: WasmPointer,
+  ) => number;
+  sqlite3_preupdate_old: (
+    db: Database | WasmPointer,
+    colIdx: number,
+    sqlValues: WasmPointer,
+  ) => number;
+
+  sqlite3_realloc64: (ptr: WasmPointer, numBytes: BigInt) => WasmPointer;
+  sqlite3_result_int64: (ctx: WasmPointer, value: BigInt) => void;
+  sqlite3_result_zeroblob64: (ctx: WasmPointer, blobLen: BigInt) => void;
+  sqlite3_serialize: (
+    db: Database | WasmPointer,
+    schema: string | WasmPointer,
+    piSize: WasmPointer,
+    flags: number,
+  ) => WasmPointer;
+  sqlite3_set_last_insert_rowid: (
+    db: Database | WasmPointer,
+    rowid: BigInt,
+  ) => void;
+  sqlite3_status64: (
+    op:
+      | CAPI['SQLITE_STATUS_MALLOC_COUNT']
+      | CAPI['SQLITE_STATUS_MALLOC_SIZE']
+      | CAPI['SQLITE_STATUS_PARSER_STACK']
+      | CAPI['SQLITE_STATUS_PAGECACHE_USED']
+      | CAPI['SQLITE_STATUS_PAGECACHE_OVERFLOW']
+      | CAPI['SQLITE_STATUS_PAGECACHE_SIZE']
+      | CAPI['SQLITE_STATUS_MEMORY_USED'],
+    pCurrent: WasmPointer,
+    pHighwater: WasmPointer,
+    resetFlag: number,
+  ) => number;
+  sqlite3_total_changes64: (db: Database | WasmPointer) => BigInt;
+  sqlite3_update_hook: (
+    db: Database | WasmPointer,
+    xUpdate: (
+      userCtx: WasmPointer,
+      op: CAPI['SQLITE_UPDATE'] | CAPI['SQLITE_DELETE'] | CAPI['SQLITE_INSERT'],
+      dbName: string,
+      tableName: string,
+      newRowId: BigInt,
+    ) => void,
+    userCtx: WasmPointer,
+  ) => void;
+  sqlite3_uri_int64: (
+    uri: string | WasmPointer,
+    paramName: string | WasmPointer,
+    defaultVal: BigInt,
+  ) => BigInt;
+
+  sqlite3_vtab_collation: (
+    indexInfo: sqlite3_index_info | WasmPointer,
+    constraintidx: number,
+  ) => string;
+  sqlite3_vtab_distinct: (
+    indexInfo: sqlite3_index_info | WasmPointer,
+  ) => number;
+  sqlite3_vtab_in: (
+    indexInfo: sqlite3_index_info | WasmPointer,
+    iCons: number,
+    bhandle: number,
+  ) => number;
+  sqlite3_vtab_in_first: (
+    sqlValue: WasmPointer,
+    outValues: WasmPointer,
+  ) => number;
+  sqlite3_vtab_in_next: (
+    sqlValue: WasmPointer,
+    outValues: WasmPointer,
+  ) => number;
+  sqlite3_vtab_nochange: (ctx: WasmPointer) => number;
+  sqlite3_vtab_on_conflict: (db: Database | WasmPointer) => number;
+  sqlite3_vtab_rhs_value: (
+    indexInfo: sqlite3_index_info | WasmPointer,
+    constraintIdx: number,
+    outValues: WasmPointer,
+  ) => number;
+
+  sqlite3changegroup_add: (
+    changeGrp: WasmPointer,
+    nData: number,
+    data: WasmPointer,
+  ) => number;
+  sqlite3changegroup_add_strm: (
+    changeGrp: WasmPointer,
+    xInput: (
+      pIn: WasmPointer,
+      pData: WasmPointer,
+      pnData: WasmPointer,
+    ) => number,
+    pIn: WasmPointer,
+  ) => number;
+  sqlite3changegroup_delete: (changeGrp: WasmPointer) => number;
+  sqlite3changegroup_new: (ppOut: WasmPointer) => number;
+  sqlite3changegroup_output: (
+    changeGrp: WasmPointer,
+    pnData: WasmPointer,
+    ppData: WasmPointer,
+  ) => number;
+  sqlite3changegroup_output_strm: (
+    changeGrp: WasmPointer,
+    xOutput: (pOut: WasmPointer, pData: WasmPointer, nData: number) => number,
+    pOut: WasmPointer,
+  ) => number;
+
+  sqlite3changeset_apply: (
+    db: Database | WasmPointer,
+    nChangeset: number,
+    pChangeSet: WasmPointer,
+    xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
+    xConflict:
+      | ((
+          pCtx: WasmPointer,
+          eConflict: number /* TODO: Can be more specific? */,
+        ) =>
+          | CAPI['SQLITE_CHANGESET_OMIT']
+          | CAPI['SQLITE_CHANGESET_ABORT']
+          | CAPI['SQLITE_CHANGESET_REPLACE'])
+      | WasmPointer,
+    pCtx: WasmPointer,
+  ) => number;
+  sqlite3changeset_apply_strm: (
+    db: Database | WasmPointer,
+    xInput:
+      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
+      | WasmPointer,
+    pIn: WasmPointer,
+    xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
+    xConflict:
+      | ((
+          pCtx: WasmPointer,
+          eConflict: number /* TODO: Can be more specific? */,
+        ) => number)
+      | WasmPointer,
+    pCtx: WasmPointer,
+  ) => number;
+  sqlite3changeset_apply_v2: (
+    db: Database | WasmPointer,
+    nChangeset: number,
+    pChangeset: WasmPointer,
+    xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
+    xConflict:
+      | ((
+          pCtx: WasmPointer,
+          eConflict: number /* TODO: Can be more specific? */,
+        ) =>
+          | CAPI['SQLITE_CHANGESET_OMIT']
+          | CAPI['SQLITE_CHANGESET_ABORT']
+          | CAPI['SQLITE_CHANGESET_REPLACE'])
+      | WasmPointer,
+    pCtx: WasmPointer,
+    ppRebase: WasmPointer,
+    pnRebase: WasmPointer,
+    flags: number,
+  ) => number;
+  sqlite3changeset_apply_v2_strm: (
+    db: Database | WasmPointer,
+    xInput:
+      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
+      | WasmPointer,
+    pIn: WasmPointer,
+    xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
+    xConflict:
+      | ((
+          pCtx: WasmPointer,
+          eConflict: number /* TODO: Can be more specific? */,
+        ) => number)
+      | WasmPointer,
+    pCtx: WasmPointer,
+    ppRebase: WasmPointer,
+    pnRebase: WasmPointer,
+    flags: number,
+  ) => number;
+  sqlite3changeset_concat: (
+    nA: number,
+    pA: WasmPointer,
+    nB: number,
+    pB: WasmPointer,
+    pnOut: WasmPointer,
+    ppOut: WasmPointer,
+  ) => number;
+  sqlite3changeset_concat_strm: (
+    xInputA:
+      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
+      | WasmPointer,
+    pInA: WasmPointer,
+    xInputB:
+      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
+      | WasmPointer,
+    pInB: WasmPointer,
+    xOutput:
+      | ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number)
+      | WasmPointer,
+    pOut: WasmPointer,
+  ) => number;
+  sqlite3changeset_conflict: (
+    pIter: WasmPointer,
+    colNum: number,
+    ppValue: WasmPointer,
+  ) => number;
+  sqlite3changeset_finalize: (pIter: WasmPointer) => number;
+  sqlite3changeset_fk_conflicts: (
+    pIter: WasmPointer,
+    pnOut: WasmPointer,
+  ) => number;
+  sqlite3changeset_invert: (
+    nIn: number,
+    pIn: WasmPointer,
+    pnOut: WasmPointer,
+    ppOut: WasmPointer,
+  ) => number;
+  sqlite3changeset_invert_strm: (
+    xInput:
+      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
+      | WasmPointer,
+    pIn: WasmPointer,
+    xOutput:
+      | ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number)
+      | WasmPointer,
+    pOut: WasmPointer,
+  ) => number;
+  sqlite3changeset_new: (
+    pIter: WasmPointer,
+    colNum: number,
+    ppValue: WasmPointer,
+  ) => number;
+  sqlite3changeset_next: (pIter: WasmPointer) => number;
+  sqlite3changeset_old: (
+    pIter: WasmPointer,
+    colNum: number,
+    ppValue: WasmPointer,
+  ) => number;
+  sqlite3changeset_op: (
+    pIter: WasmPointer,
+    pzTab: WasmPointer,
+    pnCol: WasmPointer,
+    pOp: WasmPointer,
+    pbIndirect: WasmPointer,
+  ) => number;
+  sqlite3changeset_pk: (
+    pIter: WasmPointer,
+    pabPK: WasmPointer,
+    pnCol: WasmPointer,
+  ) => number;
+  sqlite3changeset_start: (
+    ppIter: WasmPointer,
+    nChangeset: number,
+    pChangeset: WasmPointer,
+  ) => number;
+  sqlite3changeset_start_strm: (
+    ppIter: WasmPointer,
+    xInput:
+      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
+      | WasmPointer,
+    pIn: WasmPointer,
+  ) => number;
+  sqlite3changeset_start_v2: (
+    ppIter: WasmPointer,
+    nChangeset: number,
+    pChangeset: WasmPointer,
+    flags: number,
+  ) => number;
+  sqlite3changeset_start_v2_strm: (
+    ppIter: WasmPointer,
+    xInput:
+      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
+      | WasmPointer,
+    pIn: WasmPointer,
+    flags: number,
+  ) => number;
+
+  sqlite3session_attach: (pSession: WasmPointer, tableName: string) => number;
+  sqlite3session_changeset: (
+    pSession: WasmPointer,
+    pnChangeset: WasmPointer,
+    ppChangeset: WasmPointer,
+  ) => number;
+  sqlite3session_changeset_size: (pSession: WasmPointer) => number;
+  sqlite3session_changeset_strm: (
+    pSession: WasmPointer,
+    xOutput:
+      | ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number)
+      | WasmPointer,
+    pOut: WasmPointer,
+  ) => number;
+  sqlite3session_config: (
+    op: CAPI['SQLITE_SESSION_CONFIG_STRMSIZE'],
+    pArg: WasmPointer,
+  ) => number;
+  sqlite3session_create: (
+    db: Database | WasmPointer,
+    dbName: string,
+    ppSession: WasmPointer,
+  ) => number;
+  sqlite3session_diff: (
+    pSession: WasmPointer,
+    fromDb: string,
+    tableName: string,
+    pzErrMsg: WasmPointer,
+  ) => number;
+  sqlite3session_enable: (pSession: WasmPointer, bEnable: number) => number;
+  sqlite3session_indirect: (pSession: WasmPointer, bIndirect: number) => number;
+  sqlite3session_isempty: (pSession: WasmPointer) => number;
+  sqlite3session_memory_used: (pSession: WasmPointer) => number;
+  sqlite3session_object_config: (pSession: WasmPointer, op: number) => number;
+  sqlite3session_patchset: (
+    pSession: WasmPointer,
+    pnPatchset: WasmPointer,
+    ppPatchset: WasmPointer,
+  ) => number;
+  sqlite3session_patchset_strm: (
+    pSession: WasmPointer,
+    xOutput:
+      | ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number)
+      | WasmPointer,
+    pOut: WasmPointer,
+  ) => number;
+  sqlite3session_table_filter: (
+    pSession: WasmPointer,
+    xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
+    pCtx: WasmPointer,
+  ) => void;
+
+  SQLITE_ACCESS_EXISTS: 0;
+  SQLITE_ACCESS_READWRITE: 1;
+  SQLITE_ACCESS_READ: 2;
+  SQLITE_DENY: 1;
+  SQLITE_IGNORE: 2;
+  SQLITE_CREATE_INDEX: 1;
+  SQLITE_CREATE_TABLE: 2;
+  SQLITE_CREATE_TEMP_INDEX: 3;
+  SQLITE_CREATE_TEMP_TABLE: 4;
+  SQLITE_CREATE_TEMP_TRIGGER: 5;
+  SQLITE_CREATE_TEMP_VIEW: 6;
+  SQLITE_CREATE_TRIGGER: 7;
+  SQLITE_CREATE_VIEW: 8;
+  SQLITE_DELETE: 9;
+  SQLITE_DROP_INDEX: 10;
+  SQLITE_DROP_TABLE: 11;
+  SQLITE_DROP_TEMP_INDEX: 12;
+  SQLITE_DROP_TEMP_TABLE: 13;
+  SQLITE_DROP_TEMP_TRIGGER: 14;
+  SQLITE_DROP_TEMP_VIEW: 15;
+  SQLITE_DROP_TRIGGER: 16;
+  SQLITE_DROP_VIEW: 17;
+  SQLITE_INSERT: 18;
+  SQLITE_PRAGMA: 19;
+  SQLITE_READ: 20;
+  SQLITE_SELECT: 21;
+  SQLITE_TRANSACTION: 22;
+  SQLITE_UPDATE: 23;
+  SQLITE_ATTACH: 24;
+  SQLITE_DETACH: 25;
+  SQLITE_ALTER_TABLE: 26;
+  SQLITE_REINDEX: 27;
+  SQLITE_ANALYZE: 28;
+  SQLITE_CREATE_VTABLE: 29;
+  SQLITE_DROP_VTABLE: 30;
+  SQLITE_FUNCTION: 31;
+  SQLITE_SAVEPOINT: 32;
+  SQLITE_RECURSIVE: 33;
+  SQLITE_STATIC: 0;
+  SQLITE_TRANSIENT: -1;
+  SQLITE_WASM_DEALLOC: 1;
+  SQLITE_CHANGESETSTART_INVERT: 2;
+  SQLITE_CHANGESETAPPLY_NOSAVEPOINT: 1;
+  SQLITE_CHANGESETAPPLY_INVERT: 2;
+  SQLITE_CHANGESET_DATA: 1;
+  SQLITE_CHANGESET_NOTFOUND: 2;
+  SQLITE_CHANGESET_CONFLICT: 3;
+  SQLITE_CHANGESET_CONSTRAINT: 4;
+  SQLITE_CHANGESET_FOREIGN_KEY: 5;
+  SQLITE_CHANGESET_OMIT: 0;
+  SQLITE_CHANGESET_REPLACE: 1;
+  SQLITE_CHANGESET_ABORT: 2;
+  SQLITE_CONFIG_SINGLETHREAD: 1;
+  SQLITE_CONFIG_MULTITHREAD: 2;
+  SQLITE_CONFIG_SERIALIZED: 3;
+  SQLITE_CONFIG_MALLOC: 4;
+  SQLITE_CONFIG_GETMALLOC: 5;
+  SQLITE_CONFIG_SCRATCH: 6;
+  SQLITE_CONFIG_PAGECACHE: 7;
+  SQLITE_CONFIG_HEAP: 8;
+  SQLITE_CONFIG_MEMSTATUS: 9;
+  SQLITE_CONFIG_MUTEX: 10;
+  SQLITE_CONFIG_GETMUTEX: 11;
+  SQLITE_CONFIG_LOOKASIDE: 13;
+  SQLITE_CONFIG_PCACHE: 14;
+  SQLITE_CONFIG_GETPCACHE: 15;
+  SQLITE_CONFIG_LOG: 16;
+  SQLITE_CONFIG_URI: 17;
+  SQLITE_CONFIG_PCACHE2: 18;
+  SQLITE_CONFIG_GETPCACHE2: 19;
+  SQLITE_CONFIG_COVERING_INDEX_SCAN: 20;
+  SQLITE_CONFIG_SQLLOG: 21;
+  SQLITE_CONFIG_MMAP_SIZE: 22;
+  SQLITE_CONFIG_WIN32_HEAPSIZE: 23;
+  SQLITE_CONFIG_PCACHE_HDRSZ: 24;
+  SQLITE_CONFIG_PMASZ: 25;
+  SQLITE_CONFIG_STMTJRNL_SPILL: 26;
+  SQLITE_CONFIG_SMALL_MALLOC: 27;
+  SQLITE_CONFIG_SORTERREF_SIZE: 28;
+  SQLITE_CONFIG_MEMDB_MAXSIZE: 29;
+  SQLITE_INTEGER: 1;
+  SQLITE_FLOAT: 2;
+  SQLITE_TEXT: 3;
+  SQLITE_BLOB: 4;
+  SQLITE_NULL: 5;
+  SQLITE_DBCONFIG_MAINDBNAME: 1000;
+  SQLITE_DBCONFIG_LOOKASIDE: 1001;
+  SQLITE_DBCONFIG_ENABLE_FKEY: 1002;
+  SQLITE_DBCONFIG_ENABLE_TRIGGER: 1003;
+  SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER: 1004;
+  SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION: 1005;
+  SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE: 1006;
+  SQLITE_DBCONFIG_ENABLE_QPSG: 1007;
+  SQLITE_DBCONFIG_TRIGGER_EQP: 1008;
+  SQLITE_DBCONFIG_RESET_DATABASE: 1009;
+  SQLITE_DBCONFIG_DEFENSIVE: 1010;
+  SQLITE_DBCONFIG_WRITABLE_SCHEMA: 1011;
+  SQLITE_DBCONFIG_LEGACY_ALTER_TABLE: 1012;
+  SQLITE_DBCONFIG_DQS_DML: 1013;
+  SQLITE_DBCONFIG_DQS_DDL: 1014;
+  SQLITE_DBCONFIG_ENABLE_VIEW: 1015;
+  SQLITE_DBCONFIG_LEGACY_FILE_FORMAT: 1016;
+  SQLITE_DBCONFIG_TRUSTED_SCHEMA: 1017;
+  SQLITE_DBCONFIG_MAX: 1019;
+  SQLITE_DBSTATUS_LOOKASIDE_USED: 0;
+  SQLITE_DBSTATUS_CACHE_USED: 1;
+  SQLITE_DBSTATUS_SCHEMA_USED: 2;
+  SQLITE_DBSTATUS_STMT_USED: 3;
+  SQLITE_DBSTATUS_LOOKASIDE_HIT: 4;
+  SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE: 5;
+  SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL: 6;
+  SQLITE_DBSTATUS_CACHE_HIT: 7;
+  SQLITE_DBSTATUS_CACHE_MISS: 8;
+  SQLITE_DBSTATUS_CACHE_WRITE: 9;
+  SQLITE_DBSTATUS_DEFERRED_FKS: 10;
+  SQLITE_DBSTATUS_CACHE_USED_SHARED: 11;
+  SQLITE_DBSTATUS_CACHE_SPILL: 12;
+  SQLITE_DBSTATUS_MAX: 12;
+  SQLITE_UTF8: 1;
+  SQLITE_UTF16LE: 2;
+  SQLITE_UTF16BE: 3;
+  SQLITE_UTF16: 4;
+  SQLITE_UTF16_ALIGNED: 8;
+  SQLITE_FCNTL_LOCKSTATE: 1;
+  SQLITE_FCNTL_GET_LOCKPROXYFILE: 2;
+  SQLITE_FCNTL_SET_LOCKPROXYFILE: 3;
+  SQLITE_FCNTL_LAST_ERRNO: 4;
+  SQLITE_FCNTL_SIZE_HINT: 5;
+  SQLITE_FCNTL_CHUNK_SIZE: 6;
+  SQLITE_FCNTL_FILE_POINTER: 7;
+  SQLITE_FCNTL_SYNC_OMITTED: 8;
+  SQLITE_FCNTL_WIN32_AV_RETRY: 9;
+  SQLITE_FCNTL_PERSIST_WAL: 10;
+  SQLITE_FCNTL_OVERWRITE: 11;
+  SQLITE_FCNTL_VFSNAME: 12;
+  SQLITE_FCNTL_POWERSAFE_OVERWRITE: 13;
+  SQLITE_FCNTL_PRAGMA: 14;
+  SQLITE_FCNTL_BUSYHANDLER: 15;
+  SQLITE_FCNTL_TEMPFILENAME: 16;
+  SQLITE_FCNTL_MMAP_SIZE: 18;
+  SQLITE_FCNTL_TRACE: 19;
+  SQLITE_FCNTL_HAS_MOVED: 20;
+  SQLITE_FCNTL_SYNC: 21;
+  SQLITE_FCNTL_COMMIT_PHASETWO: 22;
+  SQLITE_FCNTL_WIN32_SET_HANDLE: 23;
+  SQLITE_FCNTL_WAL_BLOCK: 24;
+  SQLITE_FCNTL_ZIPVFS: 25;
+  SQLITE_FCNTL_RBU: 26;
+  SQLITE_FCNTL_VFS_POINTER: 27;
+  SQLITE_FCNTL_JOURNAL_POINTER: 28;
+  SQLITE_FCNTL_WIN32_GET_HANDLE: 29;
+  SQLITE_FCNTL_PDB: 30;
+  SQLITE_FCNTL_BEGIN_ATOMIC_WRITE: 31;
+  SQLITE_FCNTL_COMMIT_ATOMIC_WRITE: 32;
+  SQLITE_FCNTL_ROLLBACK_ATOMIC_WRITE: 33;
+  SQLITE_FCNTL_LOCK_TIMEOUT: 34;
+  SQLITE_FCNTL_DATA_VERSION: 35;
+  SQLITE_FCNTL_SIZE_LIMIT: 36;
+  SQLITE_FCNTL_CKPT_DONE: 37;
+  SQLITE_FCNTL_RESERVE_BYTES: 38;
+  SQLITE_FCNTL_CKPT_START: 39;
+  SQLITE_FCNTL_EXTERNAL_READER: 40;
+  SQLITE_FCNTL_CKSM_FILE: 41;
+  SQLITE_LOCK_NONE: 0;
+  SQLITE_LOCK_SHARED: 1;
+  SQLITE_LOCK_RESERVED: 2;
+  SQLITE_LOCK_PENDING: 3;
+  SQLITE_LOCK_EXCLUSIVE: 4;
+  SQLITE_IOCAP_ATOMIC: 1;
+  SQLITE_IOCAP_ATOMIC512: 2;
+  SQLITE_IOCAP_ATOMIC1K: 4;
+  SQLITE_IOCAP_ATOMIC2K: 8;
+  SQLITE_IOCAP_ATOMIC4K: 16;
+  SQLITE_IOCAP_ATOMIC8K: 32;
+  SQLITE_IOCAP_ATOMIC16K: 64;
+  SQLITE_IOCAP_ATOMIC32K: 128;
+  SQLITE_IOCAP_ATOMIC64K: 256;
+  SQLITE_IOCAP_SAFE_APPEND: 512;
+  SQLITE_IOCAP_SEQUENTIAL: 1024;
+  SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN: 2048;
+  SQLITE_IOCAP_POWERSAFE_OVERWRITE: 4096;
+  SQLITE_IOCAP_IMMUTABLE: 8192;
+  SQLITE_IOCAP_BATCH_ATOMIC: 16384;
+  SQLITE_MAX_ALLOCATION_SIZE: 536870911;
+  SQLITE_LIMIT_LENGTH: 0;
+  SQLITE_MAX_LENGTH: 1000000000;
+  SQLITE_LIMIT_SQL_LENGTH: 1;
+  SQLITE_MAX_SQL_LENGTH: 1000000000;
+  SQLITE_LIMIT_COLUMN: 2;
+  SQLITE_MAX_COLUMN: 2000;
+  SQLITE_LIMIT_EXPR_DEPTH: 3;
+  SQLITE_MAX_EXPR_DEPTH: 1000;
+  SQLITE_LIMIT_COMPOUND_SELECT: 4;
+  SQLITE_MAX_COMPOUND_SELECT: 500;
+  SQLITE_LIMIT_VDBE_OP: 5;
+  SQLITE_MAX_VDBE_OP: 250000000;
+  SQLITE_LIMIT_FUNCTION_ARG: 6;
+  SQLITE_MAX_FUNCTION_ARG: 127;
+  SQLITE_LIMIT_ATTACHED: 7;
+  SQLITE_MAX_ATTACHED: 10;
+  SQLITE_LIMIT_LIKE_PATTERN_LENGTH: 8;
+  SQLITE_MAX_LIKE_PATTERN_LENGTH: 50000;
+  SQLITE_LIMIT_VARIABLE_NUMBER: 9;
+  SQLITE_MAX_VARIABLE_NUMBER: 32766;
+  SQLITE_LIMIT_TRIGGER_DEPTH: 10;
+  SQLITE_MAX_TRIGGER_DEPTH: 1000;
+  SQLITE_LIMIT_WORKER_THREADS: 11;
+  SQLITE_MAX_WORKER_THREADS: 0;
+  SQLITE_OPEN_READONLY: 1;
+  SQLITE_OPEN_READWRITE: 2;
+  SQLITE_OPEN_CREATE: 4;
+  SQLITE_OPEN_URI: 64;
+  SQLITE_OPEN_MEMORY: 128;
+  SQLITE_OPEN_NOMUTEX: 32768;
+  SQLITE_OPEN_FULLMUTEX: 65536;
+  SQLITE_OPEN_SHAREDCACHE: 131072;
+  SQLITE_OPEN_PRIVATECACHE: 262144;
+  SQLITE_OPEN_EXRESCODE: 33554432;
+  SQLITE_OPEN_NOFOLLOW: 16777216;
+  SQLITE_OPEN_MAIN_DB: 256;
+  SQLITE_OPEN_MAIN_JOURNAL: 2048;
+  SQLITE_OPEN_TEMP_DB: 512;
+  SQLITE_OPEN_TEMP_JOURNAL: 4096;
+  SQLITE_OPEN_TRANSIENT_DB: 1024;
+  SQLITE_OPEN_SUBJOURNAL: 8192;
+  SQLITE_OPEN_SUPER_JOURNAL: 16384;
+  SQLITE_OPEN_WAL: 524288;
+  SQLITE_OPEN_DELETEONCLOSE: 8;
+  SQLITE_OPEN_EXCLUSIVE: 16;
+  SQLITE_PREPARE_PERSISTENT: 1;
+  SQLITE_PREPARE_NORMALIZE: 2;
+  SQLITE_PREPARE_NO_VTAB: 4;
+  SQLITE_OK: 0;
+  SQLITE_ERROR: 1;
+  SQLITE_INTERNAL: 2;
+  SQLITE_PERM: 3;
+  SQLITE_ABORT: 4;
+  SQLITE_BUSY: 5;
+  SQLITE_LOCKED: 6;
+  SQLITE_NOMEM: 7;
+  SQLITE_READONLY: 8;
+  SQLITE_INTERRUPT: 9;
+  SQLITE_IOERR: 10;
+  SQLITE_CORRUPT: 11;
+  SQLITE_NOTFOUND: 12;
+  SQLITE_FULL: 13;
+  SQLITE_CANTOPEN: 14;
+  SQLITE_PROTOCOL: 15;
+  SQLITE_EMPTY: 16;
+  SQLITE_SCHEMA: 17;
+  SQLITE_TOOBIG: 18;
+  SQLITE_CONSTRAINT: 19;
+  SQLITE_MISMATCH: 20;
+  SQLITE_MISUSE: 21;
+  SQLITE_NOLFS: 22;
+  SQLITE_AUTH: 23;
+  SQLITE_FORMAT: 24;
+  SQLITE_RANGE: 25;
+  SQLITE_NOTADB: 26;
+  SQLITE_NOTICE: 27;
+  SQLITE_WARNING: 28;
+  SQLITE_ROW: 100;
+  SQLITE_DONE: 101;
+  SQLITE_ERROR_MISSING_COLLSEQ: 257;
+  SQLITE_ERROR_RETRY: 513;
+  SQLITE_ERROR_SNAPSHOT: 769;
+  SQLITE_IOERR_READ: 266;
+  SQLITE_IOERR_SHORT_READ: 522;
+  SQLITE_IOERR_WRITE: 778;
+  SQLITE_IOERR_FSYNC: 1034;
+  SQLITE_IOERR_DIR_FSYNC: 1290;
+  SQLITE_IOERR_TRUNCATE: 1546;
+  SQLITE_IOERR_FSTAT: 1802;
+  SQLITE_IOERR_UNLOCK: 2058;
+  SQLITE_IOERR_RDLOCK: 2314;
+  SQLITE_IOERR_DELETE: 2570;
+  SQLITE_IOERR_BLOCKED: 2826;
+  SQLITE_IOERR_NOMEM: 3082;
+  SQLITE_IOERR_ACCESS: 3338;
+  SQLITE_IOERR_CHECKRESERVEDLOCK: 3594;
+  SQLITE_IOERR_LOCK: 3850;
+  SQLITE_IOERR_CLOSE: 4106;
+  SQLITE_IOERR_DIR_CLOSE: 4362;
+  SQLITE_IOERR_SHMOPEN: 4618;
+  SQLITE_IOERR_SHMSIZE: 4874;
+  SQLITE_IOERR_SHMLOCK: 5130;
+  SQLITE_IOERR_SHMMAP: 5386;
+  SQLITE_IOERR_SEEK: 5642;
+  SQLITE_IOERR_DELETE_NOENT: 5898;
+  SQLITE_IOERR_MMAP: 6154;
+  SQLITE_IOERR_GETTEMPPATH: 6410;
+  SQLITE_IOERR_CONVPATH: 6666;
+  SQLITE_IOERR_VNODE: 6922;
+  SQLITE_IOERR_AUTH: 7178;
+  SQLITE_IOERR_BEGIN_ATOMIC: 7434;
+  SQLITE_IOERR_COMMIT_ATOMIC: 7690;
+  SQLITE_IOERR_ROLLBACK_ATOMIC: 7946;
+  SQLITE_IOERR_DATA: 8202;
+  SQLITE_IOERR_CORRUPTFS: 8458;
+  SQLITE_LOCKED_SHAREDCACHE: 262;
+  SQLITE_LOCKED_VTAB: 518;
+  SQLITE_BUSY_RECOVERY: 261;
+  SQLITE_BUSY_SNAPSHOT: 517;
+  SQLITE_BUSY_TIMEOUT: 773;
+  SQLITE_CANTOPEN_NOTEMPDIR: 270;
+  SQLITE_CANTOPEN_ISDIR: 526;
+  SQLITE_CANTOPEN_FULLPATH: 782;
+  SQLITE_CANTOPEN_CONVPATH: 1038;
+  SQLITE_CANTOPEN_SYMLINK: 1550;
+  SQLITE_CORRUPT_VTAB: 267;
+  SQLITE_CORRUPT_SEQUENCE: 523;
+  SQLITE_CORRUPT_INDEX: 779;
+  SQLITE_READONLY_RECOVERY: 264;
+  SQLITE_READONLY_CANTLOCK: 520;
+  SQLITE_READONLY_ROLLBACK: 776;
+  SQLITE_READONLY_DBMOVED: 1032;
+  SQLITE_READONLY_CANTINIT: 1288;
+  SQLITE_READONLY_DIRECTORY: 1544;
+  SQLITE_ABORT_ROLLBACK: 516;
+  SQLITE_CONSTRAINT_CHECK: 275;
+  SQLITE_CONSTRAINT_COMMITHOOK: 531;
+  SQLITE_CONSTRAINT_FOREIGNKEY: 787;
+  SQLITE_CONSTRAINT_FUNCTION: 1043;
+  SQLITE_CONSTRAINT_NOTNULL: 1299;
+  SQLITE_CONSTRAINT_PRIMARYKEY: 1555;
+  SQLITE_CONSTRAINT_TRIGGER: 1811;
+  SQLITE_CONSTRAINT_UNIQUE: 2067;
+  SQLITE_CONSTRAINT_VTAB: 2323;
+  SQLITE_CONSTRAINT_ROWID: 2579;
+  SQLITE_CONSTRAINT_PINNED: 2835;
+  SQLITE_CONSTRAINT_DATATYPE: 3091;
+  SQLITE_NOTICE_RECOVER_WAL: 283;
+  SQLITE_NOTICE_RECOVER_ROLLBACK: 539;
+  SQLITE_WARNING_AUTOINDEX: 284;
+  SQLITE_AUTH_USER: 279;
+  SQLITE_OK_LOAD_PERMANENTLY: 256;
+  SQLITE_STATUS_MEMORY_USED: 0;
+  SQLITE_STATUS_PAGECACHE_USED: 1;
+  SQLITE_STATUS_PAGECACHE_OVERFLOW: 2;
+  SQLITE_STATUS_MALLOC_SIZE: 5;
+  SQLITE_STATUS_PARSER_STACK: 6;
+  SQLITE_STATUS_PAGECACHE_SIZE: 7;
+  SQLITE_STATUS_MALLOC_COUNT: 9;
+  SQLITE_STMTSTATUS_FULLSCAN_STEP: 1;
+  SQLITE_STMTSTATUS_SORT: 2;
+  SQLITE_STMTSTATUS_AUTOINDEX: 3;
+  SQLITE_STMTSTATUS_VM_STEP: 4;
+  SQLITE_STMTSTATUS_REPREPARE: 5;
+  SQLITE_STMTSTATUS_RUN: 6;
+  SQLITE_STMTSTATUS_FILTER_MISS: 7;
+  SQLITE_STMTSTATUS_FILTER_HIT: 8;
+  SQLITE_STMTSTATUS_MEMUSED: 99;
+  SQLITE_SYNC_NORMAL: 2;
+  SQLITE_SYNC_FULL: 3;
+  SQLITE_SYNC_DATAONLY: 16;
+  SQLITE_TRACE_STMT: 1;
+  SQLITE_TRACE_PROFILE: 2;
+  SQLITE_TRACE_ROW: 4;
+  SQLITE_TRACE_CLOSE: 8;
+  SQLITE_TXN_NONE: 0;
+  SQLITE_TXN_READ: 1;
+  SQLITE_TXN_WRITE: 2;
+  SQLITE_DETERMINISTIC: 2048;
+  SQLITE_DIRECTONLY: 524288;
+  SQLITE_INNOCUOUS: 2097152;
+  SQLITE_VERSION_NUMBER: 3043000;
+  SQLITE_VERSION: string;
+  SQLITE_SOURCE_ID: string;
+  SQLITE_SERIALIZE_NOCOPY: 1;
+  SQLITE_DESERIALIZE_FREEONCLOSE: 1;
+  SQLITE_DESERIALIZE_READONLY: 4;
+  SQLITE_DESERIALIZE_RESIZEABLE: 2;
+  SQLITE_SESSION_CONFIG_STRMSIZE: 1;
+  SQLITE_SESSION_OBJCONFIG_SIZE: 1;
+  SQLITE_INDEX_SCAN_UNIQUE: 1;
+  SQLITE_INDEX_CONSTRAINT_EQ: 2;
+  SQLITE_INDEX_CONSTRAINT_GT: 4;
+  SQLITE_INDEX_CONSTRAINT_LE: 8;
+  SQLITE_INDEX_CONSTRAINT_LT: 16;
+  SQLITE_INDEX_CONSTRAINT_GE: 32;
+  SQLITE_INDEX_CONSTRAINT_MATCH: 64;
+  SQLITE_INDEX_CONSTRAINT_LIKE: 65;
+  SQLITE_INDEX_CONSTRAINT_GLOB: 66;
+  SQLITE_INDEX_CONSTRAINT_REGEXP: 67;
+  SQLITE_INDEX_CONSTRAINT_NE: 68;
+  SQLITE_INDEX_CONSTRAINT_ISNOT: 69;
+  SQLITE_INDEX_CONSTRAINT_ISNOTNULL: 70;
+  SQLITE_INDEX_CONSTRAINT_ISNULL: 71;
+  SQLITE_INDEX_CONSTRAINT_IS: 72;
+  SQLITE_INDEX_CONSTRAINT_LIMIT: 73;
+  SQLITE_INDEX_CONSTRAINT_OFFSET: 74;
+  SQLITE_INDEX_CONSTRAINT_FUNCTION: 150;
+  SQLITE_VTAB_CONSTRAINT_SUPPORT: 1;
+  SQLITE_VTAB_INNOCUOUS: 2;
+  SQLITE_VTAB_DIRECTONLY: 3;
+  SQLITE_ROLLBACK: 1;
+  SQLITE_FAIL: 3;
+  SQLITE_REPLACE: 5;
+  sqlite3_js_rc_str: (rc: number) => string;
+  sqlite3_close_v2: (db: Database | WasmPointer) => number;
+  sqlite3session_delete: (
+    pSession: WasmPointer,
+  ) => number;
+  sqlite3_create_collation_v2: (
+    db: Database | WasmPointer,
+    zName: string,
+    eTextRep: number,
+    pArg: WasmPointer,
+    xCompare: ((pCtx: WasmPointer, len1: number, p1: WasmPointer, len2: number, p2: WasmPointer) => number) | WasmPointer,
+    xDestroy: ((pCtx: WasmPointer) => void) | WasmPointer,
+  ) => number;
+  sqlite3_create_collation: (
+    db: Database | WasmPointer,
+    zName: string,
+    eTextRep: number,
+    pArg: WasmPointer,
+    xCompare: ((pCtx: WasmPointer, len1: number, p1: WasmPointer, len2: number, p2: WasmPointer) => number) | WasmPointer,
+  ) => number;
+  sqlite3_config: (
+    op: number,
+    args: any,
+  ) => number;
+  sqlite3_auto_extension: (
+    xEntryPoint: ((
+      db: Database | WasmPointer,
+      pzErrMsg: WasmPointer,
+      pThunk:  WasmPointer
+    ) => number) | WasmPointer,
+  ) => number;
+  sqlite3_cancel_auto_extension: (
+    xEntryPoint: ((
+      db: Database | WasmPointer,
+      pzErrMsg: WasmPointer,
+      pThunk:  WasmPointer
+    ) => number) | WasmPointer,
+  ) => number;
+  sqlite3_reset_auto_extension: () => void;
 };
