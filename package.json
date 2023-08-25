@@ -21,12 +21,14 @@
     "sqlite-wasm/",
     "src/"
   ],
+  "types": "index.d.ts",
   "exports": {
     ".": {
       "types": "./index.d.ts",
       "import": "./index.mjs",
       "main": "./index.mjs",
-      "browser": "./index.mjs"
+      "browser": "./index.mjs",
+      "types": "./index.d.ts"
     },
     "./src/comlink.mjs": "./src/comlink.mjs",
     "./package.json": "./package.json"
