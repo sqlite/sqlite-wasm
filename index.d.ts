@@ -3158,7 +3158,13 @@ declare type CAPI = {
   sqlite3_bind_blob: (
     stmt: PreparedStatement | WasmPointer,
     idx: number,
-    blob: WasmPointer,
+    blob:
+      | WasmPointer
+      | string
+      | string[]
+      | Int8Array
+      | Uint8Array
+      | ArrayBuffer,
     n: number,
     dtor:
       | (() => void)
@@ -3170,7 +3176,13 @@ declare type CAPI = {
   sqlite3_bind_text: (
     stmt: PreparedStatement | WasmPointer,
     idx: number,
-    text: string,
+    text:
+      | string
+      | WasmPointer
+      | string[]
+      | Int8Array
+      | Uint8Array
+      | ArrayBuffer,
     n: number,
     dtor:
       | (() => void)
@@ -3183,55 +3195,63 @@ declare type CAPI = {
     db: Database | WasmPointer,
     functionName: string | WasmPointer,
     nArg: number,
-    eTextRep: number,
+    eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
     xFunc:
-      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => SqlValue)
       | WasmPointer,
     xStep:
       | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
       | WasmPointer,
-    xFinal: ((ctx: WasmPointer) => void) | WasmPointer,
+    xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
     xDestroy: (() => void) | WasmPointer,
   ) => number;
   sqlite3_create_function: (
     db: Database | WasmPointer,
     functionName: string | WasmPointer,
     nArg: number,
-    eTextRep: number,
+    eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
     xFunc:
-      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => SqlValue)
       | WasmPointer,
     xStep:
       | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
       | WasmPointer,
-    xFinal: ((ctx: WasmPointer) => void) | WasmPointer,
+    xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
   ) => number;
   sqlite3_create_window_function: (
     db: Database | WasmPointer,
     functionName: string | WasmPointer,
     nArg: number,
-    eTextRep: number,
+    eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
     xStep:
-      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => SqlValue)
       | WasmPointer,
-    xFinal: ((ctx: WasmPointer) => void) | WasmPointer,
+    xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
     xValue: ((ctx: WasmPointer) => void) | WasmPointer,
     xInverse:
       | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
       | WasmPointer,
     xDestroy: (() => void) | WasmPointer,
   ) => number;
-  sqlite3_prepare_v3: (
+  sqlite3_prepare_v3(
     db: Database | WasmPointer,
-    sql: string | WasmPointer,
+    sql: Exclude<FlexibleString, WasmPointer>,
+    nByte: -1,
+    prepFlags: number,
+    ppStmt: WasmPointer,
+    pzTail: null,
+  ): number;
+  sqlite3_prepare_v3(
+    db: Database | WasmPointer,
+    sql: WasmPointer,
     nByte: number,
     prepFlags: number,
     ppStmt: WasmPointer,
     pzTail: WasmPointer,
-  ) => number;
+  ): number;
   sqlite3_prepare_v2: (
     db: Database | WasmPointer,
     sql: string | WasmPointer,
@@ -3241,19 +3261,13 @@ declare type CAPI = {
   ) => number;
   sqlite3_exec: (
     db: Database | WasmPointer,
-    sql: string | WasmPointer,
-    callback:
-      | ((
-          cbArg: WasmPointer,
-          nColumns: number,
-          values: WasmPointer,
-          names: WasmPointer,
-        ) => number)
-      | WasmPointer,
+    sql: FlexibleString,
+    callback: ((values: SqlValue[], names: string[]) => number) | WasmPointer,
     cbArg: WasmPointer,
     pzErrMsg: WasmPointer,
   ) => number;
-  sqlite3_randomness: (N: number, P: WasmPointer) => void;
+  sqlite3_randomness(N: number, P: WasmPointer): void;
+  sqlite3_randomness<T extends Uint8Array | Int8Array>(arr: T): T;
   sqlite3_wasmfs_opfs_dir: () => string;
   sqlite3_wasmfs_filename_is_persistent: (name: string) => boolean;
   sqlite3_js_db_uses_vfs: (
@@ -3280,6 +3294,7 @@ declare type CAPI = {
     data: undefined | WasmPointer | Uint8Array | ArrayBuffer,
     dataLen?: number,
   ) => void;
+  // TODO: Type out the arguments for every option via overloading
   sqlite3_db_config: (
     db: Database | WasmPointer,
     op:
@@ -3659,10 +3674,7 @@ declare type CAPI = {
       | CAPI['SQLITE_STATUS_MALLOC_COUNT']
       | CAPI['SQLITE_STATUS_PAGECACHE_USED']
       | CAPI['SQLITE_STATUS_PAGECACHE_OVERFLOW']
-      | CAPI['SQLITE_STATUS_PAGECACHE_SIZE']
-      | CAPI['SQLITE_STATUS_SCRATCH_USED']
-      | CAPI['SQLITE_STATUS_SCRATCH_OVERFLOW']
-      | CAPI['SQLITE_STATUS_SCRATCH_SIZE'],
+      | CAPI['SQLITE_STATUS_PAGECACHE_SIZE'],
     pCurrent: WasmPointer,
     pHighwater: WasmPointer,
     resetFlag: number,
@@ -3768,10 +3780,10 @@ declare type CAPI = {
 
   sqlite3_vfs_find: (vfsName: string) => sqlite3_vfs;
   sqlite3_vfs_register: (
-    vfs: sqlite3_vfs | WasmPointer,
+    vfs: sqlite3_vfs | WasmPointer | string,
     makeDflt: number,
   ) => number;
-  sqlite3_vfs_unregister: (vfs: sqlite3_vfs | WasmPointer) => number;
+  sqlite3_vfs_unregister: (vfs: sqlite3_vfs | WasmPointer | string) => number;
   sqlite3_bind_int64: (stmt: WasmPointer, idx: number, value: BigInt) => number;
   sqlite3_changes64: (db: Database | WasmPointer) => BigInt;
   sqlite3_column_int64: (db: Database | WasmPointer, colIdx: number) => BigInt;
@@ -3795,7 +3807,7 @@ declare type CAPI = {
   sqlite3_deserialize: (
     db: Database | WasmPointer,
     schema: string | WasmPointer,
-    data: Uint8Array | Int8Array | ArrayBuffer | WasmPointer,
+    data: WasmPointer,
     dbSize: number,
     bufferSize: number,
     flags: number,
@@ -4556,41 +4568,63 @@ declare type CAPI = {
   SQLITE_REPLACE: 5;
   sqlite3_js_rc_str: (rc: number) => string;
   sqlite3_close_v2: (db: Database | WasmPointer) => number;
-  sqlite3session_delete: (
-    pSession: WasmPointer,
-  ) => number;
+  sqlite3session_delete: (pSession: WasmPointer) => number;
   sqlite3_create_collation_v2: (
     db: Database | WasmPointer,
     zName: string,
-    eTextRep: number,
+    eTextRep: CAPI['SQLITE_UTF8'],
     pArg: WasmPointer,
-    xCompare: ((pCtx: WasmPointer, len1: number, p1: WasmPointer, len2: number, p2: WasmPointer) => number) | WasmPointer,
+    xCompare:
+      | ((
+          pCtx: WasmPointer,
+          len1: number,
+          p1: WasmPointer,
+          len2: number,
+          p2: WasmPointer,
+        ) => number)
+      | WasmPointer,
     xDestroy: ((pCtx: WasmPointer) => void) | WasmPointer,
   ) => number;
   sqlite3_create_collation: (
     db: Database | WasmPointer,
     zName: string,
-    eTextRep: number,
+    eTextRep: CAPI['SQLITE_UTF8'],
     pArg: WasmPointer,
-    xCompare: ((pCtx: WasmPointer, len1: number, p1: WasmPointer, len2: number, p2: WasmPointer) => number) | WasmPointer,
+    xCompare:
+      | ((
+          pCtx: WasmPointer,
+          len1: number,
+          p1: WasmPointer,
+          len2: number,
+          p2: WasmPointer,
+        ) => number)
+      | WasmPointer,
   ) => number;
-  sqlite3_config: (
-    op: number,
-    args: any,
-  ) => number;
+  sqlite3_config(
+    op:
+      | CAPI['SQLITE_CONFIG_COVERING_INDEX_SCAN']
+      | CAPI['SQLITE_CONFIG_MEMSTATUS']
+      | CAPI['SQLITE_CONFIG_SMALL_MALLOC']
+      | CAPI['SQLITE_CONFIG_SORTERREF_SIZE']
+      | CAPI['SQLITE_CONFIG_STMTJRNL_SPILL']
+      | CAPI['SQLITE_CONFIG_URI'],
+    arg: number,
+  ): number;
+  sqlite3_config(
+    op: CAPI['SQLITE_CONFIG_LOOKASIDE'],
+    arg1: number,
+    arg2: number,
+  ): number;
+  sqlite3_config(op: CAPI['SQLITE_CONFIG_MEMDB_MAXSIZE'], arg: BigInt): number;
   sqlite3_auto_extension: (
-    xEntryPoint: ((
-      db: Database | WasmPointer,
-      pzErrMsg: WasmPointer,
-      pThunk:  WasmPointer
-    ) => number) | WasmPointer,
+    xEntryPoint:
+      | ((
+          db: Database | WasmPointer,
+          pzErrMsg: WasmPointer,
+          pThunk: WasmPointer,
+        ) => number)
+      | WasmPointer,
   ) => number;
-  sqlite3_cancel_auto_extension: (
-    xEntryPoint: ((
-      db: Database | WasmPointer,
-      pzErrMsg: WasmPointer,
-      pThunk:  WasmPointer
-    ) => number) | WasmPointer,
-  ) => number;
+  sqlite3_cancel_auto_extension: (xEntryPoint: WasmPointer) => number;
   sqlite3_reset_auto_extension: () => void;
 };
