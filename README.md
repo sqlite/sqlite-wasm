@@ -51,6 +51,10 @@ sqlite3InitModule({
 });
 ```
 
+The `db` object above implements the Object Oriented API #1, which is documented
+[here](https://sqlite.org/wasm/doc/tip/api-oo1.md).
+
+
 ### In a worker (with OPFS if available):
 
 > **Warning**
@@ -120,7 +124,7 @@ const sqliteWorkerPath = 'assets/js/sqlite-worker.js';
 // This is the name of your database. It corresponds to the path in the OPFS.
 const filename = '/test.sqlite3';
 
-const sqlite = new Sqlite(filename, sqliteWorkerPath);
+const sqlite = new SqliteClient(filename, sqliteWorkerPath);
 await sqlite.init();
 
 await sqlite.executeSql('CREATE TABLE IF NOT EXISTS test(a,b)');
