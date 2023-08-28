@@ -158,7 +158,7 @@ that shows this in action.
 
 ## Demo
 
-See the [demo](https://github.com/tomayac/sqlite-wasm/tree/main/demo) folder for
+See the [demo](https://github.com/sqlite/sqlite-wasm/tree/main/demo) folder for
 examples of how to use this in the main thread and in a worker. (Note that the
 worker variant requires special HTTP headers, so it can't be hosted on GitHub
 Pages.) An example that shows how to use this with vite is available on
