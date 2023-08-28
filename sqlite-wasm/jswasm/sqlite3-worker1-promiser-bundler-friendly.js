@@ -23,122 +23,134 @@
 */
 'use strict';
 
-globalThis.sqlite3Worker1Promiser = function callee(config = callee.defaultConfig){
-  
-  if(1===arguments.length && 'function'===typeof arguments[0]){
+globalThis.sqlite3Worker1Promiser = function callee(
+  config = callee.defaultConfig,
+) {
+  if (1 === arguments.length && 'function' === typeof arguments[0]) {
     const f = config;
     config = Object.assign(Object.create(null), callee.defaultConfig);
     config.onready = f;
-  }else{
+  } else {
     config = Object.assign(Object.create(null), callee.defaultConfig, config);
   }
   const handlerMap = Object.create(null);
-  const noop = function(){};
-  const err = config.onerror
-        || noop ;
+  const noop = function () {};
+  const err = config.onerror || noop;
   const debug = config.debug || noop;
   const idTypeMap = config.generateMessageId ? undefined : Object.create(null);
-  const genMsgId = config.generateMessageId || function(msg){
-    return msg.type+'#'+(idTypeMap[msg.type] = (idTypeMap[msg.type]||0) + 1);
+  const genMsgId =
+    config.generateMessageId ||
+    function (msg) {
+      return (
+        msg.type + '#' + (idTypeMap[msg.type] = (idTypeMap[msg.type] || 0) + 1)
+      );
+    };
+  const toss = (...args) => {
+    throw new Error(args.join(' '));
   };
-  const toss = (...args)=>{throw new Error(args.join(' '))};
-  if(!config.worker) config.worker = callee.defaultConfig.worker;
-  if('function'===typeof config.worker) config.worker = config.worker();
+  if (!config.worker) config.worker = callee.defaultConfig.worker;
+  if ('function' === typeof config.worker) config.worker = config.worker();
   let dbId;
-  config.worker.onmessage = function(ev){
+  config.worker.onmessage = function (ev) {
     ev = ev.data;
-    debug('worker1.onmessage',ev);
+    debug('worker1.onmessage', ev);
     let msgHandler = handlerMap[ev.messageId];
-    if(!msgHandler){
-      if(ev && 'sqlite3-api'===ev.type && 'worker1-ready'===ev.result) {
-        
-        if(config.onready) config.onready();
+    if (!msgHandler) {
+      if (ev && 'sqlite3-api' === ev.type && 'worker1-ready' === ev.result) {
+        if (config.onready) config.onready();
         return;
       }
-      msgHandler = handlerMap[ev.type] ;
-      if(msgHandler && msgHandler.onrow){
+      msgHandler = handlerMap[ev.type];
+      if (msgHandler && msgHandler.onrow) {
         msgHandler.onrow(ev);
         return;
       }
-      if(config.onunhandled) config.onunhandled(arguments[0]);
-      else err("sqlite3Worker1Promiser() unhandled worker message:",ev);
+      if (config.onunhandled) config.onunhandled(arguments[0]);
+      else err('sqlite3Worker1Promiser() unhandled worker message:', ev);
       return;
     }
     delete handlerMap[ev.messageId];
-    switch(ev.type){
-        case 'error':
-          msgHandler.reject(ev);
-          return;
-        case 'open':
-          if(!dbId) dbId = ev.dbId;
-          break;
-        case 'close':
-          if(ev.dbId===dbId) dbId = undefined;
-          break;
-        default:
-          break;
+    switch (ev.type) {
+      case 'error':
+        msgHandler.reject(ev);
+        return;
+      case 'open':
+        if (!dbId) dbId = ev.dbId;
+        break;
+      case 'close':
+        if (ev.dbId === dbId) dbId = undefined;
+        break;
+      default:
+        break;
     }
-    try {msgHandler.resolve(ev)}
-    catch(e){msgHandler.reject(e)}
+    try {
+      msgHandler.resolve(ev);
+    } catch (e) {
+      msgHandler.reject(e);
+    }
   };
-  return function(){
+  return function () {
     let msg;
-    if(1===arguments.length){
+    if (1 === arguments.length) {
       msg = arguments[0];
-    }else if(2===arguments.length){
+    } else if (2 === arguments.length) {
       msg = Object.create(null);
       msg.type = arguments[0];
       msg.args = arguments[1];
-    }else{
-      toss("Invalid arugments for sqlite3Worker1Promiser()-created factory.");
+    } else {
+      toss('Invalid arugments for sqlite3Worker1Promiser()-created factory.');
     }
-    if(!msg.dbId) msg.dbId = dbId;
+    if (!msg.dbId) msg.dbId = dbId;
     msg.messageId = genMsgId(msg);
     msg.departureTime = performance.now();
     const proxy = Object.create(null);
     proxy.message = msg;
-    let rowCallbackId ;
-    if('exec'===msg.type && msg.args){
-      if('function'===typeof msg.args.callback){
-        rowCallbackId = msg.messageId+':row';
+    let rowCallbackId;
+    if ('exec' === msg.type && msg.args) {
+      if ('function' === typeof msg.args.callback) {
+        rowCallbackId = msg.messageId + ':row';
         proxy.onrow = msg.args.callback;
         msg.args.callback = rowCallbackId;
         handlerMap[rowCallbackId] = proxy;
-      }else if('string' === typeof msg.args.callback){
-        toss("exec callback may not be a string when using the Promise interface.");
-        
+      } else if ('string' === typeof msg.args.callback) {
+        toss(
+          'exec callback may not be a string when using the Promise interface.',
+        );
       }
     }
-    
-    let p = new Promise(function(resolve, reject){
+
+    let p = new Promise(function (resolve, reject) {
       proxy.resolve = resolve;
       proxy.reject = reject;
       handlerMap[msg.messageId] = proxy;
-      debug("Posting",msg.type,"message to Worker dbId="+(dbId||'default')+':',msg);
+      debug(
+        'Posting',
+        msg.type,
+        'message to Worker dbId=' + (dbId || 'default') + ':',
+        msg,
+      );
       config.worker.postMessage(msg);
     });
-    if(rowCallbackId) p = p.finally(()=>delete handlerMap[rowCallbackId]);
+    if (rowCallbackId) p = p.finally(() => delete handlerMap[rowCallbackId]);
     return p;
   };
 };
 globalThis.sqlite3Worker1Promiser.defaultConfig = {
-  worker: function(){
-    let theJs = "sqlite3-worker1.js";
-    if(this.currentScript){
+  worker: function () {
+    let theJs = 'sqlite3-worker1.js';
+    if (this.currentScript) {
       const src = this.currentScript.src.split('/');
       src.pop();
-      theJs = src.join('/')+'/' + theJs;
-      
-    }else if(globalThis.location){
-      
+      theJs = src.join('/') + '/' + theJs;
+    } else if (globalThis.location) {
       const urlParams = new URL(globalThis.location.href).searchParams;
-      if(urlParams.has('sqlite3.dir')){
+      if (urlParams.has('sqlite3.dir')) {
         theJs = urlParams.get('sqlite3.dir') + '/' + theJs;
       }
     }
     return new Worker(theJs + globalThis.location.search);
   }.bind({
-    currentScript: globalThis?.document?.currentScript
+    currentScript: globalThis?.document?.currentScript,
   }),
-  onerror: (...args)=>console.error('worker1 promiser error',...args)
+  onerror: (...args) => console.error('worker1 promiser error', ...args),
 };
