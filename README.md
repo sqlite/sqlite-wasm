@@ -51,8 +51,7 @@ sqlite3InitModule({
 });
 ```
 
-The `db` object above implements the Object Oriented API #1, which is documented
-[here](https://sqlite.org/wasm/doc/tip/api-oo1.md).
+The `db` object above implements the [Object Oriented API #1](https://sqlite.org/wasm/doc/tip/api-oo1.md).
 
 
 ### In a worker (with OPFS if available):
