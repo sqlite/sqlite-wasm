@@ -53,8 +53,7 @@ sqlite3InitModule({
 
 ### In a worker (with OPFS if available):
 
-> **Warning**
-> For this to work, you need to set the following headers on your
+> **Warning** For this to work, you need to set the following headers on your
 > server:
 >
 > `Cross-Origin-Opener-Policy: same-origin`
@@ -102,8 +101,7 @@ sqlite3InitModule({
 
 ## Usage with the bundled `SQLiteClient` (with OPFS if available):
 
-> **Warning**
-> For this to work, you need to set the following headers on your
+> **Warning** For this to work, you need to set the following headers on your
 > server:
 >
 > `Cross-Origin-Opener-Policy: same-origin`
