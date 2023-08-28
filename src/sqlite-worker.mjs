@@ -6,7 +6,12 @@ const error = (...args) => console.error(...args);
 
 class SqliteWorker {
   db;
-  init(dbFile) {
+  rowMode = 'object';
+  init(dbFile, rowMode) {
+    if (rowMode && rowMode !== 'array' && rowMode !== 'object') {
+      throw new Error('Invalid rowMode');
+    }
+    this.rowMode = rowMode || this.rowMode;
     return new Promise((resolve) => {
       sqlite3InitModule({
         print: log,
@@ -29,7 +34,7 @@ class SqliteWorker {
         sql: sqlStatement,
         bind: bindParameters,
         returnValue: 'resultRows',
-        rowMode: 'array',
+        rowMode: this.rowMode,
       }),
     );
   }

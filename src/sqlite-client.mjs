@@ -5,8 +5,9 @@ export class SqliteClient {
 
   dbFile = '';
   sqliteWorkerPath = '';
+  rowMode = 'object';
 
-  constructor(dbFile, sqliteWorkerPath) {
+  constructor(dbFile, sqliteWorkerPath, rowMode) {
     if (typeof dbFile !== 'string') {
       throw new Error(
         `The 'dbFile' parameter passed to the 'SqliteClient' constructor must be of type 'string'. Instead, you passed: '${typeof dbFile}'.`,
@@ -21,6 +22,10 @@ export class SqliteClient {
 
     this.dbFile = dbFile;
     this.sqliteWorkerPath = sqliteWorkerPath;
+    if (rowMode && rowMode !== 'array' && rowMode !== 'object') {
+      throw new Error('Invalid rowMode');
+    }
+    this.rowMode = rowMode || this.rowMode;
   }
 
   async init() {
@@ -32,7 +37,7 @@ export class SqliteClient {
 
     this.sqliteWorker = await new SqliteWorker();
 
-    await this.sqliteWorker.init(this.dbFile);
+    await this.sqliteWorker.init(this.dbFile, this.rowMode);
   }
 
   async executeSql(sqlStatement, bindParameters = []) {
