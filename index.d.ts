@@ -1255,6 +1255,131 @@ declare class OpfsDatabase extends Database {
   ): Promise<number>;
 }
 
+declare class OpfsSAHPoolDatabase extends OpfsDatabase {
+  constructor(filename: string);
+}
+
+type SAHPoolUtil = {
+  OpfsSAHPoolDb: typeof OpfsSAHPoolDatabase;
+
+  /**
+   * Adds `numEntries` entries to the current pool.
+   *
+   * This change is persistent across sessions so should not be called
+   * automatically at each app startup (but see `reserveMinimumCapacity()`). Its
+   * returned Promise resolves to the new capacity. Because this operation is
+   * necessarily asynchronous, the C-level VFS API cannot call this on its own
+   * as needed.
+   */
+  addCapacity: (numEntries: number) => Promise<number>;
+
+  /**
+   * Synchronously reads the contents of the given file into a `Uint8Array` and
+   * returns it.
+   *
+   * This will throw if the given name is not currently in active use or on I/O
+   * error. Note that the given name is not visible directly in OPFS (or, if it
+   * is, it's not from this VFS). The reason for that is that this VFS manages
+   * name-to-file mappings in a roundabout way in order to maintain its list of
+   * SAHs.
+   */
+  exportFile: (filename: string) => Promise<Uint8Array>;
+
+  /**
+   * Returns the number of files currently contained in the SAH pool.
+   *
+   * The default capacity is only large enough for one or two databases and
+   * their associated temp files.
+   */
+  getCapacity: () => number;
+
+  /**
+   * Returns the number of files from the pool currently allocated to VFS slots.
+   *
+   * This is not the same as the files being "opened".
+   */
+  getFileCount: () => number;
+
+  /**
+   * Returns an array of the names of the files currently allocated to VFS
+   * slots.
+   *
+   * This list is the same length as `getFileCount()`.
+   */
+  getFilenames: () => string[];
+
+  /**
+   * Imports the contents of an SQLite database, provided as a byte array or
+   * ArrayBuffer, under the given name, overwriting any existing content.
+   *
+   * Throws if the pool has no available file slots, on I/O error, or if the
+   * input does not appear to be a database. In the latter case, only a cursory
+   * examination is made.
+   *
+   * Note that this routine is only for importing database files, not arbitrary
+   * files, the reason being that this VFS will automatically clean up any
+   * non-database files so importing them is pointless.
+   *
+   * On a write error, the handle is removed from the pool and made available
+   * for re-use.
+   *
+   * On success, the number of bytes written is returned.
+   */
+  importDb: (name: string, data: Uint8Array | ArrayBuffer) => Promise<number>;
+
+  /**
+   * Removes up to `numEntries` entries from the pool, with the caveat that it
+   * can only remove currently-unused entries.
+   *
+   * It returns a Promise which resolves to the number of entries actually
+   * removed.
+   */
+  reduceCapacity: (numEntries: number) => Promise<number>;
+
+  /**
+   * Unregisters the VFS and removes its directory from OPFS (which means all
+   * client content is destroyed). After calling this, the VFS may no longer be
+   * used and there is currently no way to re-add it aside from reloading the
+   * current JavaScript context.
+   *
+   * Results are undefined if a database is currently in use with this VFS.
+   *
+   * The returned Promise resolves to true if it performed the removal and false
+   * if the VFS was not installed.
+   *
+   * If the VFS has a multi-level directory, e.g. "/foo/bar/baz", only the
+   * bottom-most directory is removed because this VFS cannot know for certain
+   * whether the higher-level directories contain data which should be removed.
+   */
+  removeVfs: () => Promise<boolean>;
+
+  /**
+   * If the current capacity is less than `minCapacity`, the capacity is
+   * increased to `minCapacity`, else this returns with no side effects.
+   *
+   * The resulting Promise resolves to the new capacity.
+   */
+  reserveMinimumCapacity: (minCapacity: number) => Promise<number>;
+
+  /**
+   * If a virtual file exists with the given name, disassociates it from the
+   * pool and returns true, else returns false without side effects. Results are
+   * undefined if the file is currently in active use. Recall that names need to
+   * use absolute paths (starting with a slash).
+   */
+  unlink: (filename: string) => boolean;
+
+  /** The SQLite VFS name under which this pool's VFS is registered. */
+  vfsName: string;
+
+  /**
+   * Clears all client-defined state of all SAHs and makes all of them available
+   * for re-use by the pool. Results are undefined if any such handles are
+   * currently in use, e.g. by an sqlite3 db.
+   */
+  wipeFiles: () => Promise<void>;
+};
+
 /** Exception class for reporting WASM-side allocation errors. */
 declare class WasmAllocError extends Error {
   constructor(message: string);
@@ -1751,6 +1876,65 @@ declare type Sqlite3Static = {
    * exception. It must only be called once per Worker.
    */
   initWorker1API(): void;
+
+  installOpfsSAHPoolVfs(opts: {
+    /**
+     * If truthy (default=false) contents and filename mapping are removed from
+     * each SAH it is acquired during initalization of the VFS, leaving the
+     * VFS's storage in a pristine state. Use this only for databases which need
+     * not survive a page reload.
+     */
+    clearOnInit?: boolean;
+
+    /**
+     * (default=6) Specifies the default capacity of the VFS.
+     *
+     * This should not be set unduly high because the VFS has to open (and keep
+     * open) a file for each entry in the pool. This setting only has an effect
+     * when the pool is initially empty. It does not have any effect if a pool
+     * already exists. Note that this number needs to be at least twice the
+     * number of expected database files (to account for journal files) and may
+     * need to be even higher than three times the number of databases plus one,
+     * depending on the value of the `TEMP_STORE` pragma and how the databases
+     * are used.
+     */
+    initialCapacity?: number;
+
+    /**
+     * (default="."+options.name) Specifies the OPFS directory name in which to
+     * store metadata for the VFS.
+     *
+     * Only one instance of this VFS can use the same directory concurrently.
+     * Using a different directory name for each application enables different
+     * engines in the same HTTP origin to co-exist, but their data are invisible
+     * to each other. Changing this name will effectively orphan any databases
+     * stored under previous names. This option may contain multiple path
+     * elements, e.g. "/foo/bar/baz", and they are created automatically. In
+     * practice there should be no driving need to change this.
+     *
+     * **ACHTUNG:** all files in this directory are assumed to be managed by the
+     * VFS. Do not place other files in this directory, as they may be deleted
+     * or otherwise modified by the VFS.
+     */
+    directory?: string;
+
+    /**
+     * (default="opfs-sahpool") sets the name to register this VFS under.
+     *
+     * Normally this should not be changed, but it is possible to register this
+     * VFS under multiple names so long as each has its own separate directory
+     * to work from. The storage for each is invisible to all others. The name
+     * must be a string compatible with `sqlite3_vfs_register()` and friends and
+     * suitable for use in URI-style database file names.
+     *
+     * **ACHTUNG:** if a custom name is provided, a custom directory must also
+     * be provided if any other instance is registered with the default
+     * directory. No two instances may use the same directory. If no directory
+     * is explicitly provided then a directory name is synthesized from the name
+     * option.
+     */
+    name?: string;
+  }): Promise<SAHPoolUtil>;
 
   WasmAllocError: WasmAllocError;
 
@@ -7369,6 +7553,44 @@ declare type CAPI = {
   ) => void;
 
   /**
+   * Clears all kvvfs-owned state and returns the number of records it deleted
+   * (one record per database page).
+   */
+  sqlite3_js_kvvfs_clear: (which?: string) => void;
+
+  /** Returns an estimate of how many bytes of storage are used by kvvfs. */
+  sqlite3_js_kvvfs_size: (which?: string) => number;
+
+  /**
+   * If the current environment supports the POSIX file APIs, this routine
+   * creates (or overwrites) the given file using those APIs. This is primarily
+   * intended for use in Emscripten-based builds where the POSIX APIs are
+   * transparently proxied by an in-memory virtual filesystem. It may behave
+   * differently in other environments.
+   *
+   * The first argument must be either a JS string or WASM C-string holding the
+   * filename. Note that this routine does not create intermediary directories
+   * if the filename has a directory part.
+   *
+   * The 2nd argument may either a valid WASM memory pointer, an ArrayBuffer, or
+   * a Uint8Array. The 3rd must be the length, in bytes, of the data array to
+   * copy. If the 2nd argument is an ArrayBuffer or Uint8Array and the 3rd is
+   * not a positive integer then the 3rd defaults to the array's byteLength
+   * value.
+   *
+   * Results are undefined if data is a WASM pointer and dataLen is exceeds
+   * data's bounds.
+   *
+   * Throws if any arguments are invalid or if creating or writing to the file
+   * fails.
+   */
+  sqlite3_js_posix_create_file: (
+    filename: string | WasmPointer,
+    data: Uint8Array | ArrayBuffer | WasmPointer,
+    dataLen?: number,
+  ) => void;
+
+  /**
    * Given a `sqlite3_value*`, this function attempts to convert it to an
    * equivalent JS value with as much fidelity as feasible and return it.
    *
@@ -7444,10 +7666,11 @@ declare type CAPI = {
   SQLITE_RECURSIVE: 33;
   SQLITE_STATIC: 0;
   SQLITE_TRANSIENT: -1;
-  SQLITE_WASM_DEALLOC: WasmPointer;
+  SQLITE_WASM_DEALLOC: 1;
   SQLITE_CHANGESETSTART_INVERT: 2;
   SQLITE_CHANGESETAPPLY_NOSAVEPOINT: 1;
   SQLITE_CHANGESETAPPLY_INVERT: 2;
+  SQLITE_CHANGESETAPPLY_IGNORENOOP: 4;
   SQLITE_CHANGESET_DATA: 1;
   SQLITE_CHANGESET_NOTFOUND: 2;
   SQLITE_CHANGESET_CONFLICT: 3;
@@ -7507,6 +7730,8 @@ declare type CAPI = {
   SQLITE_DBCONFIG_ENABLE_VIEW: 1015;
   SQLITE_DBCONFIG_LEGACY_FILE_FORMAT: 1016;
   SQLITE_DBCONFIG_TRUSTED_SCHEMA: 1017;
+  SQLITE_DBCONFIG_STMT_SCANSTATUS: 1018;
+  SQLITE_DBCONFIG_REVERSE_SCANORDER: 1019;
   SQLITE_DBCONFIG_MAX: 1019;
   SQLITE_DBSTATUS_LOOKASIDE_USED: 0;
   SQLITE_DBSTATUS_CACHE_USED: 1;
@@ -7567,6 +7792,7 @@ declare type CAPI = {
   SQLITE_FCNTL_CKPT_START: 39;
   SQLITE_FCNTL_EXTERNAL_READER: 40;
   SQLITE_FCNTL_CKSM_FILE: 41;
+  SQLITE_FCNTL_RESET_CACHE: 42;
   SQLITE_LOCK_NONE: 0;
   SQLITE_LOCK_SHARED: 1;
   SQLITE_LOCK_RESERVED: 2;
@@ -7799,6 +8025,7 @@ declare type CAPI = {
   SQLITE_VTAB_CONSTRAINT_SUPPORT: 1;
   SQLITE_VTAB_INNOCUOUS: 2;
   SQLITE_VTAB_DIRECTONLY: 3;
+  SQLITE_VTAB_USES_ALL_SCHEMAS: 4;
   SQLITE_ROLLBACK: 1;
   SQLITE_FAIL: 3;
   SQLITE_REPLACE: 5;
