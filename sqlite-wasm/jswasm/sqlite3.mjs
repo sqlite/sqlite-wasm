@@ -10480,11 +10480,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.43.0',
-          libVersionNumber: 3043000,
+          libVersion: '3.43.1',
+          libVersionNumber: 3043001,
           sourceId:
-            '2023-08-24 12:36:59 0f80b798b3f4b81a7bb4233c58294edd0f1156f36b6ecf5ab8e83631d468778c',
-          downloadVersion: 3430000,
+            '2023-09-11 12:01:27 2d3a40c05c49e1a49264912b1a05bc2143ac0e7c3df588276ce80a4cbc9bd1b0',
+          downloadVersion: 3430100,
         };
       });
 
@@ -13134,23 +13134,39 @@ var sqlite3InitModule = (() => {
                   toss('Input does not contain an SQLite database header.');
                 }
               }
+              let sah;
               const [hDir, fnamePart] = await opfsUtil.getDirForFilename(
                 filename,
                 true,
               );
-              const hFile = await hDir.getFileHandle(fnamePart, {
-                create: true,
-              });
-              const sah = await hFile.createSyncAccessHandle();
-              sah.truncate(0);
-              const nWrote = sah.write(bytes, { at: 0 });
-              sah.close();
-              if (nWrote != n) {
-                toss(
-                  'Expected to write ' + n + ' bytes but wrote ' + nWrote + '.',
-                );
+              try {
+                const hFile = await hDir.getFileHandle(fnamePart, {
+                  create: true,
+                });
+                sah = await hFile.createSyncAccessHandle();
+                sah.truncate(0);
+                const nWrote = sah.write(bytes, { at: 0 });
+                if (nWrote != n) {
+                  toss(
+                    'Expected to write ' +
+                      n +
+                      ' bytes but wrote ' +
+                      nWrote +
+                      '.',
+                  );
+                }
+                sah.write(new Uint8Array([1, 1]), { at: 18 });
+                return nWrote;
+              } catch (e) {
+                if (sah) {
+                  await sah.close();
+                  sah = undefined;
+                }
+                await hDir.removeEntry(fnamePart).catch(() => {});
+                throw e;
+              } finally {
+                if (sah) await sah.close();
               }
-              return nWrote;
             };
 
             if (sqlite3.oo1) {
@@ -14031,6 +14047,9 @@ var sqlite3InitModule = (() => {
                 'Expected to write ' + n + ' bytes but wrote ' + nWrote + '.',
               );
             } else {
+              sah.write(new Uint8Array([1, 1]), {
+                at: HEADER_OFFSET_DATA + 18,
+              });
               this.setAssociatedPath(sah, name, capi.SQLITE_OPEN_MAIN_DB);
             }
           }

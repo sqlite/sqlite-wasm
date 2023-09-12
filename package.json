@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.43.0-build3",
+  "version": "3.43.1-build1",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
   "keywords": [
     "sqlite",
@@ -57,7 +57,7 @@
     "http-server": "github:vapier/http-server",
     "module-workers-polyfill": "^0.3.2",
     "node-fetch": "^3.3.2",
-    "prettier": "^3.0.2",
+    "prettier": "^3.0.3",
     "publint": "^0.2.2",
     "shx": "^0.3.4"
   },

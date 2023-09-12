@@ -10521,11 +10521,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.43.0',
-          libVersionNumber: 3043000,
+          libVersion: '3.43.1',
+          libVersionNumber: 3043001,
           sourceId:
-            '2023-08-24 12:36:59 0f80b798b3f4b81a7bb4233c58294edd0f1156f36b6ecf5ab8e83631d468778c',
-          downloadVersion: 3430000,
+            '2023-09-11 12:01:27 2d3a40c05c49e1a49264912b1a05bc2143ac0e7c3df588276ce80a4cbc9bd1b0',
+          downloadVersion: 3430100,
         };
       });
 
