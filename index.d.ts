@@ -3,6 +3,7 @@ declare type SqlValue =
   | string
   | number
   | null
+  | BigInt
   | Uint8Array
   | Int8Array
   | ArrayBuffer;
@@ -17,7 +18,7 @@ declare type SQLiteDataType =
 
 /** Specifies parameter bindings. */
 declare type BindingSpec =
-  | SqlValue[]
+  | readonly SqlValue[]
   | { [paramName: string]: SqlValue }
   /** Assumed to have binding index `1` */
   | SqlValue;
@@ -45,7 +46,7 @@ declare type FlexibleString =
    * string literals with the backtick syntax, it is frequently convenient to
    * write out longer SQL constructs as arrays.
    */
-  | string[];
+  | readonly string[];
 
 /**
  * Prepared statements are created solely through the {@link Database#prepare}
@@ -2995,16 +2996,16 @@ declare type WASM_API = {
    * calls, however, this variant is arguably more efficient because it will
    * hypothetically free the wrapper function quickly.
    */
-  xCallWrappe(
+  xCallWrapped(
     functionName: string,
     resultType: string,
-    argTypes: string[],
+    argTypes: readonly string[],
     ...args: any[]
   ): any;
   xCallWrapped(
     functionName: string,
     resultType: string,
-    argTypes: string[],
+    argTypes: readonly string[],
     args: any[],
   ): any;
 
@@ -3200,12 +3201,12 @@ declare type WASM_API = {
   xWrap(
     functionName: string,
     resultType: string | undefined,
-    ...argTypes: string[]
+    ...argTypes: readonly string[]
   ): Function;
   xWrap(
     functionName: string,
     resultType: string | undefined,
-    argTypes: string[],
+    argTypes: readonly string[],
   ): Function;
 
   /* --------------------------------------------------------------------------
@@ -4214,7 +4215,7 @@ declare type CAPI = {
     blob:
       | WasmPointer
       | string
-      | string[]
+      | readonly string[]
       | Int8Array
       | Uint8Array
       | ArrayBuffer,
@@ -4305,7 +4306,7 @@ declare type CAPI = {
     text:
       | string
       | WasmPointer
-      | string[]
+      | readonly string[]
       | Int8Array
       | Uint8Array
       | ArrayBuffer,
