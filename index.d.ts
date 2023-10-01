@@ -548,7 +548,7 @@ declare type FunctionOptions = {
 
 declare type ScalarFunctionOptions = FunctionOptions & {
   /** Scalar function to be defined. */
-  xFunc: (ctxPtr: number, ...args: any[]) => any;
+  xFunc: (ctxPtr: number, ...args: SqlValue[]) => SqlValue;
 };
 
 declare type AggregateFunctionOptions = FunctionOptions & {
@@ -970,11 +970,11 @@ declare class Database {
    */
   createFunction(
     name: string,
-    func: (ctxPtr: number, ...args: any[]) => SqlValue,
+    func: (ctxPtr: number, ...values: SqlValue[]) => SqlValue,
   ): this;
   createFunction(
     name: string,
-    func: (ctxPtr: number, ...args: any[]) => void,
+    func: (ctxPtr: number, ...values: SqlValue[]) => void,
     options: FunctionOptions,
   ): this;
   createFunction(
@@ -4636,10 +4636,10 @@ declare type CAPI = {
     eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
     xFunc:
-      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => SqlValue)
+      | ((ctx: WasmPointer,  ...values: SqlValue[]) => SqlValue)
       | WasmPointer,
     xStep:
-      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | ((ctx: WasmPointer, ...values: SqlValue[]) => void)
       | WasmPointer,
     xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
   ) => number;
@@ -4671,10 +4671,10 @@ declare type CAPI = {
     eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
     xFunc:
-      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => SqlValue)
+      | ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue)
       | WasmPointer,
     xStep:
-      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | ((ctx: WasmPointer, ...values: SqlValue[]) => void)
       | WasmPointer,
     xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
     xDestroy: (() => void) | WasmPointer,
@@ -4708,12 +4708,12 @@ declare type CAPI = {
     eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
     xStep:
-      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => SqlValue)
+      | ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue)
       | WasmPointer,
     xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
     xValue: ((ctx: WasmPointer) => void) | WasmPointer,
     xInverse:
-      | ((ctx: WasmPointer, nArg: number, args: WasmPointer) => void)
+      | ((ctx: WasmPointer, ...values: SqlValue[]) => void)
       | WasmPointer,
     xDestroy: (() => void) | WasmPointer,
   ) => number;
