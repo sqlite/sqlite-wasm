@@ -26,6 +26,11 @@
       "main": "./index.mjs",
       "browser": "./index.mjs"
     },
+    "./client": {
+      "import": "./client.mjs",
+      "main": "./client.mjs",
+      "browser": "./client.mjs"
+    },
     "./src/comlink.mjs": "./src/comlink.mjs",
     "./package.json": "./package.json"
   },

@@ -116,7 +116,7 @@ sqlite3InitModule({
 Import the `@sqlite.org/sqlite-wasm` library in your code and use it as such:
 
 ```js
-import { SqliteClient } from '@sqlite.org/sqlite-wasm';
+import { SqliteClient } from '@sqlite.org/sqlite-wasm/client';
 
 // Must correspond to the path in your final deployed build.
 const sqliteWorkerPath = 'assets/js/sqlite-worker.js';
