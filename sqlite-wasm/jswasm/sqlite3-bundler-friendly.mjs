@@ -9588,7 +9588,7 @@ var sqlite3InitModule = (() => {
         }
 
         const __dbArgcMismatch = (pDb, f, n) => {
-          return sqlite3.util.sqlite3_wasm_db_error(
+          return util.sqlite3_wasm_db_error(
             pDb,
             capi.SQLITE_MISUSE,
             f + '() requires ' + n + ' argument' + (1 === n ? '' : 's') + '.',
@@ -10476,11 +10476,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.43.1',
-          libVersionNumber: 3043001,
+          libVersion: '3.43.2',
+          libVersionNumber: 3043002,
           sourceId:
-            '2023-09-11 12:01:27 2d3a40c05c49e1a49264912b1a05bc2143ac0e7c3df588276ce80a4cbc9bd1b0',
-          downloadVersion: 3430100,
+            '2023-10-10 12:14:04 4310099cce5a487035fa535dd3002c59ac7f1d1bec68d7cf317fd3e769484790',
+          downloadVersion: 3430200,
         };
       });
 
