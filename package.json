@@ -16,19 +16,24 @@
   "main": "index.mjs",
   "type": "module",
   "files": [
+    "index.d.ts",
     "index.mjs",
     "sqlite-wasm/",
     "src/"
   ],
+  "types": "index.d.ts",
   "exports": {
     ".": {
+      "types": "./index.d.ts",
       "import": "./index.mjs",
       "main": "./index.mjs",
-      "browser": "./index.mjs"
+      "browser": "./index.mjs",
+      "types": "./index.d.ts"
     },
     "./src/comlink.mjs": "./src/comlink.mjs",
     "./package.json": "./package.json"
   },
+  "types": "./index.d.ts",
   "bin": {
     "sqlite-wasm": "bin/index.js"
   },
@@ -59,6 +64,7 @@
     "node-fetch": "^3.3.2",
     "prettier": "^3.0.3",
     "publint": "^0.2.2",
+    "prettier-plugin-jsdoc": "^1.0.1",
     "shx": "^0.3.4"
   },
   "optionalDependencies": {
