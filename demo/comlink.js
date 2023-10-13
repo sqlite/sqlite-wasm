@@ -14,7 +14,6 @@ const rows = await sqliteClient.executeSql(
   'SELECT a FROM t ORDER BY a LIMIT 3',
 );
 
-console.log(rows);
 document.querySelector('.comlink').innerHTML = rows
   .map((row) => row.a)
   .join('<br />');
