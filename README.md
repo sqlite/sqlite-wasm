@@ -164,6 +164,10 @@ worker variant requires special HTTP headers, so it can't be hosted on GitHub
 Pages.) An example that shows how to use this with vite is available on
 [StackBlitz](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=main.js).
 
+## Projects using this package
+
+See the list of [npm dependents](https://www.npmjs.com/browse/depended/@sqlite.org/sqlite-wasm) for this package.
+
 ## Deploying a new version
 
 (These steps can only be executed by maintainers.)
