@@ -8025,17 +8025,3 @@ declare type CAPI = {
   SQLITE_FAIL: 3;
   SQLITE_REPLACE: 5;
 };
-
-export class SqliteClient {
-  dbFile: string;
-  sqliteWorkerPath: string;
-
-  constructor(dFile: string, sqliteWorkerPath: string);
-
-  init(): Promise<void>;
-
-  executeSql(
-    sqlStatement: string,
-    bindParameters: SqlValue[],
-  ): Promise<SqlValue[][]>;
-}

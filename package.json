@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.43.2-prebuild1",
+  "version": "3.43.2-build1",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
   "keywords": [
     "sqlite",
@@ -18,8 +18,7 @@
   "files": [
     "index.d.ts",
     "index.mjs",
-    "sqlite-wasm/",
-    "src/"
+    "sqlite-wasm/"
   ],
   "types": "index.d.ts",
   "exports": {
@@ -27,13 +26,10 @@
       "types": "./index.d.ts",
       "import": "./index.mjs",
       "main": "./index.mjs",
-      "browser": "./index.mjs",
-      "types": "./index.d.ts"
+      "browser": "./index.mjs"
     },
-    "./src/comlink.mjs": "./src/comlink.mjs",
     "./package.json": "./package.json"
   },
-  "types": "./index.d.ts",
   "bin": {
     "sqlite-wasm": "bin/index.js"
   },
@@ -66,8 +62,5 @@
     "publint": "^0.2.4",
     "prettier-plugin-jsdoc": "^1.1.1",
     "shx": "^0.3.4"
-  },
-  "optionalDependencies": {
-    "comlink": "^4.4.1"
   }
 }
