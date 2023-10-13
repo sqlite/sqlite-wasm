@@ -16,7 +16,5 @@
   "trailingComma": "all",
   "useTabs": false,
   "vueIndentScriptAndStyle": false,
-  "plugins": [
-    "prettier-plugin-jsdoc"
-  ]
+  "plugins": ["prettier-plugin-jsdoc"]
 }

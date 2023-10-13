@@ -4637,11 +4637,9 @@ declare type CAPI = {
     eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
     xFunc:
-      | ((ctx: WasmPointer,  ...values: SqlValue[]) => SqlValue)
+      | ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue)
       | WasmPointer,
-    xStep:
-      | ((ctx: WasmPointer, ...values: SqlValue[]) => void)
-      | WasmPointer,
+    xStep: ((ctx: WasmPointer, ...values: SqlValue[]) => void) | WasmPointer,
     xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
   ) => number;
 
@@ -4674,9 +4672,7 @@ declare type CAPI = {
     xFunc:
       | ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue)
       | WasmPointer,
-    xStep:
-      | ((ctx: WasmPointer, ...values: SqlValue[]) => void)
-      | WasmPointer,
+    xStep: ((ctx: WasmPointer, ...values: SqlValue[]) => void) | WasmPointer,
     xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
     xDestroy: (() => void) | WasmPointer,
   ) => number;
@@ -4713,9 +4709,7 @@ declare type CAPI = {
       | WasmPointer,
     xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
     xValue: ((ctx: WasmPointer) => void) | WasmPointer,
-    xInverse:
-      | ((ctx: WasmPointer, ...values: SqlValue[]) => void)
-      | WasmPointer,
+    xInverse: ((ctx: WasmPointer, ...values: SqlValue[]) => void) | WasmPointer,
     xDestroy: (() => void) | WasmPointer,
   ) => number;
 

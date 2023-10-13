@@ -1,8 +1,4 @@
-/**
- * @license
- * Copyright 2019 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
+/** @license Copyright 2019 Google LLC SPDX-License-Identifier: Apache-2.0 */
 const proxyMarker = Symbol('Comlink.proxy');
 const createEndpoint = Symbol('Comlink.endpoint');
 const releaseProxy = Symbol('Comlink.releaseProxy');
@@ -10,9 +6,7 @@ const finalizer = Symbol('Comlink.finalizer');
 const throwMarker = Symbol('Comlink.thrown');
 const isObject = (val) =>
   (typeof val === 'object' && val !== null) || typeof val === 'function';
-/**
- * Internal transfer handle to handle objects marked to proxy.
- */
+/** Internal transfer handle to handle objects marked to proxy. */
 const proxyTransferHandler = {
   canHandle: (val) => isObject(val) && val[proxyMarker],
   serialize(obj) {
@@ -25,9 +19,7 @@ const proxyTransferHandler = {
     return wrap(port);
   },
 };
-/**
- * Internal transfer handler to handle thrown exceptions.
- */
+/** Internal transfer handler to handle thrown exceptions. */
 const throwTransferHandler = {
   canHandle: (value) => isObject(value) && throwMarker in value,
   serialize({ value }) {
@@ -56,9 +48,7 @@ const throwTransferHandler = {
     throw serialized.value;
   },
 };
-/**
- * Allows customizing the serialization of certain values.
- */
+/** Allows customizing the serialization of certain values. */
 const transferHandlers = new Map([
   ['proxy', proxyTransferHandler],
   ['throw', throwTransferHandler],
