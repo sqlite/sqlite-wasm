@@ -10,6 +10,11 @@ SQLite Wasm conveniently wrapped as an ES Module.
 > SQLite Wasm code here. Instead, please follow the
 > [SQLite bug filing instructions](https://www.sqlite.org/src/wiki?name=Bug+Reports).
 
+> **Warning**
+>
+> **Breaking change:** Version `3.43.2-build1` removes `SqliteClient`. It will
+> be published as a separate package.
+
 ## Installation
 
 ```bash
@@ -138,7 +143,9 @@ Pages.) An example that shows how to use this with vite is available on
 
 ## Projects using this package
 
-See the list of [npm dependents](https://www.npmjs.com/browse/depended/@sqlite.org/sqlite-wasm) for this package.
+See the list of
+[npm dependents](https://www.npmjs.com/browse/depended/@sqlite.org/sqlite-wasm)
+for this package.
 
 ## Deploying a new version
 
