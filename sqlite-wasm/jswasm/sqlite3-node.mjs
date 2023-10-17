@@ -11998,7 +11998,7 @@ var sqlite3InitModule = (() => {
             type: 'sqlite3-api',
             result: 'worker1-ready',
           });
-        }.bind({ self, sqlite3 });
+        }.bind({ globalThis, sqlite3 });
       });
 
       ('use strict');
