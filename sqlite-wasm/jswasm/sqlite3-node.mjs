@@ -4346,20 +4346,20 @@ var sqlite3InitModule = (() => {
         Module['asm']['sqlite3_result_blob']).apply(null, arguments);
     });
 
-    var _sqlite3_result_error_nomem = (Module['_sqlite3_result_error_nomem'] =
-      function () {
-        return (_sqlite3_result_error_nomem = Module[
-          '_sqlite3_result_error_nomem'
-        ] =
-          Module['asm']['sqlite3_result_error_nomem']).apply(null, arguments);
-      });
-
     var _sqlite3_result_error_toobig = (Module['_sqlite3_result_error_toobig'] =
       function () {
         return (_sqlite3_result_error_toobig = Module[
           '_sqlite3_result_error_toobig'
         ] =
           Module['asm']['sqlite3_result_error_toobig']).apply(null, arguments);
+      });
+
+    var _sqlite3_result_error_nomem = (Module['_sqlite3_result_error_nomem'] =
+      function () {
+        return (_sqlite3_result_error_nomem = Module[
+          '_sqlite3_result_error_nomem'
+        ] =
+          Module['asm']['sqlite3_result_error_nomem']).apply(null, arguments);
       });
 
     var _sqlite3_result_double = (Module['_sqlite3_result_double'] =
@@ -5610,6 +5610,15 @@ var sqlite3InitModule = (() => {
           Module['asm']['sqlite3_wasm_test_str_hello']).apply(null, arguments);
       });
 
+    var _sqlite3_wasm_SQLTester_strglob = (Module[
+      '_sqlite3_wasm_SQLTester_strglob'
+    ] = function () {
+      return (_sqlite3_wasm_SQLTester_strglob = Module[
+        '_sqlite3_wasm_SQLTester_strglob'
+      ] =
+        Module['asm']['sqlite3_wasm_SQLTester_strglob']).apply(null, arguments);
+    });
+
     var _malloc = (Module['_malloc'] = function () {
       return (_malloc = Module['_malloc'] = Module['asm']['malloc']).apply(
         null,
@@ -6011,6 +6020,28 @@ var sqlite3InitModule = (() => {
           },
           toss3,
           typedArrayPart,
+
+          affirmDbHeader: function (bytes) {
+            if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
+            const header = 'SQLite format 3';
+            if (header.length > bytes.byteLength) {
+              toss3('Input does not contain an SQLite3 database header.');
+            }
+            for (let i = 0; i < header.length; ++i) {
+              if (header.charCodeAt(i) !== bytes[i]) {
+                toss3('Input does not contain an SQLite3 database header.');
+              }
+            }
+          },
+
+          affirmIsDb: function (bytes) {
+            if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
+            const n = bytes.byteLength;
+            if (n < 512 || n % 512 !== 0) {
+              toss3('Byte array size', n, 'is invalid for an SQLite3 db.');
+            }
+            util.affirmDbHeader(bytes);
+          },
         };
 
         Object.assign(wasm, {
@@ -6158,6 +6189,15 @@ var sqlite3InitModule = (() => {
             return 1 === n
               ? wasm.pstack.alloc(safePtrSize ? 8 : wasm.ptrSizeof)
               : wasm.pstack.allocChunks(n, safePtrSize ? 8 : wasm.ptrSizeof);
+          },
+
+          call: function (f) {
+            const stackPos = wasm.pstack.pointer;
+            try {
+              return f(sqlite3);
+            } finally {
+              wasm.pstack.restore(stackPos);
+            }
           },
         });
         Object.defineProperties(wasm.pstack, {
@@ -6438,6 +6478,14 @@ var sqlite3InitModule = (() => {
           } finally {
             wasm.dealloc(pData);
           }
+        };
+
+        capi.sqlite3_js_sql_to_string = (sql) => {
+          if ('string' === typeof sql) {
+            return sql;
+          }
+          const x = flexibleString(v);
+          return x === v ? undefined : x;
         };
 
         if (util.isUIThread()) {
@@ -10521,11 +10569,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.43.2',
-          libVersionNumber: 3043002,
+          libVersion: '3.44.0',
+          libVersionNumber: 3044000,
           sourceId:
-            '2023-10-10 12:14:04 4310099cce5a487035fa535dd3002c59ac7f1d1bec68d7cf317fd3e769484790',
-          downloadVersion: 3430200,
+            '2023-11-01 11:23:50 17129ba1ff7f0daf37100ee82d507aef7827cf38de1866e2633096ae6ad81301',
+          downloadVersion: 3440000,
         };
       });
 
@@ -11697,7 +11745,6 @@ var sqlite3InitModule = (() => {
           if (!(globalThis.WorkerGlobalScope instanceof Function)) {
             toss('initWorker1API() must be run from a Worker thread.');
           }
-          const self = this.self;
           const sqlite3 = this.sqlite3 || toss('Missing this.sqlite3 object.');
           const DB = sqlite3.oo1.DB;
 
@@ -11998,7 +12045,7 @@ var sqlite3InitModule = (() => {
             type: 'sqlite3-api',
             result: 'worker1-ready',
           });
-        }.bind({ self, sqlite3 });
+        }.bind({ sqlite3 });
       });
 
       ('use strict');

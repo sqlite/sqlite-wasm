@@ -4301,20 +4301,20 @@ var sqlite3InitModule = (() => {
         Module['asm']['sqlite3_result_blob']).apply(null, arguments);
     });
 
-    var _sqlite3_result_error_nomem = (Module['_sqlite3_result_error_nomem'] =
-      function () {
-        return (_sqlite3_result_error_nomem = Module[
-          '_sqlite3_result_error_nomem'
-        ] =
-          Module['asm']['sqlite3_result_error_nomem']).apply(null, arguments);
-      });
-
     var _sqlite3_result_error_toobig = (Module['_sqlite3_result_error_toobig'] =
       function () {
         return (_sqlite3_result_error_toobig = Module[
           '_sqlite3_result_error_toobig'
         ] =
           Module['asm']['sqlite3_result_error_toobig']).apply(null, arguments);
+      });
+
+    var _sqlite3_result_error_nomem = (Module['_sqlite3_result_error_nomem'] =
+      function () {
+        return (_sqlite3_result_error_nomem = Module[
+          '_sqlite3_result_error_nomem'
+        ] =
+          Module['asm']['sqlite3_result_error_nomem']).apply(null, arguments);
       });
 
     var _sqlite3_result_double = (Module['_sqlite3_result_double'] =
@@ -5565,6 +5565,15 @@ var sqlite3InitModule = (() => {
           Module['asm']['sqlite3_wasm_test_str_hello']).apply(null, arguments);
       });
 
+    var _sqlite3_wasm_SQLTester_strglob = (Module[
+      '_sqlite3_wasm_SQLTester_strglob'
+    ] = function () {
+      return (_sqlite3_wasm_SQLTester_strglob = Module[
+        '_sqlite3_wasm_SQLTester_strglob'
+      ] =
+        Module['asm']['sqlite3_wasm_SQLTester_strglob']).apply(null, arguments);
+    });
+
     var _malloc = (Module['_malloc'] = function () {
       return (_malloc = Module['_malloc'] = Module['asm']['malloc']).apply(
         null,
@@ -5966,6 +5975,28 @@ var sqlite3InitModule = (() => {
           },
           toss3,
           typedArrayPart,
+
+          affirmDbHeader: function (bytes) {
+            if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
+            const header = 'SQLite format 3';
+            if (header.length > bytes.byteLength) {
+              toss3('Input does not contain an SQLite3 database header.');
+            }
+            for (let i = 0; i < header.length; ++i) {
+              if (header.charCodeAt(i) !== bytes[i]) {
+                toss3('Input does not contain an SQLite3 database header.');
+              }
+            }
+          },
+
+          affirmIsDb: function (bytes) {
+            if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
+            const n = bytes.byteLength;
+            if (n < 512 || n % 512 !== 0) {
+              toss3('Byte array size', n, 'is invalid for an SQLite3 db.');
+            }
+            util.affirmDbHeader(bytes);
+          },
         };
 
         Object.assign(wasm, {
@@ -6113,6 +6144,15 @@ var sqlite3InitModule = (() => {
             return 1 === n
               ? wasm.pstack.alloc(safePtrSize ? 8 : wasm.ptrSizeof)
               : wasm.pstack.allocChunks(n, safePtrSize ? 8 : wasm.ptrSizeof);
+          },
+
+          call: function (f) {
+            const stackPos = wasm.pstack.pointer;
+            try {
+              return f(sqlite3);
+            } finally {
+              wasm.pstack.restore(stackPos);
+            }
           },
         });
         Object.defineProperties(wasm.pstack, {
@@ -6393,6 +6433,14 @@ var sqlite3InitModule = (() => {
           } finally {
             wasm.dealloc(pData);
           }
+        };
+
+        capi.sqlite3_js_sql_to_string = (sql) => {
+          if ('string' === typeof sql) {
+            return sql;
+          }
+          const x = flexibleString(v);
+          return x === v ? undefined : x;
         };
 
         if (util.isUIThread()) {
@@ -10476,11 +10524,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.43.2',
-          libVersionNumber: 3043002,
+          libVersion: '3.44.0',
+          libVersionNumber: 3044000,
           sourceId:
-            '2023-10-10 12:14:04 4310099cce5a487035fa535dd3002c59ac7f1d1bec68d7cf317fd3e769484790',
-          downloadVersion: 3430200,
+            '2023-11-01 11:23:50 17129ba1ff7f0daf37100ee82d507aef7827cf38de1866e2633096ae6ad81301',
+          downloadVersion: 3440000,
         };
       });
 
@@ -11652,7 +11700,6 @@ var sqlite3InitModule = (() => {
           if (!(globalThis.WorkerGlobalScope instanceof Function)) {
             toss('initWorker1API() must be run from a Worker thread.');
           }
-          const self = this.self;
           const sqlite3 = this.sqlite3 || toss('Missing this.sqlite3 object.');
           const DB = sqlite3.oo1.DB;
 
@@ -11953,7 +12000,7 @@ var sqlite3InitModule = (() => {
             type: 'sqlite3-api',
             result: 'worker1-ready',
           });
-        }.bind({ self, sqlite3 });
+        }.bind({ sqlite3 });
       });
 
       ('use strict');
@@ -12392,6 +12439,7 @@ var sqlite3InitModule = (() => {
             const error = (...args) => logImpl(0, ...args);
             const toss = sqlite3.util.toss;
             const capi = sqlite3.capi;
+            const util = sqlite3.util;
             const wasm = sqlite3.wasm;
             const sqlite3_vfs = capi.sqlite3_vfs;
             const sqlite3_file = capi.sqlite3_file;
@@ -13120,30 +13168,76 @@ var sqlite3InitModule = (() => {
               doDir(opt.directory, 0);
             };
 
-            opfsUtil.importDb = async function (filename, bytes) {
-              if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
-              const n = bytes.byteLength;
-              if (n < 512 || n % 512 != 0) {
-                toss('Byte array size is invalid for an SQLite db.');
-              }
-              const header = 'SQLite format 3';
-              for (let i = 0; i < header.length; ++i) {
-                if (header.charCodeAt(i) !== bytes[i]) {
-                  toss('Input does not contain an SQLite database header.');
-                }
-              }
-              let sah;
+            const importDbChunked = async function (filename, callback) {
               const [hDir, fnamePart] = await opfsUtil.getDirForFilename(
                 filename,
                 true,
               );
+              const hFile = await hDir.getFileHandle(fnamePart, {
+                create: true,
+              });
+              let sah = await hFile.createSyncAccessHandle();
+              let nWrote = 0,
+                chunk,
+                checkedHeader = false,
+                err = false;
+              try {
+                sah.truncate(0);
+                while (undefined !== (chunk = await callback())) {
+                  if (chunk instanceof ArrayBuffer)
+                    chunk = new Uint8Array(chunk);
+                  if (0 === nWrote && chunk.byteLength >= 15) {
+                    util.affirmDbHeader(chunk);
+                    checkedHeader = true;
+                  }
+                  sah.write(chunk, { at: nWrote });
+                  nWrote += chunk.byteLength;
+                }
+                if (nWrote < 512 || 0 !== nWrote % 512) {
+                  toss(
+                    'Input size',
+                    nWrote,
+                    'is not correct for an SQLite database.',
+                  );
+                }
+                if (!checkedHeader) {
+                  const header = new Uint8Array(20);
+                  sah.read(header, { at: 0 });
+                  util.affirmDbHeader(header);
+                }
+                sah.write(new Uint8Array([1, 1]), { at: 18 });
+                return nWrote;
+              } catch (e) {
+                await sah.close();
+                sah = undefined;
+                await hDir.removeEntry(fnamePart).catch(() => {});
+                throw e;
+              } finally {
+                if (sah) await sah.close();
+              }
+            };
+
+            opfsUtil.importDb = async function (filename, bytes) {
+              if (bytes instanceof Function) {
+                return importDbChunked(filename, bytes);
+              }
+              if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
+              util.affirmIsDb(bytes);
+              const n = bytes.byteLength;
+              const [hDir, fnamePart] = await opfsUtil.getDirForFilename(
+                filename,
+                true,
+              );
+              let sah,
+                err,
+                nWrote = 0;
               try {
                 const hFile = await hDir.getFileHandle(fnamePart, {
                   create: true,
                 });
                 sah = await hFile.createSyncAccessHandle();
                 sah.truncate(0);
-                const nWrote = sah.write(bytes, { at: 0 });
+                nWrote = sah.write(bytes, { at: 0 });
                 if (nWrote != n) {
                   toss(
                     'Expected to write ' +
@@ -13373,6 +13467,7 @@ var sqlite3InitModule = (() => {
         const toss3 = sqlite3.util.toss3;
         const initPromises = Object.create(null);
         const capi = sqlite3.capi;
+        const util = sqlite3.util;
         const wasm = sqlite3.wasm;
 
         const SECTOR_SIZE = 4096;
@@ -13450,8 +13545,7 @@ var sqlite3InitModule = (() => {
                   pool.deletePath(file.path);
                 }
               } catch (e) {
-                pool.storeErr(e);
-                return capi.SQLITE_IOERR;
+                return pool.storeErr(e, capi.SQLITE_IOERR);
               }
             }
             return 0;
@@ -13495,8 +13589,7 @@ var sqlite3InitModule = (() => {
               }
               return 0;
             } catch (e) {
-              pool.storeErr(e);
-              return capi.SQLITE_IOERR;
+              return pool.storeErr(e, capi.SQLITE_IOERR);
             }
           },
           xSectorSize: function (pFile) {
@@ -13512,8 +13605,7 @@ var sqlite3InitModule = (() => {
               file.sah.flush();
               return 0;
             } catch (e) {
-              pool.storeErr(e);
-              return capi.SQLITE_IOERR;
+              return pool.storeErr(e, capi.SQLITE_IOERR);
             }
           },
           xTruncate: function (pFile, sz64) {
@@ -13526,8 +13618,7 @@ var sqlite3InitModule = (() => {
               file.sah.truncate(HEADER_OFFSET_DATA + Number(sz64));
               return 0;
             } catch (e) {
-              pool.storeErr(e);
-              return capi.SQLITE_IOERR;
+              return pool.storeErr(e, capi.SQLITE_IOERR);
             }
           },
           xUnlock: function (pFile, lockType) {
@@ -13547,10 +13638,9 @@ var sqlite3InitModule = (() => {
                 wasm.heap8u().subarray(pSrc, pSrc + n),
                 { at: HEADER_OFFSET_DATA + Number(offset64) },
               );
-              return nBytes === n ? 0 : capi.SQLITE_IOERR;
+              return n === nBytes ? 0 : toss('Unknown write() failure.');
             } catch (e) {
-              pool.storeErr(e);
-              return capi.SQLITE_IOERR;
+              return pool.storeErr(e, capi.SQLITE_IOERR);
             }
           },
         };
@@ -13603,8 +13693,8 @@ var sqlite3InitModule = (() => {
           },
           xGetLastError: function (pVfs, nOut, pOut) {
             const pool = getPoolForVfs(pVfs);
-            pool.log(`xGetLastError ${nOut}`);
             const e = pool.popErr();
+            pool.log(`xGetLastError ${nOut} e =`, e);
             if (e) {
               const scope = wasm.scopedAllocPush();
               try {
@@ -13617,7 +13707,7 @@ var sqlite3InitModule = (() => {
                 wasm.scopedAllocPop(scope);
               }
             }
-            return 0;
+            return e ? e.sqlite3Rc || capi.SQLITE_IOERR : 0;
           },
 
           xOpen: function f(pVfs, zName, pFile, flags, pOutFlags) {
@@ -13948,9 +14038,13 @@ var sqlite3InitModule = (() => {
             return !!sah;
           }
 
-          storeErr(e) {
-            if (e) this.error(e);
-            return (this.$error = e);
+          storeErr(e, code) {
+            if (e) {
+              e.sqlite3Rc = code || capi.SQLITE_IOERR;
+              this.error(e);
+            }
+            this.$error = e;
+            return code;
           }
 
           popErr() {
@@ -14022,8 +14116,57 @@ var sqlite3InitModule = (() => {
             return b;
           }
 
+          async importDbChunked(name, callback) {
+            const sah =
+              this.#mapFilenameToSAH.get(name) ||
+              this.nextAvailableSAH() ||
+              toss('No available handles to import to.');
+            sah.truncate(0);
+            let nWrote = 0,
+              chunk,
+              checkedHeader = false,
+              err = false;
+            try {
+              while (undefined !== (chunk = await callback())) {
+                if (chunk instanceof ArrayBuffer) chunk = new Uint8Array(chunk);
+                if (0 === nWrote && chunk.byteLength >= 15) {
+                  util.affirmDbHeader(chunk);
+                  checkedHeader = true;
+                }
+                sah.write(chunk, { at: HEADER_OFFSET_DATA + nWrote });
+                nWrote += chunk.byteLength;
+              }
+              if (nWrote < 512 || 0 !== nWrote % 512) {
+                toss(
+                  'Input size',
+                  nWrote,
+                  'is not correct for an SQLite database.',
+                );
+              }
+              if (!checkedHeader) {
+                const header = new Uint8Array(20);
+                sah.read(header, { at: 0 });
+                util.affirmDbHeader(header);
+              }
+              sah.write(new Uint8Array([1, 1]), {
+                at: HEADER_OFFSET_DATA + 18,
+              });
+            } catch (e) {
+              this.setAssociatedPath(sah, '', 0);
+              throw e;
+            }
+            this.setAssociatedPath(sah, name, capi.SQLITE_OPEN_MAIN_DB);
+            return nWrote;
+          }
+
           importDb(name, bytes) {
             if (bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
+            else if (bytes instanceof Function)
+              return this.importDbChunked(name, bytes);
+            const sah =
+              this.#mapFilenameToSAH.get(name) ||
+              this.nextAvailableSAH() ||
+              toss('No available handles to import to.');
             const n = bytes.byteLength;
             if (n < 512 || n % 512 != 0) {
               toss('Byte array size is invalid for an SQLite db.');
@@ -14034,10 +14177,6 @@ var sqlite3InitModule = (() => {
                 toss('Input does not contain an SQLite database header.');
               }
             }
-            const sah =
-              this.#mapFilenameToSAH.get(name) ||
-              this.nextAvailableSAH() ||
-              toss('No available handles to import to.');
             const nWrote = sah.write(bytes, { at: HEADER_OFFSET_DATA });
             if (nWrote != n) {
               this.setAssociatedPath(sah, '', 0);
@@ -14050,6 +14189,7 @@ var sqlite3InitModule = (() => {
               });
               this.setAssociatedPath(sah, name, capi.SQLITE_OPEN_MAIN_DB);
             }
+            return nWrote;
           }
         }
 
