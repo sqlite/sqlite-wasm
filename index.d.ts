@@ -1307,7 +1307,7 @@ type SAHPoolUtil = {
    *
    * This list is the same length as `getFileCount()`.
    */
-  getFilenames: () => string[];
+  getFileNames: () => string[];
 
   /**
    * Imports the contents of an SQLite database, provided as a byte array or
@@ -1321,12 +1321,31 @@ type SAHPoolUtil = {
    * files, the reason being that this VFS will automatically clean up any
    * non-database files so importing them is pointless.
    *
+   * If passed a function for its second argument, its behavior changes to
+   * asynchronous, and it imports its data in chunks fed to it by the given
+   * callback function. It calls the callback (which may be async) repeatedly,
+   * expecting either a Uint8Array or ArrayBuffer (to denote new input) or
+   * undefined (to denote EOF).
+   *
+   * For so long as the callback continues to return non-undefined, it will
+   * append incoming data to the given VFS-hosted database file. The result of
+   * the resolved Promise when called this way is the size of the resulting
+   * database.
+   *
+   * On success, the number of bytes written is returned. On success this
+   * routine rewrites the database header bytes in the output file (not the
+   * input array) to force disabling of WAL mode.
+   *
    * On a write error, the handle is removed from the pool and made available
    * for re-use.
-   *
-   * On success, the number of bytes written is returned.
    */
-  importDb: (name: string, data: Uint8Array | ArrayBuffer) => Promise<number>;
+  importDb: (
+    name: string,
+    data:
+      | Uint8Array
+      | ArrayBuffer
+      | (() => Promise<Uint8Array | ArrayBuffer | undefined>),
+  ) => Promise<number>;
 
   /**
    * Removes up to `numEntries` entries from the pool, with the caveat that it
@@ -1390,6 +1409,7 @@ declare class WasmAllocError extends Error {
 /** Exception class used primarily by the oo1 API. */
 declare class SQLite3Error extends Error {
   constructor(message: string);
+  resultCode: number;
 }
 
 /** A pointer to a location in WASM heap memory. */
@@ -1937,9 +1957,9 @@ declare type Sqlite3Static = {
     name?: string;
   }): Promise<SAHPoolUtil>;
 
-  WasmAllocError: WasmAllocError;
+  WasmAllocError: typeof WasmAllocError;
 
-  SQLite3Error: SQLite3Error;
+  SQLite3Error: typeof SQLite3Error;
 
   /**
    * The options with which the API was configured. Whether or not modifying
