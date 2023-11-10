@@ -12,11 +12,6 @@ SQLite Wasm conveniently wrapped as an ES Module.
 > [SQLite bug filing instructions](https://www.sqlite.org/src/wiki?name=Bug+Reports).
 > Filing TypeScript type related issues and feature requests is fine.
 
-> **Warning**
->
-> **Breaking change:** Version `3.43.2-build1` removes `SqliteClient`. It will
-> be published as a separate package.
-
 ## Installation
 
 ```bash
