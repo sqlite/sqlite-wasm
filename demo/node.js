@@ -1,4 +1,4 @@
-import { sqlite3InitModuleNode } from '../index.mjs';
+import { sqlite3InitModuleNode } from '../node.mjs';
 
 const log = (...args) => console.log(...args);
 const error = (...args) => console.error(...args);
