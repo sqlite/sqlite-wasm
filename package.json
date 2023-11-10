@@ -14,10 +14,12 @@
     "origin-private-file-system"
   ],
   "main": "index.mjs",
+  "node": "node.mjs",
   "type": "module",
   "files": [
     "index.d.ts",
     "index.mjs",
+    "node.mjs",
     "sqlite-wasm/"
   ],
   "types": "index.d.ts",
@@ -26,7 +28,8 @@
       "types": "./index.d.ts",
       "import": "./index.mjs",
       "main": "./index.mjs",
-      "browser": "./index.mjs"
+      "browser": "./index.mjs",
+      "node": "./node.mjs"
     },
     "./package.json": "./package.json"
   },
