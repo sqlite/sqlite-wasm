@@ -26,10 +26,10 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
+      "node": "./node.mjs",
       "import": "./index.mjs",
       "main": "./index.mjs",
-      "browser": "./index.mjs",
-      "node": "./node.mjs"
+      "browser": "./index.mjs"
     },
     "./package.json": "./package.json"
   },
