@@ -69,8 +69,7 @@ const error = (...args) => console.error(...args);
       filename: 'file:mydb.sqlite3?vfs=opfs',
     });
     const { dbId } = response;
-    logHtml(
-      '',
+    log(
       'OPFS is available, created persisted database at',
       response.result.filename.replace(/^file:(.*?)\?vfs=opfs/, '$1'),
     );
