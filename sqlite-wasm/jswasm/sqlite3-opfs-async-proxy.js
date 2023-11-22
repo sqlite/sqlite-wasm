@@ -64,14 +64,11 @@ const installAsyncProxy = function (self) {
     toss('This API requires navigator.storage.getDirectory.');
   }
 
-  /**
-   * Will hold state copied to this object from the syncronous side of
-   *      this API.
-   */
+  /** Will hold state copied to this object from the syncronous side of this API. */
   const state = Object.create(null);
 
   /**
-   * verbose:
+   * Verbose:
    *
    *      0 = no logging output
    *      1 = only errors
@@ -135,20 +132,20 @@ const installAsyncProxy = function (self) {
   };
 
   /**
-   * __openFiles is a map of sqlite3_file pointers (integers) to
-   *      metadata related to a given OPFS file handles. The pointers are, in
-   *      this side of the interface, opaque file handle IDs provided by the
-   *      synchronous part of this constellation. Each value is an object
-   *      with a structure demonstrated in the xOpen() impl.
+   * __openFiles is a map of sqlite3_file pointers (integers) to metadata
+   * related to a given OPFS file handles. The pointers are, in this side of the
+   * interface, opaque file handle IDs provided by the synchronous part of this
+   * constellation. Each value is an object with a structure demonstrated in the
+   * xOpen() impl.
    */
   const __openFiles = Object.create(null);
   /**
    * __implicitLocks is a Set of sqlite3_file pointers (integers) which were
-   *      "auto-locked".  i.e. those for which we obtained a sync access
-   *      handle without an explicit xLock() call. Such locks will be
-   *      released during db connection idle time, whereas a sync access
-   *      handle obtained via xLock(), or subsequently xLock()'d after
-   *      auto-acquisition, will not be released until xUnlock() is called.
+   * "auto-locked". i.e. those for which we obtained a sync access handle
+   * without an explicit xLock() call. Such locks will be released during db
+   * connection idle time, whereas a sync access handle obtained via xLock(), or
+   * subsequently xLock()'d after auto-acquisition, will not be released until
+   * xUnlock() is called.
    *
    *      Maintenance reminder: if we relinquish auto-locks at the end of the
    *      operation which acquires them, we pay a massive performance
@@ -158,10 +155,10 @@ const installAsyncProxy = function (self) {
   const __implicitLocks = new Set();
 
   /**
-   * Expects an OPFS file path. It gets resolved, such that ".."
-   *      components are properly expanded, and returned. If the 2nd arg is
-   *      true, the result is returned as an array of path elements, else an
-   *      absolute path string is returned.
+   * Expects an OPFS file path. It gets resolved, such that ".." components are
+   * properly expanded, and returned. If the 2nd arg is true, the result is
+   * returned as an array of path elements, else an absolute path string is
+   * returned.
    */
   const getResolvedPath = function (filename, splitIt) {
     const p = new URL(filename, 'file://irrelevant').pathname;
@@ -169,10 +166,10 @@ const installAsyncProxy = function (self) {
   };
 
   /**
-   * Takes the absolute path to a filesystem element. Returns an array
-   *      of [handleOfContainingDir, filename]. If the 2nd argument is truthy
-   *      then each directory element leading to the file is created along
-   *      the way. Throws if any creation or resolution fails.
+   * Takes the absolute path to a filesystem element. Returns an array of
+   * [handleOfContainingDir, filename]. If the 2nd argument is truthy then each
+   * directory element leading to the file is created along the way. Throws if
+   * any creation or resolution fails.
    */
   const getDirForFilename = async function f(absFilename, createDirs = false) {
     const path = getResolvedPath(absFilename, true);
@@ -187,14 +184,14 @@ const installAsyncProxy = function (self) {
   };
 
   /**
-   * If the given file-holding object has a sync handle attached to it,
-   *      that handle is remove and asynchronously closed. Though it may
-   *      sound sensible to continue work as soon as the close() returns
-   *      (noting that it's asynchronous), doing so can cause operations
-   *      performed soon afterwards, e.g. a call to getSyncHandle() to fail
-   *      because they may happen out of order from the close(). OPFS does
-   *      not guaranty that the actual order of operations is retained in
-   *      such cases. i.e.  always "await" on the result of this function.
+   * If the given file-holding object has a sync handle attached to it, that
+   * handle is remove and asynchronously closed. Though it may sound sensible to
+   * continue work as soon as the close() returns (noting that it's
+   * asynchronous), doing so can cause operations performed soon afterwards,
+   * e.g. a call to getSyncHandle() to fail because they may happen out of order
+   * from the close(). OPFS does not guaranty that the actual order of
+   * operations is retained in such cases. i.e. always "await" on the result of
+   * this function.
    */
   const closeSyncHandle = async (fh) => {
     if (fh.syncHandle) {
@@ -239,9 +236,9 @@ const installAsyncProxy = function (self) {
   };
 
   /**
-   * An experiment in improving concurrency by freeing up implicit locks
-   *      sooner. This is known to impact performance dramatically but it has
-   *      also shown to improve concurrency considerably.
+   * An experiment in improving concurrency by freeing up implicit locks sooner.
+   * This is known to impact performance dramatically but it has also shown to
+   * improve concurrency considerably.
    *
    *      If fh.releaseImplicitLocks is truthy and fh is in __implicitLocks,
    *      this routine returns closeSyncHandleNoThrow(), else it is a no-op.
@@ -253,11 +250,11 @@ const installAsyncProxy = function (self) {
   };
 
   /**
-   * An error class specifically for use with getSyncHandle(), the goal
-   *      of which is to eventually be able to distinguish unambiguously
-   *      between locking-related failures and other types, noting that we
-   *      cannot currently do so because createSyncAccessHandle() does not
-   *      define its exceptions in the required level of detail.
+   * An error class specifically for use with getSyncHandle(), the goal of which
+   * is to eventually be able to distinguish unambiguously between
+   * locking-related failures and other types, noting that we cannot currently
+   * do so because createSyncAccessHandle() does not define its exceptions in
+   * the required level of detail.
    *
    *      2022-11-29: according to:
    *
@@ -297,9 +294,9 @@ const installAsyncProxy = function (self) {
     }
   };
   /**
-   * Returns the sync access handle associated with the given file
-   *      handle object (which must be a valid handle object, as created by
-   *      xOpen()), lazily opening it if needed.
+   * Returns the sync access handle associated with the given file handle object
+   * (which must be a valid handle object, as created by xOpen()), lazily
+   * opening it if needed.
    *
    *      In order to help alleviate cross-tab contention for a dabase, if
    *      an exception is thrown while acquiring the handle, this routine
@@ -368,7 +365,7 @@ const installAsyncProxy = function (self) {
 
   /**
    * Stores the given value at state.sabOPView[state.opIds.rc] and then
-   *      Atomics.notify()'s it.
+   * Atomics.notify()'s it.
    */
   const storeAndNotify = (opName, value) => {
     log(opName + '() => notify(', value, ')');
@@ -382,11 +379,11 @@ const installAsyncProxy = function (self) {
   };
 
   /**
-   * We track 2 different timers: the "metrics" timer records how much
-   *      time we spend performing work. The "wait" timer records how much
-   *      time we spend waiting on the underlying OPFS timer. See the calls
-   *      to mTimeStart(), mTimeEnd(), wTimeStart(), and wTimeEnd()
-   *      throughout this file to see how they're used.
+   * We track 2 different timers: the "metrics" timer records how much time we
+   * spend performing work. The "wait" timer records how much time we spend
+   * waiting on the underlying OPFS timer. See the calls to mTimeStart(),
+   * mTimeEnd(), wTimeStart(), and wTimeEnd() throughout this file to see how
+   * they're used.
    */
   const __mTimer = Object.create(null);
   __mTimer.op = undefined;
@@ -411,17 +408,17 @@ const installAsyncProxy = function (self) {
     (metrics[__wTimer.op].wait += performance.now() - __wTimer.start);
 
   /**
-   * Gets set to true by the 'opfs-async-shutdown' command to quit the
-   *      wait loop. This is only intended for debugging purposes: we cannot
-   *      inspect this file's state while the tight waitLoop() is running and
-   *      need a way to stop that loop for introspection purposes.
+   * Gets set to true by the 'opfs-async-shutdown' command to quit the wait
+   * loop. This is only intended for debugging purposes: we cannot inspect this
+   * file's state while the tight waitLoop() is running and need a way to stop
+   * that loop for introspection purposes.
    */
   let flagAsyncShutdown = false;
 
   /**
-   * Asynchronous wrappers for sqlite3_vfs and sqlite3_io_methods
-   *      methods, as well as helpers like mkdir(). Maintenance reminder:
-   *      members are in alphabetical order to simplify finding them.
+   * Asynchronous wrappers for sqlite3_vfs and sqlite3_io_methods methods, as
+   * well as helpers like mkdir(). Maintenance reminder: members are in
+   * alphabetical order to simplify finding them.
    */
   const vfsAsyncImpls = {
     'opfs-async-metrics': async () => {
@@ -760,8 +757,8 @@ const installAsyncProxy = function (self) {
 
   const initS11n = () => {
     /**
-     * ACHTUNG: this code is 100% duplicated in the other half of this
-     *        proxy! The documentation is maintained in the "synchronous half".
+     * ACHTUNG: this code is 100% duplicated in the other half of this proxy!
+     * The documentation is maintained in the "synchronous half".
      */
     if (state.s11n) return state.s11n;
     const textDecoder = new TextDecoder(),
