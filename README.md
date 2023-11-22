@@ -71,7 +71,7 @@ const error = (...args) => console.error(...args);
     const { dbId } = response;
     log(
       'OPFS is available, created persisted database at',
-      response.result.filename.replace(/^file:(.*?)\?vfs=opfs/, '$1'),
+      response.result.filename.replace(/^file:(.*?)\?vfs=opfs$/, '$1'),
     );
     // Your SQLite code here.
   } catch (err) {
@@ -82,6 +82,9 @@ const error = (...args) => console.error(...args);
   }
 })();
 ```
+
+The `promiser` object above implements the
+[Worker1 API](https://sqlite.org/wasm/doc/trunk/api-worker1.md#worker1-methods).
 
 ### In a worker (with OPFS if available):
 
@@ -131,6 +134,9 @@ sqlite3InitModule({
   }
 });
 ```
+
+The `db` object above implements the
+[Object Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
 
 ### In the main thread (without OPFS):
 
