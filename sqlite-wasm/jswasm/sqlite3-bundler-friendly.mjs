@@ -3871,10 +3871,10 @@ var sqlite3InitModule = (() => {
         var type = stream.tty
           ? 2
           : FS.isDir(stream.mode)
-          ? 3
-          : FS.isLink(stream.mode)
-          ? 7
-          : 4;
+            ? 3
+            : FS.isLink(stream.mode)
+              ? 7
+              : 4;
         HEAP8[pbuf >> 0] = type;
 
         return 0;
@@ -6812,8 +6812,8 @@ var sqlite3InitModule = (() => {
           'i32' === ptrIR
             ? 4
             : 'i64' === ptrIR
-            ? 8
-            : toss('Unhandled ptrSizeof:', ptrIR));
+              ? 8
+              : toss('Unhandled ptrSizeof:', ptrIR));
 
         const cache = Object.create(null);
 
@@ -7259,8 +7259,8 @@ var sqlite3InitModule = (() => {
           return n
             ? __utf8Decode(heapWrappers().HEAP8U, ptr, ptr + n)
             : null === n
-            ? n
-            : '';
+              ? n
+              : '';
         };
 
         target.jstrlen = function (str) {
@@ -10524,11 +10524,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.44.0',
-          libVersionNumber: 3044000,
+          libVersion: '3.44.1',
+          libVersionNumber: 3044001,
           sourceId:
-            '2023-11-01 11:23:50 17129ba1ff7f0daf37100ee82d507aef7827cf38de1866e2633096ae6ad81301',
-          downloadVersion: 3440000,
+            '2023-11-22 14:18:12 d295f48e8f367b066b881780c98bdf980a1d550397d5ba0b0e49842c95b3e8b4',
+          downloadVersion: 3440100,
         };
       });
 
@@ -11130,8 +11130,8 @@ var sqlite3InitModule = (() => {
               'number' === typeof arity
                 ? arity
                 : xArity.length
-                ? xArity.length - 1
-                : 0;
+                  ? xArity.length - 1
+                  : 0;
             let rc;
             if (isWindow) {
               rc = capi.sqlite3_create_window_function(
