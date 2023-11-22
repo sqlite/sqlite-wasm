@@ -22,8 +22,8 @@ npm install @sqlite.org/sqlite-wasm
 
 There are three ways to use SQLite Wasm:
 
-- [in the main thread with a wrapped worker](#in-a-wrapped-worker-with-opfs)
-  (preferred option 💡) and
+- [in the main thread with a wrapped worker](#in-a-wrapped-worker-with-opfs-if-available)
+  (🏆 preferred option)
 - [in a worker](#in-a-worker-with-opfs-if-available)
 - [in the main thread](#in-the-main-thread-without-opfs)
 

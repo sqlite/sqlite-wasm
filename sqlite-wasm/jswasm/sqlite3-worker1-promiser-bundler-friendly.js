@@ -137,12 +137,9 @@ globalThis.sqlite3Worker1Promiser = function callee(
 };
 globalThis.sqlite3Worker1Promiser.defaultConfig = {
   worker: function () {
-    return new Worker(
-      new URL('sqlite3-worker1-bundler-friendly.mjs', import.meta.url),
-      {
-        type: 'module',
-      },
-    );
+    return new Worker('sqlite3-worker1-bundler-friendly.mjs', {
+      type: 'module',
+    });
   }.bind({
     currentScript: globalThis?.document?.currentScript,
   }),
