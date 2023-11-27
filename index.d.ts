@@ -1761,6 +1761,10 @@ declare class sqlite3_vtab_cursor extends SQLiteStruct {
   constructor(pointer?: WasmPointer);
 }
 
+declare module '@sqlite.org/sqlite-wasm' {
+  export function sqlite3Worker1Promiser(...args: any): any
+}
+
 declare class sqlite3_module extends SQLiteStruct {
   iVersion: number;
 
