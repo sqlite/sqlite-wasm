@@ -1889,10 +1889,10 @@ declare type Sqlite3Static = {
 
   /** Version numbers */
   version: {
-    libVersion: string,
-    libVersionNumber: number,
-    sourceId: string,
-    downloadVersion: number,
+    libVersion: string;
+    libVersionNumber: number;
+    sourceId: string;
+    downloadVersion: number;
   };
 
   /**
