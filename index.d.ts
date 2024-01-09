@@ -1887,6 +1887,14 @@ declare type Sqlite3Static = {
     DB: typeof Database;
   };
 
+  /** Version numbers */
+  version: {
+    libVersion: string;
+    libVersionNumber: number;
+    sourceId: string;
+    downloadVersion: number;
+  };
+
   /**
    * Initializes the Worker API.
    *

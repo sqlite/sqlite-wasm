@@ -20,41 +20,71 @@ npm install @sqlite.org/sqlite-wasm
 
 ## Usage
 
-There are two ways to use SQLite Wasm:
-[in the main thread](#in-the-main-thread-without-opfs) and
-[in a worker](#in-a-worker-with-opfs-if-available). Only the worker version
-allows you to use the origin private file system (OPFS) storage back-end.
+There are three ways to use SQLite Wasm:
 
-### In the main thread (without OPFS):
+- [in the main thread with a wrapped worker](#in-a-wrapped-worker-with-opfs-if-available)
+  (🏆 preferred option)
+- [in a worker](#in-a-worker-with-opfs-if-available)
+- [in the main thread](#in-the-main-thread-without-opfs)
+
+Only the worker versions allow you to use the origin private file system (OPFS)
+storage back-end.
+
+### In a wrapped worker (with OPFS if available):
+
+> **Warning**
+>
+> For this to work, you need to set the following headers on your server:
+>
+> `Cross-Origin-Opener-Policy: same-origin`
+>
+> `Cross-Origin-Embedder-Policy: require-corp`
 
 ```js
-import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
+import { sqlite3Worker1Promiser } from '@sqlite.org/sqlite-wasm';
 
 const log = (...args) => console.log(...args);
 const error = (...args) => console.error(...args);
 
-const start = function (sqlite3) {
-  log('Running SQLite3 version', sqlite3.version.libVersion);
-  const db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
-  // Your SQLite code here.
-};
-
-log('Loading and initializing SQLite3 module...');
-sqlite3InitModule({
-  print: log,
-  printErr: error,
-}).then((sqlite3) => {
+(async () => {
   try {
+    log('Loading and initializing SQLite3 module...');
+
+    const promiser = await new Promise((resolve) => {
+      const _promiser = sqlite3Worker1Promiser({
+        onready: () => {
+          resolve(_promiser);
+        },
+      });
+    });
+
     log('Done initializing. Running demo...');
-    start(sqlite3);
+
+    let response;
+
+    response = await promiser('config-get', {});
+    log('Running SQLite3 version', response.result.version.libVersion);
+
+    response = await promiser('open', {
+      filename: 'file:mydb.sqlite3?vfs=opfs',
+    });
+    const { dbId } = response;
+    log(
+      'OPFS is available, created persisted database at',
+      response.result.filename.replace(/^file:(.*?)\?vfs=opfs$/, '$1'),
+    );
+    // Your SQLite code here.
   } catch (err) {
+    if (!(err instanceof Error)) {
+      err = new Error(err.result.message);
+    }
     error(err.name, err.message);
   }
-});
+})();
 ```
 
-The `db` object above implements the
-[Object Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
+The `promiser` object above implements the
+[Worker1 API](https://sqlite.org/wasm/doc/trunk/api-worker1.md#worker1-methods).
 
 ### In a worker (with OPFS if available):
 
@@ -104,6 +134,40 @@ sqlite3InitModule({
   }
 });
 ```
+
+The `db` object above implements the
+[Object Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
+
+### In the main thread (without OPFS):
+
+```js
+import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
+
+const log = (...args) => console.log(...args);
+const error = (...args) => console.error(...args);
+
+const start = function (sqlite3) {
+  log('Running SQLite3 version', sqlite3.version.libVersion);
+  const db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
+  // Your SQLite code here.
+};
+
+log('Loading and initializing SQLite3 module...');
+sqlite3InitModule({
+  print: log,
+  printErr: error,
+}).then((sqlite3) => {
+  try {
+    log('Done initializing. Running demo...');
+    start(sqlite3);
+  } catch (err) {
+    error(err.name, err.message);
+  }
+});
+```
+
+The `db` object above implements the
+[Object Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
 
 ## Usage with vite
 

@@ -1,14 +1,20 @@
 import fs from 'fs';
 import fetch from 'node-fetch';
-import * as cheerio from 'cheerio';
 import decompress from 'decompress';
 
 async function getSqliteWasmDownloadLink() {
   const response = await fetch('https://sqlite.org/download.html');
   const html = await response.text();
-  const $ = cheerio.load(html);
-  const fileName = $('a[name="wasm"]').closest('tr').next().find('a').text();
-  const sqliteWasmLink = `https://sqlite.org/${new Date().getFullYear()}/${fileName}`;
+  const sqliteWasmLink =
+    'https://sqlite.org/' +
+    html
+      .replace(
+        /^.*?<!-- Download product data for scripts to read(.*?)-->.*?$/gms,
+        '$1',
+      )
+      .split(/\n/)
+      .filter((row) => /sqlite-wasm/.test(row))[0]
+      .split(/,/)[2];
   console.log(`Found SQLite Wasm download link: ${sqliteWasmLink}`);
   return sqliteWasmLink;
 }
@@ -19,6 +25,11 @@ async function downloadAndUnzipSqliteWasm(sqliteWasmDownloadLink) {
   }
   console.log('Downloading and unzipping SQLite Wasm...');
   const response = await fetch(sqliteWasmDownloadLink);
+  if (!response.ok || response.status !== 200) {
+    throw new Error(
+      `Unable to download SQLite Wasm from ${sqliteWasmDownloadLink}`,
+    );
+  }
   const buffer = await response.arrayBuffer();
   fs.writeFileSync('sqlite-wasm.zip', Buffer.from(buffer));
   const files = await decompress('sqlite-wasm.zip', 'sqlite-wasm', {
@@ -35,9 +46,9 @@ async function downloadAndUnzipSqliteWasm(sqliteWasmDownloadLink) {
 }
 
 async function main() {
-  const sqliteWasmLink = await getSqliteWasmDownloadLink();
-  await downloadAndUnzipSqliteWasm(sqliteWasmLink);
   try {
+    const sqliteWasmLink = await getSqliteWasmDownloadLink();
+    await downloadAndUnzipSqliteWasm(sqliteWasmLink);
     fs.copyFileSync(
       './node_modules/module-workers-polyfill/module-workers-polyfill.min.js',
       './demo/module-workers-polyfill.min.js',
