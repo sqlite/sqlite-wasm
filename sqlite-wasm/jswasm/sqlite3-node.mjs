@@ -4983,6 +4983,12 @@ var sqlite3InitModule = (() => {
           Module['asm']['sqlite3_collation_needed']).apply(null, arguments);
       });
 
+    var _sqlite3_get_autocommit = (Module['_sqlite3_get_autocommit'] =
+      function () {
+        return (_sqlite3_get_autocommit = Module['_sqlite3_get_autocommit'] =
+          Module['asm']['sqlite3_get_autocommit']).apply(null, arguments);
+      });
+
     var _sqlite3_table_column_metadata = (Module[
       '_sqlite3_table_column_metadata'
     ] = function () {
@@ -8792,6 +8798,7 @@ var sqlite3InitModule = (() => {
           ['sqlite3_file_control', 'int', 'sqlite3*', 'string', 'int', '*'],
           ['sqlite3_finalize', 'int', 'sqlite3_stmt*'],
           ['sqlite3_free', undefined, '*'],
+          ['sqlite3_get_autocommit', 'int', 'sqlite3*'],
           ['sqlite3_get_auxdata', '*', 'sqlite3_context*', 'int'],
           ['sqlite3_initialize', undefined],
 
@@ -10569,11 +10576,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.44.2',
-          libVersionNumber: 3044002,
+          libVersion: '3.45.0',
+          libVersionNumber: 3045000,
           sourceId:
-            '2023-11-24 11:41:44 ebead0e7230cd33bcec9f95d2183069565b9e709bf745c9b5db65cc0cbf92c0f',
-          downloadVersion: 3440200,
+            '2024-01-15 17:01:13 1066602b2b1976fe58b5150777cced894af17c803e068f5918390d6915b46e1d',
+          downloadVersion: 3450000,
         };
       });
 
