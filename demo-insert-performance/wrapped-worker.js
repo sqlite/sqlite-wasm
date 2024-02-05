@@ -40,7 +40,7 @@ import { getSampleQueries } from "./sample-queries.mjs";
     );
 
 
-    logHtml('','INSERT a lot of data');
+    logHtml('', 'INSERT a lot of data');
     // Start time
     const startTime = performance.now();
 
@@ -48,21 +48,26 @@ import { getSampleQueries } from "./sample-queries.mjs";
 
     // await promiser('exec', { dbId, sql: 'PRAGMA journal_mode = OFF;' });
 
+    await promiser('exec', { dbId, sql: 'BEGIN TRANSACTION;' });
+
     for (let i = 0; i < sampleQueries.length; i++) {
       await promiser('exec', { dbId, sql: sampleQueries[i] });
       // Check if the current index + 1 is a multiple of 50
       if ((i + 1) % 50 === 0) {
-        logHtml('',`Processed ${i + 1} records...`);
+        logHtml('', `Processed ${i + 1} records...`);
       }
     }
-    logHtml('',"DONE!")
+
+    await promiser('exec', { dbId, sql: 'COMMIT;' });
+
+    logHtml('', "DONE!")
 
     // End time
     const endTime = performance.now();
 
     // Calculate total runtime
     const totalTime = endTime - startTime;
-    logHtml('',`Table creation and data insertion completed in ${totalTime.toFixed(2)} milliseconds.`);
+    logHtml('', `Table creation and data insertion completed in ${totalTime.toFixed(2)} milliseconds.`);
 
     await promiser('close', { dbId });
   } catch (err) {

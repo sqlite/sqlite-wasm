@@ -31,6 +31,8 @@ const start = function (sqlite3) {
     const sampleQueries = getSampleQueries();
     
     // db.exec('PRAGMA journal_mode = OFF;');
+    
+    db.exec('BEGIN TRANSACTION;');
 
     for (let i = 0; i < sampleQueries.length; i++) {
       db.exec(sampleQueries[i]);
@@ -39,6 +41,9 @@ const start = function (sqlite3) {
         log(`Processed ${i + 1} records...`);
       }
     }
+    
+    db.exec('COMMIT;');
+
     log("DONE!")
 
     // End time
