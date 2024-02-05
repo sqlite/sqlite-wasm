@@ -64,12 +64,14 @@ const start = function (sqlite3) {
       // Reset the statement to be used again
       stmt.reset();
 
-      // Check if the current index + 1 is a multiple of 50
+      // Check if the current index + 1 is a multiple of 50000
       if ((i + 1) % 50000 === 0) {
         log(`Processed ${i + 1} records...`);
       }
     }
 
+    stmt.finalize( );
+    
     db.exec({
       sql: "COMMIT;",
     });

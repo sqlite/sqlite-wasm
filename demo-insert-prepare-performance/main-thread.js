@@ -27,7 +27,7 @@ const start = function (sqlite3) {
     // db.exec({
     //   sql: "DELETE FROM MT_DD02L;",
     // }); 
-    
+
     db.exec("BEGIN;");
 
     const sql = `INSERT OR REPLACE INTO MT_DD02L 
@@ -46,7 +46,7 @@ const start = function (sqlite3) {
     const sampleData = getSampleData();
 
     for (let i = 0; i < sampleData.length; i++) {
- 
+
       // Bind values from the row to the statement
       stmt.bind(sampleData[i]);
 
@@ -56,11 +56,13 @@ const start = function (sqlite3) {
       // Reset the statement to be used again
       stmt.reset();
 
-      // Check if the current index + 1 is a multiple of 50
+      // Check if the current index + 1 is a multiple of 50000
       if ((i + 1) % 50000 === 0) {
         log(`Processed ${i + 1} records...`);
       }
     }
+
+    stmt.finalize();
 
     db.exec({
       sql: "COMMIT;",
