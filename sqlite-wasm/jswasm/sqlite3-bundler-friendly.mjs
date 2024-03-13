@@ -26,9 +26,9 @@
 /*
  ** This code was built from sqlite3 version...
  **
- ** SQLITE_VERSION "3.45.1"
- ** SQLITE_VERSION_NUMBER 3045001
- ** SQLITE_SOURCE_ID "2024-01-30 16:01:20 e876e51a0ed5c5b3126f52e532044363a014bc594cfefa87ffb5b82257cc467a"
+ ** SQLITE_VERSION "3.45.2"
+ ** SQLITE_VERSION_NUMBER 3045002
+ ** SQLITE_SOURCE_ID "2024-03-12 11:06:23 d8cd6d49b46a395b13955387d05e9e1a2a47e54fb99f3c9b59835bbefad6af77"
  **
  ** Using the Emscripten SDK version 3.1.30.
  */
@@ -4204,6 +4204,16 @@ var sqlite3InitModule = (() => {
         Module['asm']['sqlite3_column_int64']).apply(null, arguments);
     });
 
+    var _sqlite3_reset = (Module['_sqlite3_reset'] = function () {
+      return (_sqlite3_reset = Module['_sqlite3_reset'] =
+        Module['asm']['sqlite3_reset']).apply(null, arguments);
+    });
+
+    var _sqlite3_exec = (Module['_sqlite3_exec'] = function () {
+      return (_sqlite3_exec = Module['_sqlite3_exec'] =
+        Module['asm']['sqlite3_exec']).apply(null, arguments);
+    });
+
     var _sqlite3_column_int = (Module['_sqlite3_column_int'] = function () {
       return (_sqlite3_column_int = Module['_sqlite3_column_int'] =
         Module['asm']['sqlite3_column_int']).apply(null, arguments);
@@ -4219,9 +4229,24 @@ var sqlite3InitModule = (() => {
         Module['asm']['sqlite3_file_control']).apply(null, arguments);
     });
 
-    var _sqlite3_reset = (Module['_sqlite3_reset'] = function () {
-      return (_sqlite3_reset = Module['_sqlite3_reset'] =
-        Module['asm']['sqlite3_reset']).apply(null, arguments);
+    var _sqlite3_column_name = (Module['_sqlite3_column_name'] = function () {
+      return (_sqlite3_column_name = Module['_sqlite3_column_name'] =
+        Module['asm']['sqlite3_column_name']).apply(null, arguments);
+    });
+
+    var _sqlite3_column_text = (Module['_sqlite3_column_text'] = function () {
+      return (_sqlite3_column_text = Module['_sqlite3_column_text'] =
+        Module['asm']['sqlite3_column_text']).apply(null, arguments);
+    });
+
+    var _sqlite3_column_type = (Module['_sqlite3_column_type'] = function () {
+      return (_sqlite3_column_type = Module['_sqlite3_column_type'] =
+        Module['asm']['sqlite3_column_type']).apply(null, arguments);
+    });
+
+    var _sqlite3_errmsg = (Module['_sqlite3_errmsg'] = function () {
+      return (_sqlite3_errmsg = Module['_sqlite3_errmsg'] =
+        Module['asm']['sqlite3_errmsg']).apply(null, arguments);
     });
 
     var _sqlite3_deserialize = (Module['_sqlite3_deserialize'] = function () {
@@ -4459,24 +4484,9 @@ var sqlite3InitModule = (() => {
           Module['asm']['sqlite3_column_double']).apply(null, arguments);
       });
 
-    var _sqlite3_column_text = (Module['_sqlite3_column_text'] = function () {
-      return (_sqlite3_column_text = Module['_sqlite3_column_text'] =
-        Module['asm']['sqlite3_column_text']).apply(null, arguments);
-    });
-
     var _sqlite3_column_value = (Module['_sqlite3_column_value'] = function () {
       return (_sqlite3_column_value = Module['_sqlite3_column_value'] =
         Module['asm']['sqlite3_column_value']).apply(null, arguments);
-    });
-
-    var _sqlite3_column_type = (Module['_sqlite3_column_type'] = function () {
-      return (_sqlite3_column_type = Module['_sqlite3_column_type'] =
-        Module['asm']['sqlite3_column_type']).apply(null, arguments);
-    });
-
-    var _sqlite3_column_name = (Module['_sqlite3_column_name'] = function () {
-      return (_sqlite3_column_name = Module['_sqlite3_column_name'] =
-        Module['asm']['sqlite3_column_name']).apply(null, arguments);
     });
 
     var _sqlite3_bind_blob = (Module['_sqlite3_bind_blob'] = function () {
@@ -4604,11 +4614,6 @@ var sqlite3InitModule = (() => {
           Module['asm']['sqlite3_value_numeric_type']).apply(null, arguments);
       });
 
-    var _sqlite3_errmsg = (Module['_sqlite3_errmsg'] = function () {
-      return (_sqlite3_errmsg = Module['_sqlite3_errmsg'] =
-        Module['asm']['sqlite3_errmsg']).apply(null, arguments);
-    });
-
     var _sqlite3_set_authorizer = (Module['_sqlite3_set_authorizer'] =
       function () {
         return (_sqlite3_set_authorizer = Module['_sqlite3_set_authorizer'] =
@@ -4623,11 +4628,6 @@ var sqlite3InitModule = (() => {
     var _sqlite3_strlike = (Module['_sqlite3_strlike'] = function () {
       return (_sqlite3_strlike = Module['_sqlite3_strlike'] =
         Module['asm']['sqlite3_strlike']).apply(null, arguments);
-    });
-
-    var _sqlite3_exec = (Module['_sqlite3_exec'] = function () {
-      return (_sqlite3_exec = Module['_sqlite3_exec'] =
-        Module['asm']['sqlite3_exec']).apply(null, arguments);
     });
 
     var _sqlite3_auto_extension = (Module['_sqlite3_auto_extension'] =
@@ -10534,11 +10534,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.45.1',
-          libVersionNumber: 3045001,
+          libVersion: '3.45.2',
+          libVersionNumber: 3045002,
           sourceId:
-            '2024-01-30 16:01:20 e876e51a0ed5c5b3126f52e532044363a014bc594cfefa87ffb5b82257cc467a',
-          downloadVersion: 3450100,
+            '2024-03-12 11:06:23 d8cd6d49b46a395b13955387d05e9e1a2a47e54fb99f3c9b59835bbefad6af77',
+          downloadVersion: 3450200,
         };
       });
 
