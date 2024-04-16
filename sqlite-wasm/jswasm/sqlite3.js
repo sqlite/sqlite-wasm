@@ -26,9 +26,9 @@
 /*
  ** This code was built from sqlite3 version...
  **
- ** SQLITE_VERSION "3.45.2"
- ** SQLITE_VERSION_NUMBER 3045002
- ** SQLITE_SOURCE_ID "2024-03-12 11:06:23 d8cd6d49b46a395b13955387d05e9e1a2a47e54fb99f3c9b59835bbefad6af77"
+ ** SQLITE_VERSION "3.45.3"
+ ** SQLITE_VERSION_NUMBER 3045003
+ ** SQLITE_SOURCE_ID "2024-04-15 13:34:05 8653b758870e6ef0c98d46b3ace27849054af85da891eb121e9aaa537f1e8355"
  **
  ** Using the Emscripten SDK version 3.1.30.
  */
@@ -10562,11 +10562,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.45.2',
-          libVersionNumber: 3045002,
+          libVersion: '3.45.3',
+          libVersionNumber: 3045003,
           sourceId:
-            '2024-03-12 11:06:23 d8cd6d49b46a395b13955387d05e9e1a2a47e54fb99f3c9b59835bbefad6af77',
-          downloadVersion: 3450200,
+            '2024-04-15 13:34:05 8653b758870e6ef0c98d46b3ace27849054af85da891eb121e9aaa537f1e8355',
+          downloadVersion: 3450300,
         };
       });
 
@@ -14364,7 +14364,7 @@ var sqlite3InitModule = (() => {
                 })
                 .catch(async (e) => {
                   await thePool.removeVfs().catch(() => {});
-                  return e;
+                  throw e;
                 });
             })
             .catch((err) => {
