@@ -7799,8 +7799,9 @@ var sqlite3InitModule = (() => {
             if (args.length !== xf.length) __argcMismatch(fArg, xf.length);
             const scope = target.scopedAllocPush();
             try {
-              for (const i in args)
+              for (let i = 0; i < args.length; i++) {
                 args[i] = cxw.convertArgNoCheck(argTypes[i], args[i], args, i);
+              }
               return cxw.convertResultNoCheck(resultType, xf.apply(null, args));
             } finally {
               target.scopedAllocPop(scope);
