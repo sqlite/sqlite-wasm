@@ -5737,7 +5737,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/vfs_find.html
    */
-  sqlite3_vfs_find: (vfsName: string|null) => number;
+  sqlite3_vfs_find: (vfsName: string|null) => WasmPointer;
 
   /**
    * Register a new VFS. Becomes the default if the makeDflt parameter is set.
