@@ -1244,7 +1244,7 @@ declare class OpfsDatabase extends Database {
    *       `c`. These modes are ignored for the special `":memory:"` and `""`
    *       names and may be ignored by specific VFSes.
    */
-  constructor(filename: string, flags: string);
+  constructor(filename: string, flags?: string);
 
   /**
    * Import a database into OPFS storage. It only works with database files and
