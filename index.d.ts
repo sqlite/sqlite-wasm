@@ -1244,7 +1244,7 @@ declare class OpfsDatabase extends Database {
    *       `c`. These modes are ignored for the special `":memory:"` and `""`
    *       names and may be ignored by specific VFSes.
    */
-  constructor(filename: string, flags: string);
+  constructor(filename: string, flags?: string);
 
   /**
    * Import a database into OPFS storage. It only works with database files and
@@ -2032,7 +2032,15 @@ declare type Sqlite3Static = {
     installVfs: (obj: {
       io?: {
         struct: sqlite3_io_methods;
-        methods: Omit<sqlite3_io_methods, 'iVersion'>;
+        methods: { [K in keyof sqlite3_io_methods as K extends `x${string}` ? K : never]?: sqlite3_io_methods[K] };
+        applyArgcCheck?: boolean;
+      };
+      vfs?: {
+        struct: sqlite3_vfs;
+        methods: { [K in keyof sqlite3_vfs as K extends `x${string}` ? K : never]?: sqlite3_vfs[K] };
+        applyArgcCheck?: boolean;
+        name?: string;
+        asDefault?: boolean;
       };
     }) => Sqlite3Static['vfs'];
   };
@@ -2792,7 +2800,7 @@ declare type WASM_API = {
   poke32: (addr: WasmPointer, value: number) => WASM_API;
 
   /** Equivalent to poke(X,Y,'i64') */
-  poke64: (addr: WasmPointer, value: number) => WASM_API;
+  poke64: (addr: WasmPointer, value: number|bigint) => WASM_API;
 
   /** Equivalent to poke(X,Y,'f32') */
   poke32f: (addr: WasmPointer, value: number) => WASM_API;
@@ -5729,7 +5737,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/vfs_find.html
    */
-  sqlite3_vfs_find: (vfsName: string) => sqlite3_vfs;
+  sqlite3_vfs_find: (vfsName: string|null) => WasmPointer;
 
   /**
    * Register a new VFS. Becomes the default if the makeDflt parameter is set.
