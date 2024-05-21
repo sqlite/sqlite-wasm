@@ -51,7 +51,9 @@ const initializeSQLite = async () => {
     log('Loading and initializing SQLite3 module...');
 
     const promiser = await new Promise((resolve) => {
-      const _promiser = sqlite3Worker1Promiser({ onready: () => resolve(_promiser) });
+      const _promiser = sqlite3Worker1Promiser({
+        onready: () => resolve(_promiser),
+      });
     });
 
     log('Done initializing. Running demo...');
@@ -65,7 +67,7 @@ const initializeSQLite = async () => {
     const { dbId } = openResponse;
     log(
       'OPFS is available, created persisted database at',
-      openResponse.result.filename.replace(/^file:(.*?)\?vfs=opfs$/, '$1')
+      openResponse.result.filename.replace(/^file:(.*?)\?vfs=opfs$/, '$1'),
     );
     // Your SQLite code here.
   } catch (err) {
@@ -106,13 +108,14 @@ const error = console.error;
 
 const start = (sqlite3) => {
   log('Running SQLite3 version', sqlite3.version.libVersion);
-  const db = 'opfs' in sqlite3 
-    ? new sqlite3.oo1.OpfsDb('/mydb.sqlite3')
-    : new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
+  const db =
+    'opfs' in sqlite3
+      ? new sqlite3.oo1.OpfsDb('/mydb.sqlite3')
+      : new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
   log(
-    'opfs' in sqlite3 
+    'opfs' in sqlite3
       ? `OPFS is available, created persisted database at ${db.filename}`
-      : `OPFS is not available, created transient database ${db.filename}`
+      : `OPFS is not available, created transient database ${db.filename}`,
   );
   // Your SQLite code here.
 };
