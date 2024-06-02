@@ -1415,7 +1415,7 @@ declare class SQLite3Error extends Error {
 /** A pointer to a location in WASM heap memory. */
 declare type WasmPointer = number;
 
-declare type NullPointer = 0 | null;
+declare type NullPointer = 0 | null | undefined;
 
 declare type StructPtrMapper<T> = {
   StructType: T;
