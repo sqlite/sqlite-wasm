@@ -6548,7 +6548,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/session/sqlite3session_attach.html
    */
-  sqlite3session_attach: (pSession: WasmPointer, tableName: string) => number;
+  sqlite3session_attach: (pSession: WasmPointer, tableName: string || 0) => number;
 
   /**
    * Set a table filter on a Session Object.
