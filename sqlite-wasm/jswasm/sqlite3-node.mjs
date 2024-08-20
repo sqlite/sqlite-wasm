@@ -26,9 +26,9 @@
 /*
  ** This code was built from sqlite3 version...
  **
- ** SQLITE_VERSION "3.46.0"
- ** SQLITE_VERSION_NUMBER 3046000
- ** SQLITE_SOURCE_ID "2024-05-23 13:25:27 96c92aba00c8375bc32fafcdf12429c58bd8aabfcadab6683e35bbb9cdebf19e"
+ ** SQLITE_VERSION "3.46.1"
+ ** SQLITE_VERSION_NUMBER 3046001
+ ** SQLITE_SOURCE_ID "2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16c63f69a1e33"
  **
  ** Using the Emscripten SDK version 3.1.30.
  */
@@ -10730,11 +10730,11 @@ var sqlite3InitModule = (() => {
 
       globalThis.sqlite3ApiBootstrap.initializers.push(function (sqlite3) {
         sqlite3.version = {
-          libVersion: '3.46.0',
-          libVersionNumber: 3046000,
+          libVersion: '3.46.1',
+          libVersionNumber: 3046001,
           sourceId:
-            '2024-05-23 13:25:27 96c92aba00c8375bc32fafcdf12429c58bd8aabfcadab6683e35bbb9cdebf19e',
-          downloadVersion: 3460000,
+            '2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16c63f69a1e33',
+          downloadVersion: 3460100,
         };
       });
 
