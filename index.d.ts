@@ -8,6 +8,14 @@ declare type SqlValue =
   | Int8Array
   | ArrayBuffer;
 
+/** Types of values that can be passed to SQLite. */
+declare type BindableValue =
+  | SqlValue
+  /** converted to NULL */
+  | undefined
+  /** converted to INTEGER */
+  | boolean;
+
 /** Internal data types supported by SQLite3. */
 declare type SQLiteDataType =
   | CAPI['SQLITE_INTEGER']
@@ -18,12 +26,10 @@ declare type SQLiteDataType =
 
 /** Specifies parameter bindings. */
 declare type BindingSpec =
-  | readonly SqlValue[]
-  | { [paramName: string]: SqlValue }
+  | readonly BindableValue[]
+  | { [paramName: string]: BindableValue }
   /** Assumed to have binding index `1` */
-  | SqlValue
-  | undefined
-  | boolean;
+  | (SqlValue | boolean);
 
 /**
  * Certain WASM-bound APIs, where explicitly noted, have additional string-type
