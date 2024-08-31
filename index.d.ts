@@ -21,7 +21,9 @@ declare type BindingSpec =
   | readonly SqlValue[]
   | { [paramName: string]: SqlValue }
   /** Assumed to have binding index `1` */
-  | SqlValue;
+  | SqlValue
+  | undefined
+  | boolean;
 
 /**
  * Certain WASM-bound APIs, where explicitly noted, have additional string-type
