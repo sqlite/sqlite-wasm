@@ -14,16 +14,19 @@
     "origin-private-file-system"
   ],
   "main": "index.mjs",
+  "node": "node.mjs",
   "type": "module",
   "files": [
     "index.d.ts",
     "index.mjs",
+    "node.mjs",
     "sqlite-wasm/"
   ],
   "types": "index.d.ts",
   "exports": {
     ".": {
       "types": "./index.d.ts",
+      "node": "./node.mjs",
       "import": "./index.mjs",
       "main": "./index.mjs",
       "browser": "./index.mjs"
@@ -39,6 +42,7 @@
     "clean": "shx rm -rf sqlite-wasm",
     "build": "npm run clean && node bin/index.js",
     "start": "npx http-server --coop",
+    "start:node": "cd demo && node node.mjs",
     "fix": "npx prettier . --write",
     "prepublishOnly": "npm run build && npm run fix && npm run publint && npm run check-types",
     "deploy": "npm run prepare && git add . && git commit -am 'New release' && git push && npm publish --access public"
