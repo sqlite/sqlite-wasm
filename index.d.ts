@@ -3,7 +3,7 @@ declare type SqlValue =
   | string
   | number
   | null
-  | BigInt
+  | bigint
   | Uint8Array
   | Int8Array
   | ArrayBuffer;
@@ -1870,9 +1870,9 @@ declare class sqlite3_index_info extends SQLiteStruct {
   needToFreeIdxStr: number;
   orderByConsumed: number;
   estimatedCost: number;
-  estimatedRows: BigInt;
+  estimatedRows: bigint;
   idxFlags: number;
-  colUsed: BigInt;
+  colUsed: bigint;
   sqlite3_index_constraint: sqlite3_index_constraint;
   sqlite3_index_orderby: sqlite3_index_orderby;
   sqlite3_index_constraint_usage: sqlite3_index_constraint_usage;
@@ -2713,7 +2713,7 @@ declare type WASM_API = {
    * Equivalent to peek(X,'i64'). Will throw if the environment is not
    * configured with BigInt support.
    */
-  peek64: (addr: WasmPointer) => BigInt;
+  peek64: (addr: WasmPointer) => bigint;
 
   /** Equivalent to peek(X,'f32') */
   peek32f: (addr: WasmPointer) => number;
@@ -3528,7 +3528,7 @@ declare type CAPI = {
     arg1: number,
     arg2: number,
   ): number;
-  sqlite3_config(op: CAPI['SQLITE_CONFIG_MEMDB_MAXSIZE'], arg: BigInt): number;
+  sqlite3_config(op: CAPI['SQLITE_CONFIG_MEMDB_MAXSIZE'], arg: bigint): number;
 
   /**
    * Used to make configuration changes to a database connection. The interface
@@ -3595,7 +3595,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/last_insert_rowid.html
    */
-  sqlite3_last_insert_rowid: (db: Database | WasmPointer) => BigInt;
+  sqlite3_last_insert_rowid: (db: Database | WasmPointer) => bigint;
 
   /**
    * Allows the application to set the value returned by calling
@@ -3610,7 +3610,7 @@ declare type CAPI = {
    */
   sqlite3_set_last_insert_rowid: (
     db: Database | WasmPointer,
-    rowid: BigInt,
+    rowid: bigint,
   ) => void;
 
   /**
@@ -3641,7 +3641,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/changes.html
    */
-  sqlite3_changes64: (db: Database | WasmPointer) => BigInt;
+  sqlite3_changes64: (db: Database | WasmPointer) => bigint;
 
   /**
    * Return the total number of rows inserted, modified or deleted by all
@@ -3673,7 +3673,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/total_changes.html
    */
-  sqlite3_total_changes64: (db: Database | WasmPointer) => BigInt;
+  sqlite3_total_changes64: (db: Database | WasmPointer) => bigint;
 
   /**
    * Useful during command-line input to determine if the currently entered text
@@ -3753,7 +3753,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/free.html
    */
-  sqlite3_malloc64: (numBytes: BigInt) => WasmPointer;
+  sqlite3_malloc64: (numBytes: bigint) => WasmPointer;
 
   /**
    * Attempts to resize a prior memory allocation X to be at least N bytes.
@@ -3793,7 +3793,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/free.html
    */
-  sqlite3_realloc64: (ptr: WasmPointer, numBytes: BigInt) => WasmPointer;
+  sqlite3_realloc64: (ptr: WasmPointer, numBytes: bigint) => WasmPointer;
 
   /**
    * Calling `sqlite3_free()` with a pointer previously returned by
@@ -3828,7 +3828,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/free.html
    */
-  sqlite3_msize: (ptr: WasmPointer) => BigInt;
+  sqlite3_msize: (ptr: WasmPointer) => bigint;
 
   /**
    * Pseudo-Random Number Generator
@@ -4014,8 +4014,8 @@ declare type CAPI = {
   sqlite3_uri_int64: (
     uri: string | WasmPointer,
     paramName: string | WasmPointer,
-    defaultVal: BigInt,
-  ) => BigInt;
+    defaultVal: bigint,
+  ) => bigint;
 
   /**
    * Returns a pointer to the name (not the value) of the `idx`-th query
@@ -4322,7 +4322,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/bind_blob.html
    */
-  sqlite3_bind_int64: (stmt: WasmPointer, idx: number, value: BigInt) => number;
+  sqlite3_bind_int64: (stmt: WasmPointer, idx: number, value: bigint) => number;
 
   /**
    * Bind a `NULL` value to a parameter in a prepared statement.
@@ -4576,7 +4576,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/column_blob.html
    */
-  sqlite3_column_int64: (db: Database | WasmPointer, colIdx: number) => BigInt;
+  sqlite3_column_int64: (db: Database | WasmPointer, colIdx: number) => bigint;
 
   /**
    * Get a TEXT result value from a column in the current result row.
@@ -4812,7 +4812,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/value_blob.html
    */
-  sqlite3_value_int64: (sqliteValue: WasmPointer) => BigInt;
+  sqlite3_value_int64: (sqliteValue: WasmPointer) => bigint;
 
   /**
    * Extract a pointer value from a protected `sqlite3_value` object. If the
@@ -5170,7 +5170,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/result_blob.html
    */
-  sqlite3_result_int64: (ctx: WasmPointer, value: BigInt) => void;
+  sqlite3_result_int64: (ctx: WasmPointer, value: bigint) => void;
 
   /**
    * Sets the return value of the application-defined function to be `NULL`.
@@ -5252,7 +5252,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/result_blob.html
    */
-  sqlite3_result_zeroblob64: (ctx: WasmPointer, blobLen: BigInt) => void;
+  sqlite3_result_zeroblob64: (ctx: WasmPointer, blobLen: bigint) => void;
 
   /**
    * Causes the subtype of the result from the application-defined SQL function
@@ -5297,7 +5297,7 @@ declare type CAPI = {
       | null
       | boolean
       | number
-      | BigInt
+      | bigint
       | string
       | Uint8Array
       | Int8Array
@@ -5513,7 +5513,7 @@ declare type CAPI = {
       op: CAPI['SQLITE_UPDATE'] | CAPI['SQLITE_DELETE'] | CAPI['SQLITE_INSERT'],
       dbName: string,
       tableName: string,
-      newRowId: BigInt,
+      newRowId: bigint,
     ) => void,
     userCtx: WasmPointer,
   ) => WasmPointer;
@@ -6265,8 +6265,8 @@ declare type CAPI = {
       op: CAPI['SQLITE_UPDATE'] | CAPI['SQLITE_DELETE'] | CAPI['SQLITE_INSERT'],
       dbName: string,
       tableName: string,
-      oldRowid: BigInt,
-      newRowid: BigInt,
+      oldRowid: bigint,
+      newRowid: bigint,
     ) => void,
   ) => void;
 
