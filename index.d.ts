@@ -11,9 +11,9 @@ declare type SqlValue =
 /** Types of values that can be passed to SQLite. */
 declare type BindableValue =
   | SqlValue
-  /** converted to NULL */
+  /** Converted to NULL */
   | undefined
-  /** converted to INTEGER */
+  /** Converted to INTEGER */
   | boolean;
 
 /** Internal data types supported by SQLite3. */
