@@ -360,9 +360,7 @@ const installAsyncProxy = function () {
           dirHandle: hDir,
           fileHandle: hFile,
           sabView: state.sabFileBufView,
-          readOnly: create
-            ? false
-            : state.sq3Codes.SQLITE_OPEN_READONLY & flags,
+          readOnly: !create && !!(state.sq3Codes.SQLITE_OPEN_READONLY & flags),
           deleteOnClose: !!(state.sq3Codes.SQLITE_OPEN_DELETEONCLOSE & flags),
         });
         fh.releaseImplicitLocks =
@@ -430,7 +428,7 @@ const installAsyncProxy = function () {
     xUnlock: async function (fid, lockType) {
       let rc = 0;
       const fh = __openFiles[fid];
-      if (state.sq3Codes.SQLITE_LOCK_NONE === lockType && fh.syncHandle) {
+      if (fh.syncHandle && state.sq3Codes.SQLITE_LOCK_NONE === lockType) {
         try {
           await closeSyncHandle(fh);
         } catch (e) {

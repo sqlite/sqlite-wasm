@@ -1261,9 +1261,9 @@ declare class OpfsDatabase extends Database {
   static importDb(
     filename: string,
     data:
-      | Uint8Array 
-      | ArrayBuffer 
-      | (() => Uint8Array | ArrayBuffer | undefined) 
+      | Uint8Array
+      | ArrayBuffer
+      | (() => Uint8Array | ArrayBuffer | undefined)
       | (() => Promise<Uint8Array | ArrayBuffer | undefined>),
   ): Promise<number>;
 }
@@ -1354,9 +1354,9 @@ type SAHPoolUtil = {
   importDb: (
     name: string,
     data:
-      | Uint8Array 
-      | ArrayBuffer 
-      | (() => Uint8Array | ArrayBuffer | undefined) 
+      | Uint8Array
+      | ArrayBuffer
+      | (() => Uint8Array | ArrayBuffer | undefined)
       | (() => Promise<Uint8Array | ArrayBuffer | undefined>),
   ) => Promise<number>;
 
