@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.48.0-build2",
+  "version": "3.48.0-build3",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
   "keywords": [
     "sqlite",
@@ -23,8 +23,8 @@
   "types": "index.d.ts",
   "exports": {
     ".": {
-      "node": "./index.mjs",
       "types": "./index.d.ts",
+      "node": "./index.mjs",
       "import": "./index.mjs",
       "main": "./index.mjs",
       "browser": "./index.mjs"
