@@ -23,6 +23,7 @@
   "types": "index.d.ts",
   "exports": {
     ".": {
+      "node": "./index.mjs",
       "types": "./index.d.ts",
       "import": "./index.mjs",
       "main": "./index.mjs",
