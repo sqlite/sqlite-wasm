@@ -1163,7 +1163,7 @@ declare class Database {
  */
 declare class JsStorageDb extends Database {
   /** Create a new kvvfs-backed database in local or session storage. */
-  constructor(options?: { filename?: 'local' | 'session'; flags?: string; });
+  constructor(options?: { filename?: 'local' | 'session'; flags?: string });
   constructor(mode: 'local' | 'session');
 
   /** Returns an _estimate_ of how many bytes of storage are used by the kvvfs. */

@@ -31,5 +31,16 @@
   - `sqlite3.dir`, if set, treats the given directory name as the
     directory from which `sqlite3.js` will be loaded.
 */
-import { default as sqlite3InitModule } from './sqlite3-bundler-friendly.mjs';
+'use strict';
+{
+  const urlParams = globalThis.location
+    ? new URL(globalThis.location.href).searchParams
+    : new URLSearchParams();
+  let theJs = 'sqlite3.js';
+  if (urlParams.has('sqlite3.dir')) {
+    theJs = urlParams.get('sqlite3.dir') + '/' + theJs;
+  }
+
+  importScripts(theJs);
+}
 sqlite3InitModule().then((sqlite3) => sqlite3.initWorker1API());
