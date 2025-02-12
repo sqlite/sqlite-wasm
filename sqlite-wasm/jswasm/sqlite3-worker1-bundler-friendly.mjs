@@ -32,15 +32,14 @@
     directory from which `sqlite3.js` will be loaded.
 */
 'use strict';
-{
+(async () => {
   const urlParams = globalThis.location
     ? new URL(globalThis.location.href).searchParams
     : new URLSearchParams();
-  let theJs = './sqlite3.js';
+    let theJs = './sqlite3.js';
   if (urlParams.has('sqlite3.dir')) {
     theJs = urlParams.get('sqlite3.dir') + '/' + theJs;
   }
 
   await import(theJs);
-}
-sqlite3InitModule().then((sqlite3) => sqlite3.initWorker1API());
+})().then(() => sqlite3InitModule().then((sqlite3) => sqlite3.initWorker1API()));
