@@ -55,8 +55,18 @@ var sqlite3InitModule = (() => {
       typeof process.versions == 'object' &&
       typeof process.versions.node == 'string' &&
       process.type != 'renderer';
+    var ENVIRONMENT_IS_BUN =
+      !!globalThis.Bun;
+    var ENVIRONMENT_IS_DENO =
+      !!globalThis.Deno;
+    var ENVIRONMENT_IS_NODE_COMPATIBLE =
+      ENVIRONMENT_IS_NODE ||
+      ENVIRONMENT_IS_BUN ||
+      ENVIRONMENT_IS_DENO;
     var ENVIRONMENT_IS_SHELL =
-      !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
+      !ENVIRONMENT_IS_WEB &&
+      !ENVIRONMENT_IS_NODE_COMPATIBLE &&
+      !ENVIRONMENT_IS_WORKER;
 
     const sqlite3InitModuleState =
       globalThis.sqlite3InitModuleState ||
@@ -129,7 +139,19 @@ var sqlite3InitModule = (() => {
           });
         };
       }
-    } else {
+    } else if (ENVIRONMENT_IS_NODE_COMPATIBLE) {
+      readAsync = (filename, binary = true) => {
+        filename = isFileURI(filename)
+          ? new URL(filename)
+          : nodePath.normalize(filename);
+        return new Promise((resolve, reject) => {
+          const { readFile } = require("node:fs");
+          readFile(filename, binary ? undefined : 'utf8', (err, data) => {
+            if (err) reject(err);
+            else resolve(binary ? data.buffer : data);
+          });
+        });
+      }
     }
 
     var out = Module['print'] || console.log.bind(console);
