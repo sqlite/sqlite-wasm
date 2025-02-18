@@ -2,6 +2,8 @@
 
 SQLite Wasm conveniently wrapped as an ES Module.
 
+## Bug reports
+
 > [!Warning]
 >
 > This project wraps the code of
@@ -31,8 +33,6 @@ Only the worker versions allow you to use the origin private file system (OPFS)
 storage back-end.
 
 ### In a wrapped worker (with OPFS if available):
-
-## Bug reports
 
 > [!Warning]
 >
