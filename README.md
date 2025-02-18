@@ -32,6 +32,8 @@ storage back-end.
 
 ### In a wrapped worker (with OPFS if available):
 
+## Bug reports
+
 > [!Warning]
 >
 > For this to work, you need to set the following headers on your server:
