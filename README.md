@@ -14,6 +14,13 @@ SQLite Wasm conveniently wrapped as an ES Module.
 > [SQLite bug filing instructions](https://www.sqlite.org/src/wiki?name=Bug+Reports).
 > Filing TypeScript type related issues and feature requests is fine.
 
+## Node.js support
+
+> [!Warning]
+>
+> Node.js is currently only supported for in-memory databases without
+> persistence.
+
 ## Installation
 
 ```bash
