@@ -51,13 +51,14 @@ globalThis.sqlite3Worker1Promiser = function callee(
   if (!config.worker) config.worker = callee.defaultConfig.worker;
   if ('function' === typeof config.worker) config.worker = config.worker();
   let dbId;
+  let promiserFunc;
   config.worker.onmessage = function (ev) {
     ev = ev.data;
     debug('worker1.onmessage', ev);
     let msgHandler = handlerMap[ev.messageId];
     if (!msgHandler) {
       if (ev && 'sqlite3-api' === ev.type && 'worker1-ready' === ev.result) {
-        if (config.onready) config.onready();
+        if (config.onready) config.onready(promiserFunc);
         return;
       }
       msgHandler = handlerMap[ev.type];
@@ -89,7 +90,7 @@ globalThis.sqlite3Worker1Promiser = function callee(
       msgHandler.reject(e);
     }
   };
-  return function () {
+  return (promiserFunc = function () {
     let msg;
     if (1 === arguments.length) {
       msg = arguments[0];
@@ -97,10 +98,11 @@ globalThis.sqlite3Worker1Promiser = function callee(
       msg = Object.create(null);
       msg.type = arguments[0];
       msg.args = arguments[1];
+      msg.dbId = msg.args.dbId;
     } else {
-      toss('Invalid arugments for sqlite3Worker1Promiser()-created factory.');
+      toss('Invalid arguments for sqlite3Worker1Promiser()-created factory.');
     }
-    if (!msg.dbId) msg.dbId = dbId;
+    if (!msg.dbId && msg.type !== 'open') msg.dbId = dbId;
     msg.messageId = genMsgId(msg);
     msg.departureTime = performance.now();
     const proxy = Object.create(null);
@@ -133,8 +135,9 @@ globalThis.sqlite3Worker1Promiser = function callee(
     });
     if (rowCallbackId) p = p.finally(() => delete handlerMap[rowCallbackId]);
     return p;
-  };
+  });
 };
+
 globalThis.sqlite3Worker1Promiser.defaultConfig = {
   worker: function () {
     return new Worker(
@@ -146,3 +149,39 @@ globalThis.sqlite3Worker1Promiser.defaultConfig = {
   },
   onerror: (...args) => console.error('worker1 promiser error', ...args),
 };
+
+sqlite3Worker1Promiser.v2 = function (config) {
+  let oldFunc;
+  if ('function' == typeof config) {
+    oldFunc = config;
+    config = {};
+  } else if ('function' === typeof config?.onready) {
+    oldFunc = config.onready;
+    delete config.onready;
+  }
+  const promiseProxy = Object.create(null);
+  config = Object.assign(config || Object.create(null), {
+    onready: async function (func) {
+      try {
+        if (oldFunc) await oldFunc(func);
+        promiseProxy.resolve(func);
+      } catch (e) {
+        promiseProxy.reject(e);
+      }
+    },
+  });
+  const p = new Promise(function (resolve, reject) {
+    promiseProxy.resolve = resolve;
+    promiseProxy.reject = reject;
+  });
+  try {
+    this.original(config);
+  } catch (e) {
+    promiseProxy.reject(e);
+  }
+  return p;
+}.bind({
+  original: sqlite3Worker1Promiser,
+});
+
+export default sqlite3Worker1Promiser.v2;

@@ -2,7 +2,9 @@
 
 SQLite Wasm conveniently wrapped as an ES Module.
 
-> **Warning**
+## Bug reports
+
+> [!Warning]
 >
 > This project wraps the code of
 > [SQLite Wasm](https://sqlite.org/wasm/doc/trunk/index.md) with _no_ changes,
@@ -32,7 +34,7 @@ storage back-end.
 
 ### In a wrapped worker (with OPFS if available):
 
-> **Warning**
+> [!Warning]
 >
 > For this to work, you need to set the following headers on your server:
 >
@@ -43,35 +45,31 @@ storage back-end.
 ```js
 import { sqlite3Worker1Promiser } from '@sqlite.org/sqlite-wasm';
 
-const log = (...args) => console.log(...args);
-const error = (...args) => console.error(...args);
+const log = console.log;
+const error = console.error;
 
-(async () => {
+const initializeSQLite = async () => {
   try {
     log('Loading and initializing SQLite3 module...');
 
     const promiser = await new Promise((resolve) => {
       const _promiser = sqlite3Worker1Promiser({
-        onready: () => {
-          resolve(_promiser);
-        },
+        onready: () => resolve(_promiser),
       });
     });
 
     log('Done initializing. Running demo...');
 
-    let response;
+    const configResponse = await promiser('config-get', {});
+    log('Running SQLite3 version', configResponse.result.version.libVersion);
 
-    response = await promiser('config-get', {});
-    log('Running SQLite3 version', response.result.version.libVersion);
-
-    response = await promiser('open', {
+    const openResponse = await promiser('open', {
       filename: 'file:mydb.sqlite3?vfs=opfs',
     });
-    const { dbId } = response;
+    const { dbId } = openResponse;
     log(
       'OPFS is available, created persisted database at',
-      response.result.filename.replace(/^file:(.*?)\?vfs=opfs$/, '$1'),
+      openResponse.result.filename.replace(/^file:(.*?)\?vfs=opfs$/, '$1'),
     );
     // Your SQLite code here.
   } catch (err) {
@@ -80,7 +78,9 @@ const error = (...args) => console.error(...args);
     }
     error(err.name, err.message);
   }
-})();
+};
+
+initializeSQLite();
 ```
 
 The `promiser` object above implements the
@@ -88,7 +88,7 @@ The `promiser` object above implements the
 
 ### In a worker (with OPFS if available):
 
-> **Warning**
+> [!Warning]
 >
 > For this to work, you need to set the following headers on your server:
 >
@@ -105,34 +105,35 @@ const worker = new Worker('worker.js', { type: 'module' });
 // In `worker.js`.
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
-const log = (...args) => console.log(...args);
-const error = (...args) => console.error(...args);
+const log = console.log;
+const error = console.error;
 
-const start = function (sqlite3) {
+const start = (sqlite3) => {
   log('Running SQLite3 version', sqlite3.version.libVersion);
-  let db;
-  if ('opfs' in sqlite3) {
-    db = new sqlite3.oo1.OpfsDb('/mydb.sqlite3');
-    log('OPFS is available, created persisted database at', db.filename);
-  } else {
-    db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
-    log('OPFS is not available, created transient database', db.filename);
-  }
+  const db =
+    'opfs' in sqlite3
+      ? new sqlite3.oo1.OpfsDb('/mydb.sqlite3')
+      : new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
+  log(
+    'opfs' in sqlite3
+      ? `OPFS is available, created persisted database at ${db.filename}`
+      : `OPFS is not available, created transient database ${db.filename}`,
+  );
   // Your SQLite code here.
 };
 
-log('Loading and initializing SQLite3 module...');
-sqlite3InitModule({
-  print: log,
-  printErr: error,
-}).then((sqlite3) => {
-  log('Done initializing. Running demo...');
+const initializeSQLite = async () => {
   try {
+    log('Loading and initializing SQLite3 module...');
+    const sqlite3 = await sqlite3InitModule({ print: log, printErr: error });
+    log('Done initializing. Running demo...');
     start(sqlite3);
   } catch (err) {
-    error(err.name, err.message);
+    error('Initialization error:', err.name, err.message);
   }
-});
+};
+
+initializeSQLite();
 ```
 
 The `db` object above implements the
@@ -143,27 +144,30 @@ The `db` object above implements the
 ```js
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
-const log = (...args) => console.log(...args);
-const error = (...args) => console.error(...args);
+const log = console.log;
+const error = console.error;
 
-const start = function (sqlite3) {
+const start = (sqlite3) => {
   log('Running SQLite3 version', sqlite3.version.libVersion);
   const db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
   // Your SQLite code here.
 };
 
-log('Loading and initializing SQLite3 module...');
-sqlite3InitModule({
-  print: log,
-  printErr: error,
-}).then((sqlite3) => {
+const initializeSQLite = async () => {
   try {
+    log('Loading and initializing SQLite3 module...');
+    const sqlite3 = await sqlite3InitModule({
+      print: log,
+      printErr: error,
+    });
     log('Done initializing. Running demo...');
     start(sqlite3);
   } catch (err) {
-    error(err.name, err.message);
+    error('Initialization error:', err.name, err.message);
   }
-});
+};
+
+initializeSQLite();
 ```
 
 The `db` object above implements the
