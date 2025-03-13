@@ -13769,6 +13769,14 @@ var sqlite3InitModule = (() => {
           async removeVfs() {
             return this.#p.removeVfs();
           }
+
+          releaseAccessHandles() {
+            return this.#p.releaseAccessHandles();
+          }
+
+          async acquireAccessHandles() {
+            return this.#p.acquireAccessHandles(false);
+          }
         }
 
         const apiVersionCheck = async () => {
