@@ -7582,7 +7582,7 @@ declare type CAPI = {
   sqlite3_js_db_export: (
     db: Database | WasmPointer,
     schema?: string | WasmPointer,
-  ) => Uint8Array;
+  ) => Uint8Array<ArrayBuffer>;
 
   /**
    * Given a `sqlite3*` and a database name (JS string or WASM C-string pointer,
