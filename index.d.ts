@@ -1649,11 +1649,11 @@ declare class SQLiteStruct {
 }
 
 declare class sqlite3_vfs extends SQLiteStruct {
-  iVersion: number;
-  szOsFile: number;
-  mxPathname: number;
+  $iVersion: number;
+  $szOsFile: number;
+  $mxPathname: number;
   pNext: WasmPointer;
-  zName: WasmPointer;
+  $zName: WasmPointer;
   pAppData: WasmPointer;
 
   constructor(pointer?: WasmPointer);
@@ -1758,7 +1758,20 @@ declare class sqlite3_io_methods extends SQLiteStruct {
 }
 
 declare class sqlite3_file extends SQLiteStruct {
-  pMethods: WasmPointer;
+  $pMethods: WasmPointer;
+  structInfo: {
+    sizeof: number;
+    name: string;
+    members: {
+      [memberName: string]: {
+        offset: number;
+        signature: string;
+        sizeof: number;
+        name: string;
+        key: string;
+      };
+    };
+  };
 
   constructor(pointer?: WasmPointer);
 }
