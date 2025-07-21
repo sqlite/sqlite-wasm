@@ -1413,15 +1413,19 @@ type SAHPoolUtil = {
    */
   wipeFiles: () => Promise<void>;
 
-  /** Unregister this VFS and release file access handles, without clearing
-   * files. The database must be closed before calling this. */
+  /**
+   * Unregister this VFS and release file access handles, without clearing
+   * files. The database must be closed before calling this.
+   */
   pauseVfs: () => SAHPoolUtil;
 
   /** Returns `true` if this VFS pool is paused */
   isPaused: () => boolean;
 
-  /** Re-register this VFS and re-acquire file access handles. Any previously
-   * open databases will have to be re-opened after calling this. */
+  /**
+   * Re-register this VFS and re-acquire file access handles. Any previously
+   * open databases will have to be re-opened after calling this.
+   */
   unpauseVfs: () => Promise<SAHPoolUtil>;
 };
 
