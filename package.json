@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.50.3-build1",
+  "version": "3.50.4-build1",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
   "keywords": [
     "sqlite",
@@ -67,6 +67,6 @@
     "prettier-plugin-jsdoc": "^1.3.3",
     "publint": "^0.3.12",
     "shx": "^0.4.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }
