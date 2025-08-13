@@ -3915,7 +3915,7 @@ declare type CAPI = {
       arg2: string | 0,
       arg3: string | 0,
       arg4: string | 0,
-    ) => number,
+    ) => number | NullPointer,
     cbArg: WasmPointer,
   ) => number;
 
