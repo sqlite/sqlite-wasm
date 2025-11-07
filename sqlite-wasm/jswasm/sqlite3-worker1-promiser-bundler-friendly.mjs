@@ -140,21 +140,13 @@ globalThis.sqlite3Worker1Promiser = function callee(
 
 globalThis.sqlite3Worker1Promiser.defaultConfig = {
   worker: function () {
-    let theJs = 'sqlite3-worker1.js';
-    if (this.currentScript) {
-      const src = this.currentScript.src.split('/');
-      src.pop();
-      theJs = src.join('/') + '/' + theJs;
-    } else if (globalThis.location) {
-      const urlParams = new URL(globalThis.location.href).searchParams;
-      if (urlParams.has('sqlite3.dir')) {
-        theJs = urlParams.get('sqlite3.dir') + '/' + theJs;
-      }
-    }
-    return new Worker(theJs + globalThis.location.search);
-  }.bind({
-    currentScript: globalThis?.document?.currentScript,
-  }),
+    return new Worker(
+      new URL('sqlite3-worker1.mjs', import.meta.url),
+      {
+        type: 'module',
+      },
+    );
+  },
   onerror: (...args) => console.error('worker1 promiser error', ...args),
 };
 
@@ -196,3 +188,5 @@ globalThis.sqlite3Worker1Promiser.v2 = function callee(
 
 globalThis.sqlite3Worker1Promiser.v2.defaultConfig =
   globalThis.sqlite3Worker1Promiser.defaultConfig;
+
+export default sqlite3Worker1Promiser.v2;

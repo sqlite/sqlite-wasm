@@ -31,5 +31,5 @@
   - `sqlite3.dir`, if set, treats the given directory name as the
     directory from which `sqlite3.js` will be loaded.
 */
-import { default as sqlite3InitModule } from './sqlite3.mjs';
+return new Worker(new URL('sqlite3.js', import.meta.url));
 sqlite3InitModule().then((sqlite3) => sqlite3.initWorker1API());
