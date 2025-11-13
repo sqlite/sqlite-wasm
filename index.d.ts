@@ -2007,6 +2007,28 @@ declare type Sqlite3Static = {
      * option.
      */
     name?: string;
+
+    /**
+     * (default=false, available as of 3.47) is an opt-in workaround for a
+     * particular browser quirk which can cause initialization of this VFS to
+     * fail on its first attempt but to succeed if a second attempt is tried a
+     * short time later.
+     *
+     * Forewarning: this flag should truly never be used, as an environment
+     * which requires this workaround is inherently suspect for purposes of this
+     * VFS, but it is provided for developers who wish to throw caution to the
+     * wind and hope for the best.
+     *
+     * What it does: when this VFS initializes, the result is cached (whether
+     * success or failure) so that future calls to installOpfsSAHPoolVfs() can
+     * return consistent results, as described in the next section. This flag
+     * will override a cached failure result and instead attempt to initialize
+     * the VFS a second time. In environments affected by the motivating ticket,
+     * that second attempt may well work. The library does not automatically
+     * retry in such cases for reasons explained in that ticket's discussion
+     * thread.
+     */
+    forceReinitIfPreviouslyFailed?: boolean;
   }): Promise<SAHPoolUtil>;
 
   WasmAllocError: typeof WasmAllocError;
