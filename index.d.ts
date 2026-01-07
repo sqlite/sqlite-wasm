@@ -7196,7 +7196,12 @@ declare type CAPI = {
     xConflict:
       | ((
           pCtx: WasmPointer,
-          eConflict: number /* TODO: Can be more specific? */,
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
           pIter: WasmPointer,
         ) =>
           | CAPI['SQLITE_CHANGESET_OMIT']
@@ -7254,7 +7259,12 @@ declare type CAPI = {
     xConflict:
       | ((
           pCtx: WasmPointer,
-          eConflict: number /* TODO: Can be more specific? */,
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
           pIter: WasmPointer,
         ) =>
           | CAPI['SQLITE_CHANGESET_OMIT']
@@ -7300,8 +7310,13 @@ declare type CAPI = {
     xConflict:
       | ((
           pCtx: WasmPointer,
-          eConflict: number /* TODO: Can be more specific? */,
-        ) => number)
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
+          ) => number)
       | WasmPointer,
     pCtx: WasmPointer,
   ) => number;
@@ -7345,7 +7360,12 @@ declare type CAPI = {
     xConflict:
       | ((
           pCtx: WasmPointer,
-          eConflict: number /* TODO: Can be more specific? */,
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
         ) => number)
       | WasmPointer,
     pCtx: WasmPointer,
