@@ -34,9 +34,6 @@
     "./package.json": "./package.json",
     "./sqlite3.wasm": "./sqlite-wasm/jswasm/sqlite3.wasm"
   },
-  "bin": {
-    "sqlite-wasm": "bin/index.js"
-  },
   "scripts": {
     "publint": "npx publint",
     "check-types": "tsc",
