@@ -1,6 +1,4 @@
-#!/usr/bin/env node
-import fs from 'fs';
-import fetch from 'node-fetch';
+import { rmSync, writeFileSync } from 'node:fs';
 import decompress from 'decompress';
 
 async function getSqliteWasmDownloadLink() {
@@ -32,7 +30,7 @@ async function downloadAndUnzipSqliteWasm(sqliteWasmDownloadLink) {
     );
   }
   const buffer = await response.arrayBuffer();
-  fs.writeFileSync('sqlite-wasm.zip', Buffer.from(buffer));
+  writeFileSync('sqlite-wasm.zip', Buffer.from(buffer));
   const files = await decompress('sqlite-wasm.zip', 'sqlite-wasm', {
     strip: 1,
     filter: (file) =>
@@ -43,20 +41,14 @@ async function downloadAndUnzipSqliteWasm(sqliteWasmDownloadLink) {
       .map((file) => (/\//.test(file.path) ? '‣ ' + file.path + '\n' : ''))
       .join('')}`,
   );
-  fs.rmSync('sqlite-wasm.zip');
+  rmSync('sqlite-wasm.zip');
 }
 
-async function main() {
+(async () => {
   try {
     const sqliteWasmLink = await getSqliteWasmDownloadLink();
     await downloadAndUnzipSqliteWasm(sqliteWasmLink);
-    fs.copyFileSync(
-      './node_modules/module-workers-polyfill/module-workers-polyfill.min.js',
-      './demo/module-workers-polyfill.min.js',
-    );
   } catch (err) {
     console.error(err.name, err.message);
   }
-}
-
-main();
+})();
