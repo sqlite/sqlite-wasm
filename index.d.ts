@@ -37,7 +37,7 @@ declare type BindingSpec =
  * is generally reserved for arguments which expect SQL strings, as such strings
  * are often large and frequently come from external sources, e.g. byte arrays
  * loaded from local files, over XHR requests, or using `fetch()`. Functions
- * which take filename strings, and simlilar "small" strings, do not use this
+ * which take filename strings, and similar "small" strings, do not use this
  * feature.
  */
 declare type FlexibleString =
@@ -124,8 +124,8 @@ declare class PreparedStatement {
    * Requires that {@link PreparedStatement#step} has just returned a truthy
    * value, else an exception is thrown.
    *
-   * By default it will determine the data type of the result automatically. If
-   * passed a second arugment, it must be one of the enumeration values for
+   * By default, it will determine the data type of the result automatically. If
+   * passed a second argument, it must be one of the enumeration values for
    * sqlite3 types, which are defined as members of the sqlite3 namespace:
    * `SQLITE_INTEGER`, `SQLITE_FLOAT`, `SQLITE_TEXT`, `SQLITE_BLOB`. Any other
    * value, except for `undefined`, will trigger an exception. Passing
@@ -140,9 +140,9 @@ declare class PreparedStatement {
    *     const values = stmt.get([]);
    *
    * This will return an array which contains one entry for each result column
-   * of the statement's current row..
+   * of the statement's current row.
    *
-   * If the index is a plain object, this function behaves even differentlier:
+   * If the index is a plain object, this function behaves even differential:
    * it assigns the properties of the object to the values of their
    * corresponding result columns:
    *
@@ -206,7 +206,7 @@ declare class PreparedStatement {
 
   /**
    * Equivalent to {@link PreparedStatement#getString(ndx)} but returns passes
-   * the result of passing the fetched string string through `JSON.parse()`. If
+   * the result of passing the fetched string through `JSON.parse()`. If
    * JSON parsing throws, that exception is propagated.
    */
   getJSON(ndx: number): any;
@@ -326,11 +326,11 @@ declare type ExecOptions = {
 
   /**
    * A string specifying what this function should return: The default value is
-   * (usually) `"this"`. The exceptions is if the caller passes neither of
+   * (usually) `"this"`. The exception occurs if the caller passes neither of
    * `callback` nor `returnValue` but does pass an explicit `rowMode` then the
    * default returnValue is `"resultRows"`, described below. The options are:
    *
-   * - `"this"` menas that the DB object itself should be returned.
+   * - `"this"` means that the DB object itself should be returned.
    * - `"resultRows"` means to return the value of the `resultRows` option. If
    *   `resultRows` is not set, this function behaves as if it were set to an
    *   empty array.
@@ -453,7 +453,7 @@ declare type ExecRowModeScalarOptions = {
 
   /**
    * For number values: indicates a zero-based column in the result row. Only
-   * that one single value will be passed on. If string. For string values: A
+   * that one single value will be passed on. For string values: A
    * string with a minimum length of 2 and leading character of `$` will fetch
    * the row as an object, extract that one field, and pass that field's value
    * to the `callback`. Note that these keys are case-sensitive so must match
@@ -502,15 +502,15 @@ declare type FunctionOptions = {
    * indexes, or generated columns.
    *
    * The flag is recommended for any application-defined SQL function that has
-   * side-effects or that could potentially leak sensitive information. This
+   * side effects or that could potentially leak sensitive information. This
    * will prevent attacks in which an application is tricked into using a
-   * database file that has had its schema surreptiously modified to invoke the
+   * database file that has had its schema surreptitiously modified to invoke the
    * application-defined function in ways that are harmful.
    *
    * Some people say it is good practice to set the flag on all
-   * application-defined SQL functions, regardless of whether or not they are
+   * application-defined SQL functions, regardless of whether they are
    * security sensitive, as doing so prevents those functions from being used
-   * inside of the database schema, and thus ensures that the database can be
+   * inside the database schema, and thus ensures that the database can be
    * inspected and modified using generic tools (such as the CLI) that do not
    * have access to the application-defined functions.
    */
@@ -536,7 +536,7 @@ declare type FunctionOptions = {
    * built-in functions are innocuous. Developers are advised to avoid using the
    * `SQLITE_INNOCUOUS` flag for application-defined functions unless the
    * function has been carefully audited and found to be free of potentially
-   * security-adverse side-effects and information-leaks.
+   * security-adverse side effects and information-leaks.
    */
   innocuous?: boolean;
 
@@ -645,8 +645,8 @@ declare class Database {
    *   default sqlite3 VFS. Note that the special sqlite3 db names `":memory:"`
    *   and `""` (temporary db) have their normal special meanings here.
    * @param options.flags The flags to use when opening the file. It must be a
-   *   string containing a sequence of letters (in any order, but case
-   *   sensitive) specifying the mode:
+   *   string containing a sequence of letters (in any order, but case-sensitive)
+   *   specifying the mode:
    *
    *   - `c`: create if it does not exist, else fail if it does not exist. Implies
    *       the `w` flag.
@@ -670,7 +670,7 @@ declare class Database {
    *   VFS. Note that the special sqlite3 db names `":memory:"` and `""`
    *   (temporary db) have their normal special meanings here.
    * @param flags The flags to use when opening the file. It must be a string
-   *   containing a sequence of letters (in any order, but case sensitive)
+   *   containing a sequence of letters (in any order, but case-sensitive)
    *   specifying the mode:
    *
    *   - `c`: create if it does not exist, else fail if it does not exist. Implies
@@ -707,7 +707,7 @@ declare class Database {
    * Executes SQL statements and optionally collects query results and/or calls
    * a callback for each result row.
    *
-   * _LOTS_ of overloads on this one one, depending on:
+   * _LOTS_ of overloads on this one, depending on:
    *
    * - `sql` as parameter or as option
    * - `returnValue`:
@@ -1136,8 +1136,8 @@ declare class Database {
   savepoint<T>(callback: (db: this) => T): T;
 
   /**
-   * Expects to be given a `DatabaseApi` instance or an `sqlite3*` pointer (may
-   * be `null`) and an sqlite3 API result code. If the result code is not falsy,
+   * Expects to be given a `DatabaseApi` instance or an `sqlite3*` pointer (which may
+   * be `null`) and a sqlite3 API result code. If the result code is not falsy,
    * this function throws an `SQLite3Error` with an error message from
    * `sqlite3_errmsg()`, using the given db handle, or `sqlite3_errstr()` if the
    * db handle is falsy or is a `close()`ed DB instance. Note that if it's
@@ -1159,7 +1159,7 @@ declare class Database {
 /**
  * SQLite3 database backed by `localStorage` or `sessionStorage`.
  *
- * When the sqlite3 API is installed in the main thread, the this class is
+ * When the sqlite3 API is installed in the main thread, the class is
  * added, which simplifies usage of the kvvfs.
  */
 declare class JsStorageDb extends Database {
@@ -1204,7 +1204,7 @@ declare class JsStorageDb extends Database {
  * Safari versions less than version 17 are incompatible with the current OPFS
  * VFS implementation because of a bug in storage handling from sub-workers.
  * There is no workaround for that - supporting it will require a separate VFS
- * implementation and we do not, as of July 2023, have an expected time frame
+ * implementation, and we do not, as of July 2023, have an expected time frame
  * for its release. Both the `SharedAccessHandle` pool VFS and the WASMFS
  * support offers alternatives which should work with Safari versions 16.4 or
  * higher.
@@ -1224,7 +1224,7 @@ declare class JsStorageDb extends Database {
  * communication between the synchronous and asynchronous parts of the
  * `sqlite3_vfs` OPFS proxy.
  *
- * The COEP header may also have a value of `credentialless`, but whether or not
+ * The COEP header may also have a value of `credentialless`, but whether
  * that will work in the context of any given application depends on how it uses
  * other remote assets.
  *
@@ -1239,11 +1239,11 @@ declare class OpfsDatabase extends Database {
    *   VFS. Note that the special sqlite3 db names `":memory:"` and `""`
    *   (temporary db) have their normal special meanings here.
    * @param flags The flags to use when opening the file. It must be a string
-   *   containing a sequence of letters (in any order, but case sensitive)
+   *   containing a sequence of letters (in any order, but case-sensitive)
    *   specifying the mode:
    *
    *   - `c`: create if it does not exist, else fail if it does not exist. Implies
-   *       the `w` flag. Will create all directorries leading up to the file.
+   *       the `w` flag. Will create all directories leading up to the file.
    *   - `w`: write. Implies `r`: a db cannot be write-only.
    *   - `r`: read-only if neither `w` nor `c` are provided, else it is ignored.
    *   - `t`: enable tracing of SQL executed on this database handle, sending it to
@@ -1410,7 +1410,7 @@ type SAHPoolUtil = {
   /**
    * Clears all client-defined state of all SAHs and makes all of them available
    * for re-use by the pool. Results are undefined if any such handles are
-   * currently in use, e.g. by an sqlite3 db.
+   * currently in use, e.g. by a sqlite3 db.
    */
   wipeFiles: () => Promise<void>;
 
@@ -1606,7 +1606,7 @@ declare class SQLiteStruct {
    * `wasm.functionEntry()` is used to validate that it is a known function. If
    * so, it is used as-is with no extra level of proxying or cleanup, else an
    * exception is thrown. It is legal to pass a value of 0, indicating a `NULL`
-   * pointer, with the caveat that 0 is a legal function pointer in WASM but it
+   * pointer, with the caveat that 0 is a legal function pointer in WASM, but it
    * will not be accepted as such here. (Justification: the function at address
    * zero must be one which initially came from the WASM module, not a method we
    * want to bind to client-level extension code.)
@@ -1943,7 +1943,7 @@ declare type Sqlite3Static = {
   /**
    * Initializes the Worker API.
    *
-   * Required to to permit this API to be loaded in Worker threads without
+   * Required to permit this API to be loaded in Worker threads without
    * automatically registering onmessage handlers
    *
    * If this function is called from a non-worker thread then it throws an
@@ -1954,7 +1954,7 @@ declare type Sqlite3Static = {
   installOpfsSAHPoolVfs(opts: {
     /**
      * If truthy (default=false) contents and filename mapping are removed from
-     * each SAH it is acquired during initalization of the VFS, leaving the
+     * each SAH it is acquired during initialization of the VFS, leaving the
      * VFS's storage in a pristine state. Use this only for databases which need
      * not survive a page reload.
      */
@@ -2229,7 +2229,7 @@ declare type Sqlite3Static = {
        * (default=false): if truthy, the given methods are not mapped as-is, but
        * are instead wrapped inside wrappers which translate exceptions into
        * result codes of SQLITE_ERROR or SQLITE_NOMEM, depending on whether the
-       * exception is an sqlite3.WasmAllocError. In the case of the xConnect and
+       * exception is a sqlite3.WasmAllocError. In the case of the xConnect and
        * xCreate methods, the exception handler also sets the output error
        * string to the exception's error string.
        */
@@ -2243,7 +2243,7 @@ declare type Sqlite3Static = {
       struct?: sqlite3_module;
 
       /**
-       * If set, it must be an integer value and it gets assigned to the
+       * If set, it must be an integer value, and it gets assigned to the
        * `$iVersion` member of the struct object. If it's _not_ set, and the
        * passed-in `struct` object's `$iVersion` is 0 (the default) then this
        * function attempts to define a value for that property based on the list
@@ -2303,7 +2303,7 @@ declare type WASM_API = {
   /* ==========================================================================
    * Memory Management
    * ==========================================================================
-   * Just like in C, WASM offers a memory "heap," and transfering values
+   * Just like in C, WASM offers a memory "heap," and transferring values
    * between JS and WASM often requires manipulation of that memory, including
    * low-level allocation and deallocation of it. The following subsections
    * describe the various memory management APIs.
@@ -2324,7 +2324,7 @@ declare type WASM_API = {
   /**
    * Allocates n bytes of memory from the WASM heap and returns the address of
    * the first byte in the block. `alloc()` throws a {@link WasmAllocError} if
-   * allocation fails. If non-thowing allocation is required, use
+   * allocation fails. If non-throwing allocation is required, use
    * {@link WASM_API#alloc.impl}, which returns a WASM NULL pointer (the integer
    * 0) if allocation fails.
    *
@@ -2341,7 +2341,7 @@ declare type WASM_API = {
    * Uses {@link WASM_API#alloc} to allocate enough memory for the byte-length of
    * the given JS string, plus 1 (for a `NUL` terminator), copies the given JS
    * string to that memory using `jstrcpy()`, `NUL`-terminates it, and returns
-   * the pointer to that C-string. Ownership of the pointer is transfered to the
+   * the pointer to that C-string. Ownership of the pointer is transferred to the
    * caller, who must eventually pass the pointer to {@link WASM_API#dealloc} to
    * free it.
    *
@@ -2369,7 +2369,7 @@ declare type WASM_API = {
    *
    * Throws if `list.length` is falsy.
    *
-   * Note that the returned value is troublesome to deallocate but it is
+   * Note that the returned value is troublesome to deallocate, but it is
    * intended for use with calling a C-level `main()` function, where the
    * strings must live as long as the application. See `scopedAllocMainArgv()`
    * for a variant which is trivial to deallocate.
@@ -2705,7 +2705,7 @@ declare type WASM_API = {
    * - `i8`: 8-bit signed integer
    * - `i16`: 16-bit signed integer
    * - `i32`: 32-bit signed integer. Aliases: `int`, `*`, `**` (noting that
-   *    `*` and `**` may be remapped dynamically to to i64 when WASM environments
+   *    `*` and `**` may be remapped dynamically to i64 when WASM environments
    *    gain 64-bit pointer capabilities).
    * - `i64`: 64-bit signed integer. APIs which use this require that the
    *    application has been built with BigInt support, and will throw if that is
@@ -2778,7 +2778,7 @@ declare type WASM_API = {
    * heap, so do not hold a reference longer than needed and do not use a
    * reference after any operation which may allocate. Instead, re-fetch the
    * reference by calling this function again, which automatically refreshes the
-   * view if need.
+   * view if needed.
    *
    * Throws if passed an invalid `n`.
    *
@@ -2899,7 +2899,7 @@ declare type WASM_API = {
    * Expects its argument to be a pointer into the WASM heap memory which refers
    * to a NUL-terminated C-style string encoded as UTF-8. Returns the length, in
    * bytes, of the string, as for `strlen(3)`. As a special case, if the
-   * argument is falsy then it it returns null. Throws if the argument is out of
+   * argument is falsy, then it returns null. Throws if the argument is out of
    * range for `wasm.heap8u()`.
    */
   cstrlen: (ptr: WasmPointer) => number | null;
@@ -2923,7 +2923,7 @@ declare type WASM_API = {
    *   length.
    *
    * **ACHTUNG:** when passing in a non-negative `n` value, it is possible to
-   * copy partial multi-byte characters this way, and converting such strings
+   * copy partial multibyte characters this way, and converting such strings
    * back to JS strings will have undefined results.
    */
   cstrncpy: (tgtPtr: WasmPointer, srcPtr: WasmPointer, n: number) => number;
@@ -2943,8 +2943,8 @@ declare type WASM_API = {
    * length of `tgt`, starting at the given offset.
    *
    * If writing the last character would surpass the `maxBytes` count because
-   * the character is multi-byte, that character will not be written (as opposed
-   * to writing a truncated multi-byte character). This can lead to it writing
+   * the character is multibyte, that character will not be written (as opposed
+   * to writing a truncated multibyte character). This can lead to it writing
    * as many as 3 fewer bytes than `maxBytes` specifies.
    *
    * Returns the number of bytes written to the target, including the NUL
@@ -2954,7 +2954,7 @@ declare type WASM_API = {
    *     jsString is empty and addNul is false.
    *     offset < 0.
    *     maxBytes === 0.
-   *     maxBytes is less than the byte length of a multi-byte jsString[0].
+   *     maxBytes is less than the byte length of a multibyte jsString[0].
    *
    * Throws if `tgt` is not an `Int8Array` or `Uint8Array`.
    */
@@ -3055,7 +3055,7 @@ declare type WASM_API = {
 
   /**
    * Calls a WASM-exported function by name, passing on all supplied arguments
-   * (which may optionally be supplied as an array). If throws if the function
+   * (which may optionally be supplied as an array). It throws if the function
    * is not exported or if the argument count does not match. This routine does
    * no type conversion and is essentially equivalent to:
    *
@@ -3072,7 +3072,7 @@ declare type WASM_API = {
    * as for `xWrap()`.
    *
    * The first argument is the name of the exported function to call. The 2nd
-   * its the name of its result type, as documented for `xWrap()`. The 3rd is an
+   * is the name of its result type, as documented for `xWrap()`. The 3rd is an
    * array of argument type names, as documented for `xWrap()`. The 4th+
    * arguments are arguments for the call, with the special case that if the 4th
    * argument is an array, it is used as the arguments for the call.
@@ -3184,12 +3184,12 @@ declare type WASM_API = {
    *       client-side code is required to create the string, then pass its
    *       pointer to the function.
    *   - Else the arg is assumed to be a pointer to a string the client has already
-   *       allocated and it's passed on as a WASM pointer.
+   *       allocated, and it's passed on as a WASM pointer.
    * - `string` or `utf8` (results): treats the result value as a const C-string,
    *   encoded as UTF-8, copies it to a JS string, and returns that JS string.
    * - `string:dealloc` or `utf8:dealloc` (results): treats the result value as a
    *   non-const C-string, encoded as UTF-8, ownership of which has just been
-   *   transfered to the caller. It copies the C-string to a JS string, frees
+   *   transferred to the caller. It copies the C-string to a JS string, frees
    *   the C-string using `dealloc()`, and returns the JS string. If such a
    *   result value is NULL, the JS result is null. **Achtung:** when using an
    *   API which returns results from a specific allocator, this conversion is
@@ -3202,7 +3202,7 @@ declare type WASM_API = {
    * - `string:static` (args): if passed a pointer, returns it as is. Anything
    *   else: gets coerced to a JS string for use as a map key. If a matching
    *   entry is found (as described next), it is returned, else
-   *   `wasm.allocCString()` is used to create a a new string, map its pointer
+   *   `wasm.allocCString()` is used to create a new string, map its pointer
    *   to `(''+v)` for the remainder of the application's life, and returns that
    *   pointer value for this call and all future calls which are passed a
    *   string-equivalent argument. This conversion is intended for cases which
@@ -3213,7 +3213,7 @@ declare type WASM_API = {
    *   `null` if the C-string is a NULL pointer. Propagates any exception from
    *   `JSON.parse()`.
    * - `json:dealloc` (results): works exactly like `string:dealloc` but returns
-   *   the same thing as the json adapter. Note the warning in `string:dealloc`
+   *   the same thing as the JSON adapter. Note the warning in `string:dealloc`
    *   about the allocator and deallocator.
    *
    * The type names for results and arguments are validated when `xWrap()` is
@@ -3428,7 +3428,7 @@ declare type CAPI = {
   sqlite3_libversion: () => string;
 
   /**
-   * Returns returns a string constant whose value is the same as the
+   * Returns a string constant whose value is the same as the
    * `SQLITE_SOURCE_ID` C preprocessor macro. Except if SQLite is built using an
    * edited copy of the amalgamation, then the last four characters of the hash
    * might be different from `SQLITE_SOURCE_ID`.
@@ -3667,7 +3667,7 @@ declare type CAPI = {
    * Returns the number of rows modified, inserted or deleted by the most
    * recently completed `INSERT`, `UPDATE` or `DELETE` statement on the database
    * connection specified by the only parameter. Executing any other type of SQL
-   * statement does not modify the value returned by these functions. REturn
+   * statement does not modify the value returned by these functions. Return
    * value is undefined if the number of changes is bigger than 32 bits. Use
    * `sqlite3_changes64()` instead in these cases.
    *
@@ -3967,7 +3967,7 @@ declare type CAPI = {
 
   /**
    * Causes the callback function `callback` to be invoked periodically during
-   * long running calls to `sqlite3_step()` and `sqlite3_prepare()` and similar
+   * long-running calls to `sqlite3_step()` and `sqlite3_prepare()` and similar
    * for database connection `db`. An example use for this interface is to keep
    * a GUI updated during a large query.
    *
@@ -4108,8 +4108,8 @@ declare type CAPI = {
 
   /**
    * If the most recent `sqlite3_*` API call associated with database connection
-   * `db` failed, then the `sqlite3_errmsg(db)` interface returns English-
-   * language text that describes the error.
+   * `db` failed, then the `sqlite3_errmsg(db)` interface returns English-language
+   * text that describes the error.
    *
    * C Signature:
    *
@@ -4935,7 +4935,7 @@ declare type CAPI = {
    * `sqlite3_value_nochange(sqliteValue)` interface returns true if and only if
    * the column corresponding to `sqliteValue` is unchanged by the `UPDATE`
    * operation that the `xUpdate` method call was invoked to implement and if
-   * and the prior `xColumn` method call that was invoked to extracted the value
+   * and the prior `xColumn` method call that was invoked to extract the value
    * for that column returned without setting a result (probably because it
    * queried `sqlite3_vtab_nochange()` and found that the column was
    * unchanging).
@@ -5328,7 +5328,7 @@ declare type CAPI = {
    * - `boolean`: `sqlite3_result_int()` with a value of 0 or 1. `- `number`:
    *   `sqlite3_result_int()`, `sqlite3_result_int64()`, or
    *   `sqlite3_result_double()`, depending on the range of the number and
-   *   whether or not `int64` support is enabled.
+   *   whether `int64` support is enabled.
    * - `BigInt`: similar to number but will trigger an error if the value is too
    *   big to store in an `int64`.
    * - `string`: `sqlite3_result_text()
@@ -5733,7 +5733,7 @@ declare type CAPI = {
    * Remove Unnecessary Virtual Table Implementations
    *
    * Removes all virtual table modules from database connection `db` except
-   * those named on list `azKeep`. The `azKeepp` parameter must be either NULL
+   * those named on list `azKeep`. The `azKeep` parameter must be either NULL
    * or a pointer to an array of pointers to strings where the array is
    * terminated by a single NULL pointer. If the `azKeep` parameter is NULL,
    * then all virtual table modules are removed.
@@ -5797,7 +5797,7 @@ declare type CAPI = {
   ) => number;
 
   /**
-   * Returns a pointer to a VFS given its name. Names are case sensitive.
+   * Returns a pointer to a VFS given its name. Names are case-sensitive.
    *
    * C Signature:
    *
@@ -6091,7 +6091,7 @@ declare type CAPI = {
    * Returns zero if and only if string `str` matches the `GLOB` pattern `glob`.
    * The definition of `GLOB` pattern matching used in `sqlite3_strglob(glob,
    * str)` is the same as for the `str GLOB glob` operator in the SQL dialect
-   * understood by SQLite. The function is case sensitive.
+   * understood by SQLite. The function is case-sensitive.
    *
    * C Signature:
    *
@@ -6110,7 +6110,7 @@ declare type CAPI = {
    * matching used in `sqlite3_strlike(like, str, esc)` is the same as for the
    * `X LIKE P ESCAPE E` operator in the SQL dialect understood by SQLite. For
    * `X LIKE P` without the `ESCAPE` clause, set the `esc` parameter to 0. As
-   * with the `LIKE` operator, the function is case insensitive.
+   * with the `LIKE` operator, the function is case-insensitive.
    *
    * C Signature:
    *
@@ -6190,7 +6190,7 @@ declare type CAPI = {
    * Determine if a virtual table query is DISTINCT
    *
    * This API may only be used from within an `xBestIndex method` of a virtual
-   * table implementation. The result of calling this interface from outside of
+   * table implementation. The result of calling this interface from outside
    * `xBestIndex()` is undefined and probably harmful.
    *
    * C Signature:
@@ -6324,10 +6324,10 @@ declare type CAPI = {
    * contains the value of the `colIdx`th column of the table row before it is
    * updated. The `colIdx` parameter must be between 0 and one less than the
    * number of columns or the behavior will be undefined. This must only be used
-   * within `SQLITE_UPDATE` and `SQLITE_DELETE` preupdate callbacks; if it is
+   * within `SQLITE_UPDATE` and `SQLITE_DELETE` pre-update callbacks; if it is
    * used by an `SQLITE_INSERT` callback then the behavior is undefined. The
    * `sqlite3_value` that `sqlValue` points to will be destroyed when the
-   * preupdate callback returns.
+   * pre-update callback returns.
    *
    * C Signature:
    *
@@ -6367,7 +6367,7 @@ declare type CAPI = {
   sqlite3_preupdate_count: (db: Database | WasmPointer) => number;
 
   /**
-   * Returns 0 if the preupdate callback was invoked as a result of a direct
+   * Returns 0 if the pre-update callback was invoked as a result of a direct
    * insert, update, or delete operation; or 1 for inserts, updates, or deletes
    * invoked by top-level triggers; or 2 for changes resulting from triggers
    * called by top-level triggers; and so forth.
@@ -6385,10 +6385,10 @@ declare type CAPI = {
    * contains the value of the `colIdx`th column of the table row after it is
    * updated. The `colidx` parameter must be between 0 and one less than the
    * number of columns or the behavior will be undefined. This must only be used
-   * within `SQLITE_INSERT` and `SQLITE_UPDATE` preupdate callbacks; if it is
+   * within `SQLITE_INSERT` and `SQLITE_UPDATE` pre-update callbacks; if it is
    * used by an `SQLITE_DELETE` callback then the behavior is undefined. The
    * `sqlite3_value` that `sqlValue` points to will be destroyed when the
-   * preupdate callback returns.
+   * pre-update callback returns.
    *
    * C Signature:
    *
@@ -6716,7 +6716,7 @@ declare type CAPI = {
    * - The original values of any modified fields are omitted from `UPDATE`
    *   records.
    *
-   * A patchset blob may be used with up to date versions of all
+   * A patchset blob may be used with up-to-date versions of all
    * `sqlite3changeset_xxx` API functions except for
    * `sqlite3changeset_invert()`, which returns `SQLITE_CORRUPT` if it is passed
    * a patchset. Similarly, attempting to use a patchset blob with old versions
@@ -7313,7 +7313,7 @@ declare type CAPI = {
    * @param pIn First arg for xInput
    * @param xFilter Filter function
    * @param xConflict Conflict handler function
-   * @param pCtx First argumet for xFilter and xConflict
+   * @param pCtx First argument for xFilter and xConflict
    */
   sqlite3changeset_apply_strm: (
     db: Database | WasmPointer,
@@ -7360,7 +7360,7 @@ declare type CAPI = {
    * @param pIn First arg for xInput
    * @param xFilter Filter function
    * @param xConflict Conflict handler function
-   * @param pCtx First argumet for xFilter and xConflict
+   * @param pCtx First argument for xFilter and xConflict
    * @param ppRebase OUT: Pointer to rebase data
    * @param pnRebase OUT: Size of rebase data in bytes
    * @param flags `SESSION_CHANGESETAPPLY_*` flags
@@ -7699,7 +7699,7 @@ declare type CAPI = {
    * not a positive integer then the 3rd defaults to the array's byteLength
    * value.
    *
-   * Results are undefined if data is a WASM pointer and dataLen is exceeds
+   * Results are undefined if data is a WASM pointer and dataLen is exceeding
    * data's bounds.
    *
    * Throws if any arguments are invalid or if creating or writing to the file
@@ -7715,7 +7715,7 @@ declare type CAPI = {
    * Given a `sqlite3_value*`, this function attempts to convert it to an
    * equivalent JS value with as much fidelity as feasible and return it.
    *
-   * By default it throws if it cannot determine any sensible conversion. If
+   * By default, it throws if it cannot determine any sensible conversion. If
    * passed a falsy second argument, it instead returns undefined if no suitable
    * conversion is found. Note that there is no conversion from SQL to JS which
    * results in the undefined value. It always throws a WasmAllocError if
