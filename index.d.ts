@@ -937,7 +937,8 @@ declare class Database {
    * `sqlite3_total_changes64()`, which will trigger an exception if this build
    * does not have `BigInt` support enabled.
    */
-  changes(total?: boolean, sixtyFour?: boolean): number;
+  changes(total: boolean, sixtyFour: true): bigint;
+  changes(total?: boolean, sixtyFour?: false): number;
 
   /**
    * Returns the filename associated with the given database name. Defaults to
