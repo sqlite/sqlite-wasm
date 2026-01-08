@@ -8,24 +8,6 @@ const logHtml = (cssClass, ...args) => {
 };
 
 (async () => {
-  // Module Worker polyfill from https://stackoverflow.com/a/62963963/6255000.
-  const supportsWorkerType = () => {
-    let supports = false;
-    const tester = {
-      get type() {
-        supports = true;
-      },
-    };
-    try {
-      new Worker('data:,""', tester);
-    } finally {
-      return supports;
-    }
-  };
-  if (!supportsWorkerType()) {
-    await import('./module-workers-polyfill.min.js');
-  }
-
   const worker = new Worker('/demo/worker.js', {
     type: 'module',
   });

@@ -142,9 +142,9 @@ declare class PreparedStatement {
    * This will return an array which contains one entry for each result column
    * of the statement's current row.
    *
-   * If the index is a plain object, this function behaves even differential:
-   * it assigns the properties of the object to the values of their
-   * corresponding result columns:
+   * If the index is a plain object, this function behaves even differential: it
+   * assigns the properties of the object to the values of their corresponding
+   * result columns:
    *
    *     const values = stmt.get({});
    *
@@ -206,8 +206,8 @@ declare class PreparedStatement {
 
   /**
    * Equivalent to {@link PreparedStatement#getString(ndx)} but returns passes
-   * the result of passing the fetched string through `JSON.parse()`. If
-   * JSON parsing throws, that exception is propagated.
+   * the result of passing the fetched string through `JSON.parse()`. If JSON
+   * parsing throws, that exception is propagated.
    */
   getJSON(ndx: number): any;
 
@@ -453,13 +453,13 @@ declare type ExecRowModeScalarOptions = {
 
   /**
    * For number values: indicates a zero-based column in the result row. Only
-   * that one single value will be passed on. For string values: A
-   * string with a minimum length of 2 and leading character of `$` will fetch
-   * the row as an object, extract that one field, and pass that field's value
-   * to the `callback`. Note that these keys are case-sensitive so must match
-   * the case used in the SQL. e.g. `"select a A from t"` with a `rowMode` of
-   * `'$A'` would work but `'$a'` would not. A reference to a column not in the
-   * result set will trigger an exception on the first row (as the check is not
+   * that one single value will be passed on. For string values: A string with a
+   * minimum length of 2 and leading character of `$` will fetch the row as an
+   * object, extract that one field, and pass that field's value to the
+   * `callback`. Note that these keys are case-sensitive so must match the case
+   * used in the SQL. e.g. `"select a A from t"` with a `rowMode` of `'$A'`
+   * would work but `'$a'` would not. A reference to a column not in the result
+   * set will trigger an exception on the first row (as the check is not
    * performed until rows are fetched).
    */
   rowMode: number | Exclude<string, 'stmt' | 'array' | 'object'>;
@@ -504,15 +504,15 @@ declare type FunctionOptions = {
    * The flag is recommended for any application-defined SQL function that has
    * side effects or that could potentially leak sensitive information. This
    * will prevent attacks in which an application is tricked into using a
-   * database file that has had its schema surreptitiously modified to invoke the
-   * application-defined function in ways that are harmful.
+   * database file that has had its schema surreptitiously modified to invoke
+   * the application-defined function in ways that are harmful.
    *
    * Some people say it is good practice to set the flag on all
-   * application-defined SQL functions, regardless of whether they are
-   * security sensitive, as doing so prevents those functions from being used
-   * inside the database schema, and thus ensures that the database can be
-   * inspected and modified using generic tools (such as the CLI) that do not
-   * have access to the application-defined functions.
+   * application-defined SQL functions, regardless of whether they are security
+   * sensitive, as doing so prevents those functions from being used inside the
+   * database schema, and thus ensures that the database can be inspected and
+   * modified using generic tools (such as the CLI) that do not have access to
+   * the application-defined functions.
    */
   directOnly?: boolean;
 
@@ -645,8 +645,8 @@ declare class Database {
    *   default sqlite3 VFS. Note that the special sqlite3 db names `":memory:"`
    *   and `""` (temporary db) have their normal special meanings here.
    * @param options.flags The flags to use when opening the file. It must be a
-   *   string containing a sequence of letters (in any order, but case-sensitive)
-   *   specifying the mode:
+   *   string containing a sequence of letters (in any order, but
+   *   case-sensitive) specifying the mode:
    *
    *   - `c`: create if it does not exist, else fail if it does not exist. Implies
    *       the `w` flag.
@@ -743,7 +743,9 @@ declare class Database {
   exec(
     opts: (ExecBaseOptions &
       ExecRowModeArrayOptions &
-      ExecReturnThisOptions) & { sql: FlexibleString },
+      ExecReturnThisOptions) & {
+      sql: FlexibleString;
+    },
   ): this;
   exec(
     sql: FlexibleString,
@@ -999,7 +1001,9 @@ declare class Database {
       | ScalarFunctionOptions
       | AggregateFunctionOptions
       | WindowFunctionOptions
-    ) & { name: string },
+    ) & {
+      name: string;
+    },
   ): this;
 
   /**
@@ -1136,14 +1140,14 @@ declare class Database {
   savepoint<T>(callback: (db: this) => T): T;
 
   /**
-   * Expects to be given a `DatabaseApi` instance or an `sqlite3*` pointer (which may
-   * be `null`) and a sqlite3 API result code. If the result code is not falsy,
-   * this function throws an `SQLite3Error` with an error message from
-   * `sqlite3_errmsg()`, using the given db handle, or `sqlite3_errstr()` if the
-   * db handle is falsy or is a `close()`ed DB instance. Note that if it's
-   * passed a non-error code like `SQLITE_ROW` or `SQLITE_DONE`, it will still
-   * throw but the error string might be `"Not an error."` The various non-0
-   * non-error codes need to be checked for in client code where they are
+   * Expects to be given a `DatabaseApi` instance or an `sqlite3*` pointer
+   * (which may be `null`) and a sqlite3 API result code. If the result code is
+   * not falsy, this function throws an `SQLite3Error` with an error message
+   * from `sqlite3_errmsg()`, using the given db handle, or `sqlite3_errstr()`
+   * if the db handle is falsy or is a `close()`ed DB instance. Note that if
+   * it's passed a non-error code like `SQLITE_ROW` or `SQLITE_DONE`, it will
+   * still throw but the error string might be `"Not an error."` The various
+   * non-0 non-error codes need to be checked for in client code where they are
    * expected. If it does not throw, it returns its `db` argument (`this`, if
    * called as a member function).
    */
@@ -1159,8 +1163,8 @@ declare class Database {
 /**
  * SQLite3 database backed by `localStorage` or `sessionStorage`.
  *
- * When the sqlite3 API is installed in the main thread, the class is
- * added, which simplifies usage of the kvvfs.
+ * When the sqlite3 API is installed in the main thread, the class is added,
+ * which simplifies usage of the kvvfs.
  */
 declare class JsStorageDb extends Database {
   /** Create a new kvvfs-backed database in local or session storage. */
@@ -1224,8 +1228,8 @@ declare class JsStorageDb extends Database {
  * communication between the synchronous and asynchronous parts of the
  * `sqlite3_vfs` OPFS proxy.
  *
- * The COEP header may also have a value of `credentialless`, but whether
- * that will work in the context of any given application depends on how it uses
+ * The COEP header may also have a value of `credentialless`, but whether that
+ * will work in the context of any given application depends on how it uses
  * other remote assets.
  *
  * How to emit those headers depends on the underlying web server.
@@ -2255,6 +2259,8 @@ declare type Sqlite3Static = {
 };
 
 /**
+ * A function installed by Emscripten to load and initialize the module.
+ *
  * NOTE: The omission of the function parameter list from this declaration is
  * intentional. Please do not reintroduce the removed details.
  * See https://github.com/sqlite/sqlite-wasm/pull/129 for details.
@@ -2325,9 +2331,9 @@ declare type WASM_API = {
    * Uses {@link WASM_API#alloc} to allocate enough memory for the byte-length of
    * the given JS string, plus 1 (for a `NUL` terminator), copies the given JS
    * string to that memory using `jstrcpy()`, `NUL`-terminates it, and returns
-   * the pointer to that C-string. Ownership of the pointer is transferred to the
-   * caller, who must eventually pass the pointer to {@link WASM_API#dealloc} to
-   * free it.
+   * the pointer to that C-string. Ownership of the pointer is transferred to
+   * the caller, who must eventually pass the pointer to {@link WASM_API#dealloc}
+   * to free it.
    *
    * If passed a truthy 2nd argument then its return semantics change: it
    * returns `[ptr,n]`, where `ptr` is the C-string's pointer and n is its
@@ -2928,8 +2934,8 @@ declare type WASM_API = {
    *
    * If writing the last character would surpass the `maxBytes` count because
    * the character is multibyte, that character will not be written (as opposed
-   * to writing a truncated multibyte character). This can lead to it writing
-   * as many as 3 fewer bytes than `maxBytes` specifies.
+   * to writing a truncated multibyte character). This can lead to it writing as
+   * many as 3 fewer bytes than `maxBytes` specifies.
    *
    * Returns the number of bytes written to the target, including the NUL
    * terminator (if any). If it returns 0, it wrote nothing at all, which can
@@ -3055,8 +3061,8 @@ declare type WASM_API = {
    * Functions like `xCall()` but performs argument and result type conversions
    * as for `xWrap()`.
    *
-   * The first argument is the name of the exported function to call. The 2nd
-   * is the name of its result type, as documented for `xWrap()`. The 3rd is an
+   * The first argument is the name of the exported function to call. The 2nd is
+   * the name of its result type, as documented for `xWrap()`. The 3rd is an
    * array of argument type names, as documented for `xWrap()`. The 4th+
    * arguments are arguments for the call, with the special case that if the 4th
    * argument is an array, it is used as the arguments for the call.
@@ -3186,8 +3192,8 @@ declare type WASM_API = {
    * - `string:static` (args): if passed a pointer, returns it as is. Anything
    *   else: gets coerced to a JS string for use as a map key. If a matching
    *   entry is found (as described next), it is returned, else
-   *   `wasm.allocCString()` is used to create a new string, map its pointer
-   *   to `(''+v)` for the remainder of the application's life, and returns that
+   *   `wasm.allocCString()` is used to create a new string, map its pointer to
+   *   `(''+v)` for the remainder of the application's life, and returns that
    *   pointer value for this call and all future calls which are passed a
    *   string-equivalent argument. This conversion is intended for cases which
    *   require static/long-lived string arguments, e.g. `sqlite3_bind_pointer()`
@@ -3412,10 +3418,10 @@ declare type CAPI = {
   sqlite3_libversion: () => string;
 
   /**
-   * Returns a string constant whose value is the same as the
-   * `SQLITE_SOURCE_ID` C preprocessor macro. Except if SQLite is built using an
-   * edited copy of the amalgamation, then the last four characters of the hash
-   * might be different from `SQLITE_SOURCE_ID`.
+   * Returns a string constant whose value is the same as the `SQLITE_SOURCE_ID`
+   * C preprocessor macro. Except if SQLite is built using an edited copy of the
+   * amalgamation, then the last four characters of the hash might be different
+   * from `SQLITE_SOURCE_ID`.
    *
    * C Signature:
    *
@@ -4092,8 +4098,8 @@ declare type CAPI = {
 
   /**
    * If the most recent `sqlite3_*` API call associated with database connection
-   * `db` failed, then the `sqlite3_errmsg(db)` interface returns English-language
-   * text that describes the error.
+   * `db` failed, then the `sqlite3_errmsg(db)` interface returns
+   * English-language text that describes the error.
    *
    * C Signature:
    *
@@ -5717,10 +5723,10 @@ declare type CAPI = {
    * Remove Unnecessary Virtual Table Implementations
    *
    * Removes all virtual table modules from database connection `db` except
-   * those named on list `azKeep`. The `azKeep` parameter must be either NULL
-   * or a pointer to an array of pointers to strings where the array is
-   * terminated by a single NULL pointer. If the `azKeep` parameter is NULL,
-   * then all virtual table modules are removed.
+   * those named on list `azKeep`. The `azKeep` parameter must be either NULL or
+   * a pointer to an array of pointers to strings where the array is terminated
+   * by a single NULL pointer. If the `azKeep` parameter is NULL, then all
+   * virtual table modules are removed.
    *
    * C Signature:
    *
@@ -7315,7 +7321,7 @@ declare type CAPI = {
             | CAPI['SQLITE_CHANGESET_CONFLICT']
             | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
             | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
-          ) => number)
+        ) => number)
       | WasmPointer,
     pCtx: WasmPointer,
   ) => number;

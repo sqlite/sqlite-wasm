@@ -56,13 +56,12 @@
   },
   "homepage": "https://github.com/sqlite/sqlite-wasm#readme",
   "devDependencies": {
+    "@types/node": "^25.0.3",
     "decompress": "^4.2.1",
     "http-server": "github:vapier/http-server",
-    "module-workers-polyfill": "^0.3.2",
-    "node-fetch": "^3.3.2",
     "prettier": "^3.7.3",
     "prettier-plugin-jsdoc": "^1.7.0",
-    "publint": "^0.3.15",
+    "publint": "^0.3.16",
     "shx": "^0.4.0",
     "typescript": "^5.9.3"
   }
