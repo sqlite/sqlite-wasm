@@ -2255,7 +2255,7 @@ declare type Sqlite3Static = {
 };
 
 /**
- * NOTE: The omission of function parameter list from this declaration is
+ * NOTE: The omission of the function parameter list from this declaration is
  * intentional. Please do not reintroduce the removed details.
  * See https://github.com/sqlite/sqlite-wasm/pull/129 for details.
  */
