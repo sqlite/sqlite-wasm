@@ -1,0 +1,9 @@
+# https://github.com/evilmartians/lefthook
+
+output: false
+
+pre-commit:
+  commands:
+    prettier:
+      stage_fixed: true
+      run: npx prettier . --write

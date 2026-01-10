@@ -2262,8 +2262,8 @@ declare type Sqlite3Static = {
  * A function installed by Emscripten to load and initialize the module.
  *
  * NOTE: The omission of the function parameter list from this declaration is
- * intentional. Please do not reintroduce the removed details.
- * See https://github.com/sqlite/sqlite-wasm/pull/129 for details.
+ * intentional. Please do not reintroduce the removed details. See
+ * https://github.com/sqlite/sqlite-wasm/pull/129 for details.
  */
 export default function init(): Promise<Sqlite3Static>;
 

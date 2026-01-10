@@ -1,4 +1,4 @@
-import { sqlite3Worker1Promiser } from '../index.mjs';
+import { sqlite3Worker1Promiser } from '../src/index.js';
 
 (async () => {
   const container = document.querySelector('.worker-promiser');

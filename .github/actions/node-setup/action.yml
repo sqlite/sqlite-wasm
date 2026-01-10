@@ -1,0 +1,15 @@
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js LTS
+      uses: actions/setup-node@v6
+      with:
+        node-version: 'lts/*'
+        cache: 'npm'
+        cache-dependency-path: package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        set -euo pipefail
+        npm ci --prefer-offline --no-audit --no-fund

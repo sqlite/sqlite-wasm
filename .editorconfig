@@ -1,0 +1,30 @@
+root = true
+
+[*]
+ij_html_space_inside_empty_tag = true
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+# quote style
+ij_javascript_force_quote_style = true
+ij_typescript_force_quote_style = true
+ij_javascript_use_double_quotes = false
+ij_typescript_use_double_quotes = false
+
+# bracket spacing
+ij_javascript_spaces_within_object_literal_braces = true
+ij_typescript_spaces_within_object_literal_braces = true
+ij_javascript_spaces_within_object_type_braces = true
+ij_typescript_spaces_within_object_type_braces = true
+
+# imports
+ij_javascript_spaces_within_imports = true
+ij_typescript_spaces_within_imports = true
+ij_javascript_import_merge_members = true
+ij_typescript_import_merge_members = true
+ij_javascript_import_sort_members = true
+ij_typescript_import_sort_members = true
