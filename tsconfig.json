@@ -1,9 +1,11 @@
 {
-  "$schema": "https://www.schemastore.org/tsconfig.json",
   "compilerOptions": {
-    "target": "es2020",
+    "target": "es2023",
     "noEmit": true,
     "strict": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "moduleResolution": "nodenext",
+    "module": "NodeNext"
+  },
+  "include": ["tsdown.config.ts"]
 }
