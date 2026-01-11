@@ -13,7 +13,7 @@ const tsdownConfig: UserConfig = defineConfig({
   format: ['esm'],
   minify: 'dce-only',
   outputOptions: {
-    legalComments: 'none',
+    legalComments: 'inline',
   },
   onSuccess: () => {
     copyFileSync('./src/bin/sqlite3.wasm', './dist/sqlite3.wasm');
