@@ -1,4 +1,5 @@
-/*
+/* @preserve
+**
 ** LICENSE for the sqlite3 WebAssembly/JavaScript APIs.
 **
 ** This bundle (typically released as sqlite3.js or sqlite3.mjs)
@@ -23,12 +24,12 @@
 ** *   May you find forgiveness for yourself and forgive others.
 ** *   May you share freely, never taking more than you give.
 */
-/*
+/* @preserve
 ** This code was built from sqlite3 version...
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-10 00:38:00 1fd02a75a914f131948fe06fc99f851d3e226f9f1270e25393d79c493c28a347"
+** SQLITE_SOURCE_ID "2026-01-11 14:14:16 596f1ea084e78843aa668d3a197690929848d474e55ff7b1444f78bd11f116b1"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -4789,7 +4790,8 @@ Module.runSQLite3PostLoadInit = async function(
      And all of that gets sandwiched between extern-pre-js.js and
      extern-post-js.js.
   */
-/*
+/* @preserve
+**
 ** LICENSE for the sqlite3 WebAssembly/JavaScript APIs.
 **
 ** This bundle (typically released as sqlite3.js or sqlite3.mjs)
@@ -4814,12 +4816,12 @@ Module.runSQLite3PostLoadInit = async function(
 ** *   May you find forgiveness for yourself and forgive others.
 ** *   May you share freely, never taking more than you give.
 */
-/*
+/* @preserve
 ** This code was built from sqlite3 version...
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-10 00:38:00 1fd02a75a914f131948fe06fc99f851d3e226f9f1270e25393d79c493c28a347"
+** SQLITE_SOURCE_ID "2026-01-11 14:14:16 596f1ea084e78843aa668d3a197690929848d474e55ff7b1444f78bd11f116b1"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -6994,7 +6996,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-10 00:38:00 1fd02a75a914f131948fe06fc99f851d3e226f9f1270e25393d79c493c28a347","downloadVersion": 3520000,"scm":{ "sha3-256": "1fd02a75a914f131948fe06fc99f851d3e226f9f1270e25393d79c493c28a347","branch": "trunk","tags": "","datetime": "2026-01-10T00:38:00.277Z"}};
+  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-11 14:14:16 596f1ea084e78843aa668d3a197690929848d474e55ff7b1444f78bd11f116b1","downloadVersion": 3520000,"scm":{ "sha3-256": "596f1ea084e78843aa668d3a197690929848d474e55ff7b1444f78bd11f116b1","branch": "trunk","tags": "","datetime": "2026-01-11T14:14:16.150Z"}};
 });
 /**
   2022-07-08
