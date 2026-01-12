@@ -29,7 +29,7 @@
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-11 16:21:32 334b2be57e752672cfcaf764e3bc73e3d00a0a5174e8ef7c3d83c26136bccaf5"
+** SQLITE_SOURCE_ID "2026-01-12 15:43:18 b57a8215f4259a0aae188b7ee5060f8ff48919303179aae80b58b43ed3b991f5"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -148,41 +148,6 @@ if (ENVIRONMENT_IS_NODE) {
     return new URL(path, import.meta.url).href;
   }.bind(sIMS);
 
-  /**
-     Override Module.instantiateWasm().
-
-     A custom Module.instantiateWasm() does not work in WASMFS builds:
-
-     https://github.com/emscripten-core/emscripten/issues/17951
-
-     In such builds we must disable this.
-  */
-  Module['instantiateWasm'] = function callee(imports,onSuccess){
-    const sims = this;
-    const uri = Module.locateFile(
-      sims.wasmFilename, (
-        ('undefined'===typeof scriptDirectory/*var defined by Emscripten glue*/)
-          ? "" : scriptDirectory)
-    );
-    sims.debugModule("instantiateWasm() uri =", uri, "sIMS =",this);
-    const wfetch = ()=>fetch(uri, {credentials: 'same-origin'});
-    const finalThen = (arg)=>{
-      arg.imports = imports;
-      sims.instantiateWasm = arg /* used by sqlite3-api-prologue.c-pp.js */;
-      onSuccess(arg.instance, arg.module);
-    };
-    const loadWasm = WebAssembly.instantiateStreaming
-          ? async ()=>
-          WebAssembly
-          .instantiateStreaming(wfetch(), imports)
-          .then(finalThen)
-          : async ()=>// Safari < v15
-          wfetch()
-          .then(response => response.arrayBuffer())
-          .then(bytes => WebAssembly.instantiate(bytes, imports))
-          .then(finalThen)
-    return loadWasm();
-  }.bind(sIMS);
 })(Module);
 /* END FILE: api/pre-js.js. */
 // end include: ./bld/pre-js.node.js
@@ -4877,7 +4842,7 @@ Module.runSQLite3PostLoadInit = async function(
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-11 16:21:32 334b2be57e752672cfcaf764e3bc73e3d00a0a5174e8ef7c3d83c26136bccaf5"
+** SQLITE_SOURCE_ID "2026-01-12 15:43:18 b57a8215f4259a0aae188b7ee5060f8ff48919303179aae80b58b43ed3b991f5"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -7052,7 +7017,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-11 16:21:32 334b2be57e752672cfcaf764e3bc73e3d00a0a5174e8ef7c3d83c26136bccaf5","downloadVersion": 3520000,"scm":{ "sha3-256": "334b2be57e752672cfcaf764e3bc73e3d00a0a5174e8ef7c3d83c26136bccaf5","branch": "trunk","tags": "","datetime": "2026-01-11T16:21:32.127Z"}};
+  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-12 15:43:18 b57a8215f4259a0aae188b7ee5060f8ff48919303179aae80b58b43ed3b991f5","downloadVersion": 3520000,"scm":{ "sha3-256": "b57a8215f4259a0aae188b7ee5060f8ff48919303179aae80b58b43ed3b991f5","branch": "trunk","tags": "","datetime": "2026-01-12T15:43:18.126Z"}};
 });
 /**
   2022-07-08
