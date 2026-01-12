@@ -31,19 +31,6 @@ const start = function (sqlite3) {
   }
 };
 
-// Mock fetch because Emscripten's Node.js loader still uses it and it fails on file:// URLs
-globalThis.fetch = async (url) => {
-  if (url.toString().endsWith('.wasm')) {
-    const buffer = readFileSync(
-      new URL('../dist/sqlite3.wasm', import.meta.url),
-    );
-    return new Response(buffer, {
-      headers: { 'Content-Type': 'application/wasm' },
-    });
-  }
-  throw new Error(`Unexpected fetch to ${url}`);
-};
-
 log('Loading and initializing SQLite3 module...');
 sqlite3InitModule({
   print: log,

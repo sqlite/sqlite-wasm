@@ -1,21 +1,7 @@
-import { expect, test, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { expect, test } from 'vitest';
 import sqlite3InitModule from '../bin/sqlite3-node.mjs';
 
 test('Node.js build sanity check', async () => {
-  // Mock fetch because Emscripten's Node.js loader still uses it, and it fails on file:// URLs
-  vi.stubGlobal('fetch', async (url) => {
-    if (url.endsWith('.wasm')) {
-      const buffer = readFileSync(
-        new URL('../bin/sqlite3.wasm', import.meta.url),
-      );
-      return new Response(buffer, {
-        headers: { 'Content-Type': 'application/wasm' },
-      });
-    }
-    throw new Error(`Unexpected fetch to ${url}`);
-  });
-
   const sqlite3 = await sqlite3InitModule();
 
   expect(typeof sqlite3.version.libVersion).toBe('string');
