@@ -19,6 +19,7 @@ RUN apt-get update \
     zip \
     unzip \
     curl \
+    wabt \
  && rm -rf /var/lib/apt/lists/*
 
 # create useful dirs
