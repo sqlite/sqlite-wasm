@@ -67,8 +67,18 @@ if [ -d "$SRC_DIR/.git" ]; then
 else
   log "Cloning repository..."
   rm -rf "$SRC_DIR"
-  mkdir -p "$(dirname "$SRC_DIR")"
-  git clone --depth 1 --branch "$SQLITE_REF" "$SQLITE_REPO" "$SRC_DIR"
+  mkdir -p "$SRC_DIR"
+  git -C "$SRC_DIR" init
+  git -C "$SRC_DIR" remote add origin "$SQLITE_REPO"
+  log "Fetching ref: $SQLITE_REF"
+  if git -C "$SRC_DIR" fetch --depth 1 origin "$SQLITE_REF"; then
+    git -C "$SRC_DIR" checkout --detach FETCH_HEAD
+  else
+    log "Failed to fetch shallow ref, trying full clone..."
+    rm -rf "$SRC_DIR"
+    git clone "$SQLITE_REPO" "$SRC_DIR"
+    git -C "$SRC_DIR" checkout "$SQLITE_REF"
+  fi
 fi
 
 # Ensure emsdk environment active in this shell
