@@ -8,7 +8,6 @@ declare type SqlValue =
   | Int8Array
   | ArrayBuffer;
 
-
 /** A PreparedStatement or a WASM pointer to one. */
 declare type StmtPtr = PreparedStatement | WasmPointer;
 
@@ -874,150 +873,150 @@ declare class Database {
     opts: ExecBaseOptions &
       ExecRowModeObjectOptions &
       ExecReturnThisOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): this;
   exec(
     opts: ExecBaseOptions &
       ExecRowModeObjectOptions &
       ExecReturnThisOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): this;
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
       ExecRowModeStmtOptions &
       ExecReturnThisOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): this;
   exec(
     opts: ExecBaseOptions &
       ExecRowModeStmtOptions &
       ExecReturnThisOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): this;
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
       ExecRowModeScalarOptions &
       ExecReturnThisOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): this;
   exec(
     opts: ExecBaseOptions &
       ExecRowModeScalarOptions &
       ExecReturnThisOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): this;
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
       ExecRowModeArrayOptions &
       ExecReturnResultRowsOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): SqlValue[][];
   exec(
     opts: ExecBaseOptions &
       ExecRowModeArrayOptions &
       ExecReturnResultRowsOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): SqlValue[][];
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
       ExecRowModeObjectOptions &
       ExecReturnResultRowsOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): { [columnName: string]: SqlValue }[];
   exec(
     opts: ExecBaseOptions &
       ExecRowModeObjectOptions &
       ExecReturnResultRowsOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): { [columnName: string]: SqlValue }[];
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
       ExecRowModeScalarOptions &
       ExecReturnResultRowsOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): SqlValue[];
   exec(
     opts: ExecBaseOptions &
       ExecRowModeScalarOptions &
       ExecReturnResultRowsOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): SqlValue[];
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
       ExecRowModeArrayOptions &
       ExecReturnSaveSqlOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): string[];
   exec(
     opts: ExecBaseOptions &
       ExecRowModeArrayOptions &
       ExecReturnSaveSqlOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): string[];
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
       ExecRowModeObjectOptions &
       ExecReturnSaveSqlOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): string[];
   exec(
     opts: ExecBaseOptions &
       ExecRowModeObjectOptions &
       ExecReturnSaveSqlOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): string[];
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
       ExecRowModeStmtOptions &
       ExecReturnSaveSqlOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): string[];
   exec(
     opts: ExecBaseOptions &
       ExecRowModeStmtOptions &
       ExecReturnSaveSqlOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): string[];
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
       ExecRowModeScalarOptions &
       ExecReturnSaveSqlOptions & {
-      sql?: undefined;
-    },
+        sql?: undefined;
+      },
   ): string[];
   exec(
     opts: ExecBaseOptions &
       ExecRowModeScalarOptions &
       ExecReturnSaveSqlOptions & {
-      sql: FlexibleString;
-    },
+        sql: FlexibleString;
+      },
   ): string[];
 
   /**
@@ -1123,7 +1122,7 @@ declare class Database {
       | ScalarFunctionOptions
       | AggregateFunctionOptions
       | WindowFunctionOptions
-      ) & {
+    ) & {
       name: string;
     },
   ): this;
@@ -1806,7 +1805,11 @@ declare class sqlite3_vfs extends SQLiteStruct {
     flags: number,
     pOutputFlags: WasmPointer,
   ) => Sqlite3Result;
-  xDelete: (vfsPtr: WasmPointer, zName: WasmPointer, syncDir: number) => Sqlite3Result;
+  xDelete: (
+    vfsPtr: WasmPointer,
+    zName: WasmPointer,
+    syncDir: number,
+  ) => Sqlite3Result;
   xAccess: (
     vfsPtr: WasmPointer,
     zName: WasmPointer,
@@ -1835,7 +1838,10 @@ declare class sqlite3_vfs extends SQLiteStruct {
   xSleep: (vfsPtr: WasmPointer, microseconds: number) => Sqlite3Result;
   xCurrentTime: (vfsPtr: WasmPointer, pTimeOut: WasmPointer) => Sqlite3Result;
   xGetLastError: (vfsPtr: WasmPointer, nBuf: number, zBuf: WasmPointer) => void;
-  xCurrentTimeInt64: (vfsPtr: WasmPointer, pTimeOut: WasmPointer) => Sqlite3Result;
+  xCurrentTimeInt64: (
+    vfsPtr: WasmPointer,
+    pTimeOut: WasmPointer,
+  ) => Sqlite3Result;
   xSetSystemCall: (
     vfsPtr: WasmPointer,
     zName: WasmPointer,
@@ -1871,8 +1877,15 @@ declare class sqlite3_io_methods extends SQLiteStruct {
   xFileSize: (file: WasmPointer, pSize: WasmPointer) => Sqlite3Result;
   xLock: (file: WasmPointer, lockType: number) => Sqlite3Result;
   xUnlock: (file: WasmPointer, lockType: number) => Sqlite3Result;
-  xCheckReservedLock: (file: WasmPointer, pResOut: WasmPointer) => Sqlite3Result;
-  xFileControl: (file: WasmPointer, op: number, pArg: WasmPointer) => Sqlite3Result;
+  xCheckReservedLock: (
+    file: WasmPointer,
+    pResOut: WasmPointer,
+  ) => Sqlite3Result;
+  xFileControl: (
+    file: WasmPointer,
+    op: number,
+    pArg: WasmPointer,
+  ) => Sqlite3Result;
   xSectorSize: (file: WasmPointer) => Sqlite3Result;
   xDeviceCharacteristics: (file: WasmPointer) => Sqlite3Result;
   xShmMap: (
@@ -1971,7 +1984,11 @@ declare class sqlite3_module extends SQLiteStruct {
   ) => Sqlite3Result;
   xNext: (pCursor: WasmPointer) => Sqlite3Result;
   xEof: (pCursor: WasmPointer) => Sqlite3Result;
-  xColumn: (pCursor: WasmPointer, pContext: WasmPointer, i: number) => Sqlite3Result;
+  xColumn: (
+    pCursor: WasmPointer,
+    pContext: WasmPointer,
+    i: number,
+  ) => Sqlite3Result;
   xRowid: (pCursor: WasmPointer, pRowid: WasmPointer) => Sqlite3Result;
   xUpdate: (
     pVtab: WasmPointer,
@@ -2340,16 +2357,16 @@ declare type Sqlite3Static = {
       methods: Omit<sqlite3_module, 'iVersion'> &
         (
           | {
-          xConnect: undefined;
-        }
+              xConnect: undefined;
+            }
           | { xCreate: undefined }
-          ) &
+        ) &
         (
           | {
-          xDisconnect: undefined;
-        }
+              xDisconnect: undefined;
+            }
           | { xDestroy: undefined }
-          );
+        );
 
       /**
        * (default=false): if truthy, the given methods are not mapped as-is, but
@@ -3038,7 +3055,11 @@ declare type WASM_API = {
    * copy partial multibyte characters this way, and converting such strings
    * back to JS strings will have undefined results.
    */
-  cstrncpy: (tgtPtr: WasmPointer, srcPtr: WasmPointer, n: number) => Sqlite3Result;
+  cstrncpy: (
+    tgtPtr: WasmPointer,
+    srcPtr: WasmPointer,
+    n: number,
+  ) => Sqlite3Result;
 
   /**
    * Forewarning: this API is somewhat complicated and is, in practice, never
@@ -3675,7 +3696,10 @@ declare type CAPI = {
     arg1: number,
     arg2: number,
   ): Sqlite3Result;
-  sqlite3_config(op: CAPI['SQLITE_CONFIG_MEMDB_MAXSIZE'], arg: bigint): Sqlite3Result;
+  sqlite3_config(
+    op: CAPI['SQLITE_CONFIG_MEMDB_MAXSIZE'],
+    arg: bigint,
+  ): Sqlite3Result;
 
   /**
    * Used to make configuration changes to a database connection. The interface
@@ -3739,10 +3763,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/extended_result_codes.html
    */
-  sqlite3_extended_result_codes: (
-    db: DbPtr,
-    onoff: number,
-  ) => Sqlite3Result;
+  sqlite3_extended_result_codes: (db: DbPtr, onoff: number) => Sqlite3Result;
 
   /**
    * Usually returns the `rowid` of the most recent successful `INSERT` into a
@@ -3770,10 +3791,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/set_last_insert_rowid.html
    */
-  sqlite3_set_last_insert_rowid: (
-    db: DbPtr,
-    rowid: bigint,
-  ) => void;
+  sqlite3_set_last_insert_rowid: (db: DbPtr, rowid: bigint) => void;
 
   /**
    * Returns the number of rows modified, inserted or deleted by the most
@@ -4108,7 +4126,10 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/open.html
    */
-  sqlite3_open: (filename: string | WasmPointer, ppDb: WasmPointer) => Sqlite3Result;
+  sqlite3_open: (
+    filename: string | WasmPointer,
+    ppDb: WasmPointer,
+  ) => Sqlite3Result;
 
   /**
    * Open an SQLite database file as specified by the `filename` argument
@@ -4479,7 +4500,11 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/bind_blob.html
    */
-  sqlite3_bind_int64: (stmt: StmtPtr, idx: number, value: bigint) => Sqlite3Result;
+  sqlite3_bind_int64: (
+    stmt: StmtPtr,
+    idx: number,
+    value: bigint,
+  ) => Sqlite3Result;
 
   /**
    * Bind a `NULL` value to a parameter in a prepared statement.
@@ -4490,10 +4515,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/bind_blob.html
    */
-  sqlite3_bind_null: (
-    stmt: StmtPtr,
-    idx: number,
-  ) => Sqlite3Result;
+  sqlite3_bind_null: (stmt: StmtPtr, idx: number) => Sqlite3Result;
 
   /**
    * Bind a `TEXT` value to a parameter in a prepared statement.
@@ -4570,9 +4592,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/bind_parameter_count.html
    */
-  sqlite3_bind_parameter_count: (
-    stmt: StmtPtr,
-  ) => number;
+  sqlite3_bind_parameter_count: (stmt: StmtPtr) => number;
 
   /**
    * Return the index of an SQL parameter given its name. The index value
@@ -4682,10 +4702,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/column_blob.html
    */
-  sqlite3_column_blob: (
-    stmt: StmtPtr,
-    colIdx: number,
-  ) => WasmPointer;
+  sqlite3_column_blob: (stmt: StmtPtr, colIdx: number) => WasmPointer;
 
   /**
    * Get a double precision floating point result value from a column in the
@@ -4697,10 +4714,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/column_blob.html
    */
-  sqlite3_column_double: (
-    stmt: StmtPtr,
-    colIdx: number,
-  ) => number;
+  sqlite3_column_double: (stmt: StmtPtr, colIdx: number) => number;
 
   /**
    * Get an integer result value from a column in the current result row.
@@ -4711,10 +4725,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/column_blob.html
    */
-  sqlite3_column_int: (
-    stmt: StmtPtr,
-    colIdx: number,
-  ) => number;
+  sqlite3_column_int: (stmt: StmtPtr, colIdx: number) => number;
 
   /**
    * Get a 64bit integer result value from a column in the current result row.
@@ -4736,10 +4747,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/column_blob.html
    */
-  sqlite3_column_text: (
-    stmt: StmtPtr,
-    colIdx: number,
-  ) => string;
+  sqlite3_column_text: (stmt: StmtPtr, colIdx: number) => string;
 
   /**
    * Get a `sql_value*` result value from a column in the current result row.
@@ -4750,10 +4758,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/column_blob.html
    */
-  sqlite3_column_value: (
-    stmt: StmtPtr,
-    colIdx: number,
-  ) => WasmPointer;
+  sqlite3_column_value: (stmt: StmtPtr, colIdx: number) => WasmPointer;
 
   /**
    * Returns the initial data type of the result column in the current result
@@ -4765,10 +4770,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/column_blob.html
    */
-  sqlite3_column_bytes: (
-    stmt: StmtPtr,
-    colIdx: number,
-  ) => number;
+  sqlite3_column_bytes: (stmt: StmtPtr, colIdx: number) => number;
 
   /**
    * Get the length in bytes of a BLOB or TEXT column in the current result row.
@@ -4779,10 +4781,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/column_blob.html
    */
-  sqlite3_column_type: (
-    stmt: StmtPtr,
-    colIdx: number,
-  ) => number;
+  sqlite3_column_type: (stmt: StmtPtr, colIdx: number) => number;
 
   /**
    * The `sqlite3_finalize()` function is called to delete a prepared statement.
@@ -5475,12 +5474,12 @@ declare type CAPI = {
     pArg: WasmPointer,
     xCompare:
       | ((
-      pCtx: WasmPointer,
-      len1: number,
-      p1: WasmPointer,
-      len2: number,
-      p2: WasmPointer,
-    ) => number)
+          pCtx: WasmPointer,
+          len1: number,
+          p1: WasmPointer,
+          len2: number,
+          p2: WasmPointer,
+        ) => number)
       | WasmPointer,
   ) => Sqlite3Result;
 
@@ -5507,12 +5506,12 @@ declare type CAPI = {
     pArg: WasmPointer,
     xCompare:
       | ((
-      pCtx: WasmPointer,
-      len1: number,
-      p1: WasmPointer,
-      len2: number,
-      p2: WasmPointer,
-    ) => number)
+          pCtx: WasmPointer,
+          len1: number,
+          p1: WasmPointer,
+          len2: number,
+          p2: WasmPointer,
+        ) => number)
       | WasmPointer,
     xDestroy: ((pCtx: WasmPointer) => void) | WasmPointer,
   ) => Sqlite3Result;
@@ -5538,11 +5537,11 @@ declare type CAPI = {
     cbArg: WasmPointer,
     callback:
       | ((
-      cbArg: WasmPointer,
-      db: DbPtr,
-      eTextRep: number,
-      name: string | WasmPointer,
-    ) => void)
+          cbArg: WasmPointer,
+          db: DbPtr,
+          eTextRep: number,
+          name: string | WasmPointer,
+        ) => void)
       | WasmPointer,
   ) => Sqlite3Result;
 
@@ -5581,10 +5580,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/db_filename.html
    */
-  sqlite3_db_filename: (
-    db: DbPtr,
-    dbName: string | WasmPointer,
-  ) => string;
+  sqlite3_db_filename: (db: DbPtr, dbName: string | WasmPointer) => string;
 
   /**
    * Determine the transaction state of a database
@@ -5740,11 +5736,7 @@ declare type CAPI = {
    */
   sqlite3_auto_extension: (
     xEntryPoint:
-      | ((
-      db: DbPtr,
-      pzErrMsg: WasmPointer,
-      pThunk: WasmPointer,
-    ) => number)
+      | ((db: DbPtr, pzErrMsg: WasmPointer, pThunk: WasmPointer) => number)
       | WasmPointer,
   ) => Sqlite3Result;
 
@@ -5846,10 +5838,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/drop_modules.html
    */
-  sqlite3_drop_modules: (
-    db: DbPtr,
-    azKeep: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_drop_modules: (db: DbPtr, azKeep: WasmPointer) => Sqlite3Result;
 
   /**
    * Declare The Schema Of A Virtual Table
@@ -5864,10 +5853,7 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/declare_vtab.html
    */
-  sqlite3_declare_vtab: (
-    db: DbPtr,
-    sql: string | WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_declare_vtab: (db: DbPtr, sql: string | WasmPointer) => Sqlite3Result;
 
   /**
    * Overload A Function For A Virtual Table
@@ -5930,7 +5916,9 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/vfs_find.html
    */
-  sqlite3_vfs_unregister: (vfs: sqlite3_vfs | WasmPointer | string) => Sqlite3Result;
+  sqlite3_vfs_unregister: (
+    vfs: sqlite3_vfs | WasmPointer | string,
+  ) => Sqlite3Result;
 
   /**
    * Low-Level Control Of Database Files
@@ -6037,7 +6025,10 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/keyword_count.html
    */
-  sqlite3_keyword_check: (name: string | WasmPointer, n: number) => Sqlite3Result;
+  sqlite3_keyword_check: (
+    name: string | WasmPointer,
+    n: number,
+  ) => Sqlite3Result;
 
   /**
    * Used to retrieve runtime status information about the performance of
@@ -6337,7 +6328,10 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/vtab_in_first.html
    */
-  sqlite3_vtab_in_first: (sqlValue: WasmPointer, ppOut: WasmPointer) => Sqlite3Result;
+  sqlite3_vtab_in_first: (
+    sqlValue: WasmPointer,
+    ppOut: WasmPointer,
+  ) => Sqlite3Result;
 
   /**
    * Find all elements on the right-hand side of an IN constraint.
@@ -6355,7 +6349,10 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/vtab_in_first.html
    */
-  sqlite3_vtab_in_next: (sqlValue: WasmPointer, ppOut: WasmPointer) => Sqlite3Result;
+  sqlite3_vtab_in_next: (
+    sqlValue: WasmPointer,
+    ppOut: WasmPointer,
+  ) => Sqlite3Result;
 
   /**
    * Constraint values in `xBestIndex()`
@@ -6448,10 +6445,7 @@ declare type CAPI = {
    *
    * See https://sqlite.org/wasm/doc/trunk/api-c-style.md#pre-update-ext
    */
-  sqlite3_preupdate_old_js: (
-    db: DbPtr,
-    colIdx: number,
-  ) => SqlValue;
+  sqlite3_preupdate_old_js: (db: DbPtr, colIdx: number) => SqlValue;
 
   /**
    * Returns the number of columns in the row that is being inserted, updated,
@@ -6509,10 +6503,7 @@ declare type CAPI = {
    *
    * See https://sqlite.org/wasm/doc/trunk/api-c-style.md#pre-update-ext
    */
-  sqlite3_preupdate_new_js: (
-    db: DbPtr,
-    colIdx: number,
-  ) => SqlValue;
+  sqlite3_preupdate_new_js: (db: DbPtr, colIdx: number) => SqlValue;
 
   /**
    * When the `sqlite3_blob_write()` API is used to update a blob column, the
@@ -6644,7 +6635,10 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/session/sqlite3session_object_config.html
    */
-  sqlite3session_object_config: (pSession: WasmPointer, op: number) => Sqlite3Result;
+  sqlite3session_object_config: (
+    pSession: WasmPointer,
+    op: number,
+  ) => Sqlite3Result;
 
   /**
    * Enable or disable the recording of changes by a session object. When
@@ -6657,7 +6651,10 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/session/sqlite3session_enable.html
    */
-  sqlite3session_enable: (pSession: WasmPointer, bEnable: number) => Sqlite3Result;
+  sqlite3session_enable: (
+    pSession: WasmPointer,
+    bEnable: number,
+  ) => Sqlite3Result;
 
   /**
    * Set Or Clear the Indirect Change Flag
@@ -6686,7 +6683,10 @@ declare type CAPI = {
    *
    * See https://www.sqlite.org/session/sqlite3session_indirect.html
    */
-  sqlite3session_indirect: (pSession: WasmPointer, bIndirect: number) => Sqlite3Result;
+  sqlite3session_indirect: (
+    pSession: WasmPointer,
+    bIndirect: number,
+  ) => Sqlite3Result;
 
   /**
    * Attach A Table To A Session Object
@@ -7309,18 +7309,18 @@ declare type CAPI = {
     xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
     xConflict:
       | ((
-      pCtx: WasmPointer,
-      eConflict:
-        | CAPI['SQLITE_CHANGESET_DATA']
-        | CAPI['SQLITE_CHANGESET_NOTFOUND']
-        | CAPI['SQLITE_CHANGESET_CONFLICT']
-        | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
-        | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
-      pIter: WasmPointer,
-    ) =>
-      | CAPI['SQLITE_CHANGESET_OMIT']
-      | CAPI['SQLITE_CHANGESET_ABORT']
-      | CAPI['SQLITE_CHANGESET_REPLACE'])
+          pCtx: WasmPointer,
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
+          pIter: WasmPointer,
+        ) =>
+          | CAPI['SQLITE_CHANGESET_OMIT']
+          | CAPI['SQLITE_CHANGESET_ABORT']
+          | CAPI['SQLITE_CHANGESET_REPLACE'])
       | WasmPointer,
     pCtx: WasmPointer,
   ) => Sqlite3Result;
@@ -7372,18 +7372,18 @@ declare type CAPI = {
     xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
     xConflict:
       | ((
-      pCtx: WasmPointer,
-      eConflict:
-        | CAPI['SQLITE_CHANGESET_DATA']
-        | CAPI['SQLITE_CHANGESET_NOTFOUND']
-        | CAPI['SQLITE_CHANGESET_CONFLICT']
-        | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
-        | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
-      pIter: WasmPointer,
-    ) =>
-      | CAPI['SQLITE_CHANGESET_OMIT']
-      | CAPI['SQLITE_CHANGESET_ABORT']
-      | CAPI['SQLITE_CHANGESET_REPLACE'])
+          pCtx: WasmPointer,
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
+          pIter: WasmPointer,
+        ) =>
+          | CAPI['SQLITE_CHANGESET_OMIT']
+          | CAPI['SQLITE_CHANGESET_ABORT']
+          | CAPI['SQLITE_CHANGESET_REPLACE'])
       | WasmPointer,
     pCtx: WasmPointer,
     ppRebase: WasmPointer,
@@ -7423,14 +7423,14 @@ declare type CAPI = {
     xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
     xConflict:
       | ((
-      pCtx: WasmPointer,
-      eConflict:
-        | CAPI['SQLITE_CHANGESET_DATA']
-        | CAPI['SQLITE_CHANGESET_NOTFOUND']
-        | CAPI['SQLITE_CHANGESET_CONFLICT']
-        | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
-        | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
-    ) => number)
+          pCtx: WasmPointer,
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
+        ) => number)
       | WasmPointer,
     pCtx: WasmPointer,
   ) => Sqlite3Result;
@@ -7473,14 +7473,14 @@ declare type CAPI = {
     xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
     xConflict:
       | ((
-      pCtx: WasmPointer,
-      eConflict:
-        | CAPI['SQLITE_CHANGESET_DATA']
-        | CAPI['SQLITE_CHANGESET_NOTFOUND']
-        | CAPI['SQLITE_CHANGESET_CONFLICT']
-        | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
-        | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
-    ) => number)
+          pCtx: WasmPointer,
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
+        ) => number)
       | WasmPointer,
     pCtx: WasmPointer,
     ppRebase: WasmPointer,
@@ -7751,10 +7751,7 @@ declare type CAPI = {
    * which may be 0), returns a pointer to the `sqlite3_vfs` responsible for it.
    * If the given db name is null/0, or not provided, then `"main"` is assumed.
    */
-  sqlite3_js_db_vfs: (
-    db: DbPtr,
-    dbName?: string | WasmPointer,
-  ) => WasmPointer;
+  sqlite3_js_db_vfs: (db: DbPtr, dbName?: string | WasmPointer) => WasmPointer;
 
   /**
    * Given one of the `SQLITE_...` constant values, this function returns the
