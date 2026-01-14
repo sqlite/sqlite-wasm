@@ -49,8 +49,8 @@ jobs:
       - name: Run format check
         run: npx prettier . --check
 
-  test:
-    name: Run tests
+  test-browser:
+    name: Run browser tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -64,6 +64,26 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Run tests
-        id: run-tests
-        run: npm run test
+      - name: Run browser tests
+        run: npm run test:browser
+
+  test-node:
+    name: Run node tests (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 23, 24, 25]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup environment (node + install)
+        uses: ./.github/actions/node-setup
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Run node tests
+        run: npm run test:node

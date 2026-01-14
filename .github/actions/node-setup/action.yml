@@ -1,10 +1,16 @@
+inputs:
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: 'lts/*'
+
 runs:
   using: 'composite'
   steps:
-    - name: Setup Node.js LTS
+    - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: 'lts/*'
+        node-version: ${{ inputs.node-version }}
         cache: 'npm'
         cache-dependency-path: package-lock.json
 

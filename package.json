@@ -47,6 +47,8 @@
   ],
   "scripts": {
     "test": "vitest",
+    "test:node": "vitest --project node",
+    "test:browser": "vitest --project browser",
     "publint": "npx publint",
     "check-types": "tsc",
     "build": "tsdown",
