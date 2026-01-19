@@ -55,7 +55,7 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set up Docker Buildx
+      - name: Set up Buildx Docker CLI plugin
         if: steps.check-branch.outputs.skip != 'true'
         uses: docker/setup-buildx-action@v3
 
