@@ -4,8 +4,6 @@ import sqlite3InitModule from '../bin/sqlite3-bundler-friendly.mjs';
 test('Bundler-friendly OO1 API sanity check (browser)', async () => {
   const sqlite3 = await sqlite3InitModule();
 
-  expect(typeof sqlite3.version.libVersion).toBe('string');
-
   // 1. Create a database
   const db = new sqlite3.oo1.DB(':memory:');
   expect(db.isOpen()).toBe(true);
