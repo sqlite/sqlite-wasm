@@ -29,7 +29,7 @@
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-20 10:57:44 346ad366a8ebed1e7936c59f8a40e9c8e7e31d0153bc4f654a47b2ddc39b18ca"
+** SQLITE_SOURCE_ID "2026-01-20 18:01:56 982a91abc0c97e7e785d3ba69a4d0516a899f4d6cd462027ebdf7115e577e8c3"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -131,6 +131,14 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
      approach.
   */
   Module['locateFile'] = function(path, prefix) {
+    if( this.emscriptenLocateFile instanceof Function ){
+      /* [tag:locateFile] Client-overridden impl. We do not support
+         this but offer it as a back-door which will go away the
+         moment either Emscripten changes that interface or we manage
+         to get non-Emscripten builds working.
+         https://sqlite.org/forum/forumpost/1eec339854c935bd */
+      return this.emscriptenLocateFile(path, prefix);
+    }
     return new URL(path, import.meta.url).href;
   }.bind(sIMS);
 
@@ -147,6 +155,10 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
      node does not do fetch().
   */
   Module['instantiateWasm'] = function callee(imports,onSuccess){
+    if( this.emscriptenInstantiateWasm instanceof Function ){
+      /* See [tag:locateFile]. Same story here */
+      return this.emscriptenInstantiateWasm(imports, onSuccess);
+    }
     const sims = this;
     const uri = Module.locateFile(
       sims.wasmFilename, (
@@ -4824,7 +4836,7 @@ Module.runSQLite3PostLoadInit = async function(
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-20 10:57:44 346ad366a8ebed1e7936c59f8a40e9c8e7e31d0153bc4f654a47b2ddc39b18ca"
+** SQLITE_SOURCE_ID "2026-01-20 18:01:56 982a91abc0c97e7e785d3ba69a4d0516a899f4d6cd462027ebdf7115e577e8c3"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -6999,7 +7011,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-20 10:57:44 346ad366a8ebed1e7936c59f8a40e9c8e7e31d0153bc4f654a47b2ddc39b18ca","downloadVersion": 3520000,"scm":{ "sha3-256": "346ad366a8ebed1e7936c59f8a40e9c8e7e31d0153bc4f654a47b2ddc39b18ca","branch": "trunk","tags": "","datetime": "2026-01-20T10:57:44.925Z"}};
+  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-20 18:01:56 982a91abc0c97e7e785d3ba69a4d0516a899f4d6cd462027ebdf7115e577e8c3","downloadVersion": 3520000,"scm":{ "sha3-256": "982a91abc0c97e7e785d3ba69a4d0516a899f4d6cd462027ebdf7115e577e8c3","branch": "trunk","tags": "","datetime": "2026-01-20T18:01:56.243Z"}};
 });
 /**
   2022-07-08
@@ -21047,6 +21059,8 @@ const toExportForESM =
 
   const sIM = globalThis.sqlite3InitModule = function ff(...args){
     //console.warn("Using replaced sqlite3InitModule()",globalThis.location);
+    sIMS.emscriptenLocateFile = args[0]?.locateFile /* see pre-js.c-pp.js [tag:locateFile] */;
+    sIMS.emscriptenInstantiateWasm = args[0]?.instantiateWasm /* see pre-js.c-pp.js [tag:locateFile] */;
     return originalInit(...args).then((EmscriptenModule)=>{
       sIMS.debugModule("sqlite3InitModule() sIMS =",sIMS);
       sIMS.debugModule("sqlite3InitModule() EmscriptenModule =",EmscriptenModule);
