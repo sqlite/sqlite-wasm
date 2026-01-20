@@ -29,7 +29,7 @@
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-19 11:44:59 c1e55132410a80d37bad30e4ddecc7a98fad92a68b436880324998af1cee37ae"
+** SQLITE_SOURCE_ID "2026-01-19 22:20:12 81840bd4b2132c1c701bb6fd5a2ac48a4ed33d2b68a3f7a826fa32dc0fc16483"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -4824,7 +4824,7 @@ Module.runSQLite3PostLoadInit = async function(
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-19 11:44:59 c1e55132410a80d37bad30e4ddecc7a98fad92a68b436880324998af1cee37ae"
+** SQLITE_SOURCE_ID "2026-01-19 22:20:12 81840bd4b2132c1c701bb6fd5a2ac48a4ed33d2b68a3f7a826fa32dc0fc16483"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -6999,7 +6999,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-19 11:44:59 c1e55132410a80d37bad30e4ddecc7a98fad92a68b436880324998af1cee37ae","downloadVersion": 3520000,"scm":{ "sha3-256": "c1e55132410a80d37bad30e4ddecc7a98fad92a68b436880324998af1cee37ae","branch": "trunk","tags": "","datetime": "2026-01-19T11:44:59.928Z"}};
+  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-19 22:20:12 81840bd4b2132c1c701bb6fd5a2ac48a4ed33d2b68a3f7a826fa32dc0fc16483","downloadVersion": 3520000,"scm":{ "sha3-256": "81840bd4b2132c1c701bb6fd5a2ac48a4ed33d2b68a3f7a826fa32dc0fc16483","branch": "trunk","tags": "","datetime": "2026-01-19T22:20:12.220Z"}};
 });
 /**
   2022-07-08
@@ -19822,7 +19822,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
   }/*vfsMethods*/;
 
   /**
-     Creates and initializes an sqlite3_vfs instance for an
+     Creates, initializes, and returns an sqlite3_vfs instance for an
      OpfsSAHPool. The argument is the VFS's name (JS string).
 
      Throws if the VFS name is already registered or if something
@@ -20569,8 +20569,9 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      described at the end of these docs.
 
      This function accepts an options object to configure certain
-     parts but it is only acknowledged for the very first call and
-     ignored for all subsequent calls.
+     parts but it is only acknowledged for the very first call for
+     each distinct name and ignored for all subsequent calls with that
+     same name.
 
      The options, in alphabetical order:
 
@@ -20636,7 +20637,14 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      - Paths given to it _must_ be absolute. Relative paths will not
      be properly recognized. This is arguably a bug but correcting it
      requires some hoop-jumping in routines which have no business
-     doing such tricks.
+     doing such tricks. (2026-01-19 (2.5 years later): the specifics
+     are lost to history, but this was a side effect of xOpen()
+     receiving an immutable C-string filename, to which no implicit
+     "/" can be prefixed without causing a discrepancy between what
+     the user provided and what the VFS stores. Its conceivable that
+     that quirk could be glossed over in xFullPathname(), but
+     regressions when doing so cannot be ruled out, so there are no
+     current plans to change this behavior.)
 
      - It is possible to install multiple instances under different
      names, each sandboxed from one another inside their own private
