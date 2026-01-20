@@ -1,4 +1,4 @@
-import sqlite3InitModule from '../index.mjs';
+import sqlite3InitModule from '../src/index.js';
 
 const container = document.querySelector('.main-thread');
 

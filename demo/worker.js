@@ -1,4 +1,4 @@
-import sqlite3InitModule from '../index.mjs';
+import sqlite3InitModule from '../src/bin/sqlite3.mjs';
 
 const logHtml = function (cssClass, ...args) {
   postMessage({

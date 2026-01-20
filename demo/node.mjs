@@ -1,4 +1,5 @@
-import sqlite3InitModule from '../node.mjs';
+import { readFileSync } from 'node:fs';
+import sqlite3InitModule from '../src/node.js';
 
 const log = (...args) => console.log(...args);
 const error = (...args) => console.error(...args);
@@ -6,7 +7,7 @@ const error = (...args) => console.error(...args);
 const start = function (sqlite3) {
   log('Running SQLite3 version', sqlite3.version.libVersion);
 
-  const db = new sqlite3.oo1.DB('./local', 'cw');
+  const db = new sqlite3.oo1.DB(':memory:');
 
   try {
     log('Creating a table...');

@@ -1,0 +1,21 @@
+inputs:
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: 'lts/*'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+        cache-dependency-path: package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        set -euo pipefail
+        npm ci --prefer-offline --no-audit --no-fund

@@ -1,0 +1,112 @@
+name: CI
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  type-check:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: ./.github/actions/node-setup
+
+      - name: Run type check
+        run: npm run check-types
+
+  format:
+    name: Format check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup environment (node + install)
+        uses: ./.github/actions/node-setup
+
+      - name: Run format check
+        run: npx prettier . --check
+
+  test-browser:
+    name: Run browser tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup environment (node + install)
+        uses: ./.github/actions/node-setup
+
+      - name: Get Playwright version
+        id: playwright-version
+        run:
+          echo "PLAYWRIGHT_VERSION=$(node -e
+          "console.log(require('./package-lock.json').packages['node_modules/playwright'].version)")"
+          >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key:
+            ${{ runner.os }}-playwright-${{
+            steps.playwright-version.outputs.PLAYWRIGHT_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+
+      - name: Install Playwright dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps
+
+      - name: Run browser tests
+        run: npm run test:browser
+
+  test-node:
+    name: Run node tests (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 23, 24, 25]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup environment (node + install)
+        uses: ./.github/actions/node-setup
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Run node tests
+        run: npm run test:node

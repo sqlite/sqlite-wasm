@@ -223,14 +223,80 @@ for this package.
 
 (These steps can only be executed by maintainers.)
 
-1. Update the version number in `package.json` reflecting the current
+1. Manually trigger the
+   [GitHub Actions workflow](../../actions/workflows/build-wasm.yml). By
+   default, it uses the latest SQLite tag. This pull request will contain the
+   latest `sqlite3.wasm` and related bindings.
+
+2. Once the above pull request is validated and merged, update the version
+   number in `package.json`, reflecting the current
    [SQLite version number](https://sqlite.org/download.html) and add a build
    identifier suffix like `-build1`. The complete version number should read
    something like `3.41.2-build1`.
-1. Run `npm run build` to build the ES Module. This downloads the latest SQLite
-   Wasm binary and builds the ES Module.
-1. Run `npm run deploy` to commit the changes, push to GitHub, and publish the
-   new version to npm.
+
+## Building the SQLite Wasm locally
+
+1.  Build the Docker image:
+
+    ```bash
+    docker build -t sqlite-wasm-builder:env .
+    ```
+
+2.  Run the build:
+
+    **Unix (Linux/macOS):**
+
+    ```bash
+    docker run --rm \
+      -e SQLITE_REF="master" \
+      -v "$(pwd)/out":/out \
+      -v "$(pwd)/src/bin":/src/bin \
+      sqlite-wasm-builder:env build
+    ```
+
+    **Windows (PowerShell):**
+
+    ```powershell
+    docker run --rm `
+      -e SQLITE_REF="master" `
+      -v "${PWD}/out:/out" `
+      -v "${PWD}/src/bin:/src/bin" `
+      sqlite-wasm-builder:env build
+    ```
+
+    **Windows (Command Prompt):**
+
+    ```cmd
+    docker run --rm ^
+      -e SQLITE_REF="master" ^
+      -v "%cd%/out:/out" ^
+      -v "%cd%/src/bin:/src/bin" ^
+      sqlite-wasm-builder:env build
+    ```
+
+## Running tests
+
+The test suite consists of Node.js tests and browser-based tests (using Vitest
+Browser Mode). Tests aim to sanity-check the exported scripts. We test for
+correct exports and **very** basic functionality.
+
+1.  Install dependencies:
+
+    ```bash
+    npm install
+    ```
+
+2.  Install Playwright browsers (required for browser tests):
+
+    ```bash
+    npx playwright install chromium --with-deps --no-shell
+    ```
+
+3.  Run all tests:
+
+    ```bash
+    npm test
+    ```
 
 ## License
 

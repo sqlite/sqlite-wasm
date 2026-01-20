@@ -1,0 +1,119 @@
+name: Build SQLite Wasm
+
+on:
+  workflow_dispatch:
+    inputs:
+      sqlite_ref:
+        description: 'SQLite reference (tag, branch, or commit, or "latest")'
+        required: true
+        default: 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Resolve SQLite reference
+        id: resolve-ref
+        run: |
+          SQLITE_REF="${{ github.event.inputs.sqlite_ref }}"
+          if [ "$SQLITE_REF" = "latest" ]; then
+            echo "Fetching latest tag..."
+            LATEST_TAG=$(git ls-remote --tags --sort="v:refname" https://github.com/sqlite/sqlite.git "refs/tags/version-*" | tail -n 1 | cut -f 2 | sed 's/refs\/tags\///')
+            echo "Latest tag found: $LATEST_TAG"
+            SQLITE_REF="$LATEST_TAG"
+          fi
+
+          # Get the full commit SHA
+          SQLITE_SHA=$(git ls-remote https://github.com/sqlite/sqlite.git "$SQLITE_REF" | head -n 1 | cut -f 1)
+          if [ -z "$SQLITE_SHA" ]; then
+            # If not found, maybe it's a tag that needs refs/tags/ prefix or it's already a SHA
+            SQLITE_SHA=$(git ls-remote https://github.com/sqlite/sqlite.git "refs/tags/$SQLITE_REF" | head -n 1 | cut -f 1)
+          fi
+
+          if [ -z "$SQLITE_SHA" ]; then
+            # Fallback: assume it's a SHA if ls-remote didn't find it as a ref
+            SQLITE_SHA="$SQLITE_REF"
+          fi
+
+          echo "sqlite_ref=$SQLITE_REF" >> $GITHUB_OUTPUT
+          echo "sqlite_sha=$SQLITE_SHA" >> $GITHUB_OUTPUT
+          echo "branch_name=update-sqlite-wasm-${SQLITE_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Check if branch exists
+        id: check-branch
+        run: |
+          BRANCH_NAME="${{ steps.resolve-ref.outputs.branch_name }}"
+          if git ls-remote --exit-code --heads origin "$BRANCH_NAME"; then
+            echo "Branch $BRANCH_NAME already exists. Skipping build."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Buildx Docker CLI plugin
+        if: steps.check-branch.outputs.skip != 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        if: steps.check-branch.outputs.skip != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: sqlite-wasm-builder:env
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run build
+        if: steps.check-branch.outputs.skip != 'true'
+        run: |
+          mkdir -p out src/bin
+          docker run --rm \
+            -e SQLITE_REF="${{ steps.resolve-ref.outputs.sqlite_ref }}" \
+            -e HOST_UID="$(id -u)" \
+            -e HOST_GID="$(id -g)" \
+            -v "$(pwd)/out":/out \
+            -v "$(pwd)/src/bin":/src/bin \
+            sqlite-wasm-builder:env build
+          # Fallback fix for permissions if chown inside docker failed or was incomplete
+          sudo chown -R $(id -u):$(id -g) out src/bin
+
+      - name: Check for changes
+        if: steps.check-branch.outputs.skip != 'true'
+        id: git-check
+        run: |
+          # Add files that might be newly created or modified
+          git add src/bin
+          git status --porcelain
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if:
+          steps.check-branch.outputs.skip != 'true' &&
+          steps.git-check.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message:
+            'chore: update SQLite Wasm binaries from ${{
+            steps.resolve-ref.outputs.sqlite_ref }} (${{
+            steps.resolve-ref.outputs.sqlite_sha }})'
+          title:
+            'chore: update SQLite Wasm binaries from ${{
+            steps.resolve-ref.outputs.sqlite_ref }}'
+          body: |
+            This PR updates the SQLite Wasm binaries in `src/bin` by building them from SQLite reference `${{ steps.resolve-ref.outputs.sqlite_ref }}` (commit `${{ steps.resolve-ref.outputs.sqlite_sha }}`).
+
+            Triggered by manual workflow dispatch.
+          branch: ${{ steps.resolve-ref.outputs.branch_name }}
+          base: main
+          delete-branch: true
