@@ -29,7 +29,7 @@
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-20 18:01:56 982a91abc0c97e7e785d3ba69a4d0516a899f4d6cd462027ebdf7115e577e8c3"
+** SQLITE_SOURCE_ID "2026-01-20 18:30:48 2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -105,8 +105,10 @@ if (ENVIRONMENT_IS_NODE) {
 
    This SQLite JS build configuration is entirely unsupported! It has
    not been tested beyond the ability to compile it. It may not
-   load. It may not work properly. Only builds targeting browser
-   environments are supported and tested.
+   load. It may not work properly. Only builds _directly_ targeting
+   browser environments ("vanilla" JS and ESM modules) are supported
+   and tested. Builds which _indirectly_ target browsers (namely
+   bundler-friendly builds) are not supported deliverables.
 */
 /* END FILE: api/pre-js.js. */
 // end include: ./bld/pre-js.node.js
@@ -4801,7 +4803,7 @@ Module.runSQLite3PostLoadInit = async function(
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-20 18:01:56 982a91abc0c97e7e785d3ba69a4d0516a899f4d6cd462027ebdf7115e577e8c3"
+** SQLITE_SOURCE_ID "2026-01-20 18:30:48 2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -6976,7 +6978,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-20 18:01:56 982a91abc0c97e7e785d3ba69a4d0516a899f4d6cd462027ebdf7115e577e8c3","downloadVersion": 3520000,"scm":{ "sha3-256": "982a91abc0c97e7e785d3ba69a4d0516a899f4d6cd462027ebdf7115e577e8c3","branch": "trunk","tags": "","datetime": "2026-01-20T18:01:56.243Z"}};
+  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-20 18:30:48 2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552","downloadVersion": 3520000,"scm":{ "sha3-256": "2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552","branch": "trunk","tags": "","datetime": "2026-01-20T18:30:48.704Z"}};
 });
 /**
   2022-07-08
