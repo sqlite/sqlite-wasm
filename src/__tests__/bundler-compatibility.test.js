@@ -14,7 +14,6 @@ describe('Vite bundler compatibility', () => {
     }
 
     // Run vite build
-    // We use npx to ensure we use the project's vite
     execSync('npx vite build', { cwd: testDir, stdio: 'inherit' });
 
     // 1. Check if hashed WASM file exists in dist/assets
@@ -25,7 +24,6 @@ describe('Vite bundler compatibility', () => {
     );
 
     expect(wasmFile).toBeDefined();
-    console.log('Found hashed WASM file:', wasmFile);
 
     // 2. Check if the JS bundle contains the hashed WASM filename
     const assetsDirJs = path.resolve(distDir, 'assets');
@@ -41,11 +39,9 @@ describe('Vite bundler compatibility', () => {
     );
 
     // It should contain something like: new URL("/assets/sqlite3-hash.wasm", import.meta.url)
-    // Vite might use different quotes or spacing, but it should definitely have the hashed filename.
     expect(bundleContent).toContain(wasmFile);
 
     // Specifically check that it's part of a new URL call or at least correctly referenced
-    // In our previous check it was: new URL("/assets/sqlite3-Bguoklsa.wasm",import.meta.url)
     const urlPattern = new RegExp(
       `new URL\\(".*${wasmFile}",\\s*import\\.meta\\.url\\)`,
     );
