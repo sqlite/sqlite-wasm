@@ -1,5 +1,5 @@
 /** Types of values that can be passed to/retrieved from SQLite. */
-declare type SqlValue =
+export type SqlValue =
   | string
   | number
   | null
@@ -9,13 +9,13 @@ declare type SqlValue =
   | ArrayBuffer;
 
 /** A PreparedStatement or a WASM pointer to one. */
-declare type StmtPtr = PreparedStatement | WasmPointer;
+export type StmtPtr = PreparedStatement | WasmPointer;
 
 /** A Database or a WASM pointer to one. */
-declare type DbPtr = Database | WasmPointer;
+export type DbPtr = Database | WasmPointer;
 
 /** An integer result code from a SQLite C API call. */
-declare type Sqlite3Result =
+export type Sqlite3Result =
   | CAPI['SQLITE_OK']
   | CAPI['SQLITE_ERROR']
   | CAPI['SQLITE_INTERNAL']
@@ -122,7 +122,7 @@ declare type Sqlite3Result =
   | CAPI['SQLITE_OK_LOAD_PERMANENTLY'];
 
 /** A destructor for a BLOB or TEXT binding. */
-declare type DtorType =
+export type DtorType =
   | (() => void)
   | WasmPointer
   | CAPI['SQLITE_STATIC']
@@ -130,7 +130,7 @@ declare type DtorType =
   | CAPI['SQLITE_WASM_DEALLOC'];
 
 /** Types of values that can be passed to SQLite. */
-declare type BindableValue =
+export type BindableValue =
   | SqlValue
   /** Converted to NULL */
   | undefined
@@ -138,7 +138,7 @@ declare type BindableValue =
   | boolean;
 
 /** Internal data types supported by SQLite3. */
-declare type SQLiteDataType =
+export type SQLiteDataType =
   | CAPI['SQLITE_INTEGER']
   | CAPI['SQLITE_FLOAT']
   | CAPI['SQLITE_TEXT']
@@ -146,7 +146,7 @@ declare type SQLiteDataType =
   | CAPI['SQLITE_NULL'];
 
 /** Specifies parameter bindings. */
-declare type BindingSpec =
+export type BindingSpec =
   | readonly BindableValue[]
   | { [paramName: string]: BindableValue }
   /** Assumed to have binding index `1` */
@@ -161,7 +161,7 @@ declare type BindingSpec =
  * which take filename strings, and similar "small" strings, do not use this
  * feature.
  */
-declare type FlexibleString =
+export type FlexibleString =
   | string
   /** WASM C-string pointer, passed on to WASM as-is. */
   | WasmPointer
@@ -198,7 +198,7 @@ declare type FlexibleString =
  *   stmt.finalize();
  *   }
  */
-declare class PreparedStatement {
+export class PreparedStatement {
   /** Binds one more values to its bindable parameters. */
   bind(binding: BindingSpec): this;
 
@@ -424,7 +424,7 @@ declare class PreparedStatement {
   pointer: WasmPointer | undefined;
 }
 
-declare type ExecOptions = {
+export type ExecOptions = {
   /**
    * The SQL to run (unless it's provided as the first argument). The SQL may
    * contain any number of statements.
@@ -533,42 +533,42 @@ declare type ExecOptions = {
  * Derivate type of ExecOptions to be used as base mixin for method overloads on
  * `exec`
  */
-declare type ExecBaseOptions = Omit<
+export type ExecBaseOptions = Omit<
   ExecOptions,
   'callback' | 'resultRows' | 'rowMode' | 'returnValue' | 'sql'
 >;
 
-declare type ExecReturnThisOptions = {
+export type ExecReturnThisOptions = {
   returnValue?: 'this';
 };
 
-declare type ExecReturnResultRowsOptions = {
+export type ExecReturnResultRowsOptions = {
   returnValue: 'resultRows';
 };
 
-declare type ExecReturnSaveSqlOptions = {
+export type ExecReturnSaveSqlOptions = {
   returnValue: 'saveSql';
 };
 
-declare type ExecRowModeArrayOptions = {
+export type ExecRowModeArrayOptions = {
   callback?: (row: SqlValue[]) => void | false;
   resultRows?: SqlValue[][];
   rowMode?: 'array';
 };
 
-declare type ExecRowModeObjectOptions = {
+export type ExecRowModeObjectOptions = {
   callback?: (row: { [columnName: string]: SqlValue }) => void | false;
   resultRows?: { [columnName: string]: SqlValue }[];
   rowMode: 'object';
 };
 
-declare type ExecRowModeStmtOptions = {
+export type ExecRowModeStmtOptions = {
   callback?: (row: PreparedStatement) => void | false;
   resultRows?: undefined;
   rowMode: 'stmt';
 };
 
-declare type ExecRowModeScalarOptions = {
+export type ExecRowModeScalarOptions = {
   callback?: (row: SqlValue) => void | false;
   resultRows?: SqlValue[];
 
@@ -587,7 +587,7 @@ declare type ExecRowModeScalarOptions = {
 };
 
 /** Options for creating a user-defined function that can be called from SQL. */
-declare type FunctionOptions = {
+export type FunctionOptions = {
   /**
    * Number of arguments which SQL calls to this function expect or require. The
    * default value is `X.length` MINUS 1, where X is either `xFunc` or `xStep`,
@@ -676,12 +676,12 @@ declare type FunctionOptions = {
   xDestroy?: (pAppPtr: WasmPointer) => void;
 };
 
-declare type ScalarFunctionOptions = FunctionOptions & {
+export type ScalarFunctionOptions = FunctionOptions & {
   /** Scalar function to be defined. */
   xFunc: (ctxPtr: number, ...args: SqlValue[]) => SqlValue;
 };
 
-declare type AggregateFunctionOptions = FunctionOptions & {
+export type AggregateFunctionOptions = FunctionOptions & {
   /**
    * 'Step' callback for an aggregate function.
    *
@@ -701,7 +701,7 @@ declare type AggregateFunctionOptions = FunctionOptions & {
   xFinal: (ctxPtr: number) => SqlValue;
 };
 
-declare type WindowFunctionOptions = FunctionOptions & {
+export type WindowFunctionOptions = FunctionOptions & {
   /**
    * 'Step' callback for a window function.
    *
@@ -756,7 +756,7 @@ declare type WindowFunctionOptions = FunctionOptions & {
  *   }
  *   ```;
  */
-declare class Database {
+export class Database {
   /**
    * Creates a connection to the given file, optionally creating it if needed.
    *
@@ -1287,7 +1287,7 @@ declare class Database {
  * When the sqlite3 API is installed in the main thread, the class is added,
  * which simplifies usage of the kvvfs.
  */
-declare class JsStorageDb extends Database {
+export class JsStorageDb extends Database {
   /** Create a new kvvfs-backed database in local or session storage. */
   constructor(options?: { filename?: 'local' | 'session'; flags?: string });
   constructor(mode: 'local' | 'session');
@@ -1355,7 +1355,7 @@ declare class JsStorageDb extends Database {
  *
  * How to emit those headers depends on the underlying web server.
  */
-declare class OpfsDatabase extends Database {
+export class OpfsDatabase extends Database {
   /**
    * Creates a connection to the given file, optionally creating it if needed.
    *
@@ -1395,7 +1395,7 @@ declare class OpfsDatabase extends Database {
   ): Promise<number>;
 }
 
-declare class OpfsSAHPoolDatabase extends OpfsDatabase {
+export class OpfsSAHPoolDatabase extends OpfsDatabase {
   constructor(filename: string);
 }
 
@@ -1556,23 +1556,23 @@ type SAHPoolUtil = {
 };
 
 /** Exception class for reporting WASM-side allocation errors. */
-declare class WasmAllocError extends Error {
+export class WasmAllocError extends Error {
   constructor(message: string);
   toss: any;
 }
 
 /** Exception class used primarily by the oo1 API. */
-declare class SQLite3Error extends Error {
+export class SQLite3Error extends Error {
   constructor(message: string);
   resultCode: number;
 }
 
 /** A pointer to a location in WASM heap memory. */
-declare type WasmPointer = number;
+export type WasmPointer = number;
 
-declare type NullPointer = 0 | null | undefined;
+export type NullPointer = 0 | null | undefined;
 
-declare type StructPtrMapper<T> = {
+export type StructPtrMapper<T> = {
   StructType: T;
   /**
    * Creates a new StructType object, writes its `pointer` value to the given
@@ -1625,7 +1625,7 @@ declare type StructPtrMapper<T> = {
   dispose: (ptr: WasmPointer) => void;
 };
 
-declare class SQLiteStruct {
+export class SQLiteStruct {
   /**
    * Calling a constructor with no arguments creates a new instance in the WASM
    * heap in order to connect it to C. In this case, client JavaScript code owns
@@ -1789,7 +1789,7 @@ declare class SQLiteStruct {
   ): this;
 }
 
-declare class sqlite3_vfs extends SQLiteStruct {
+export class sqlite3_vfs extends SQLiteStruct {
   $iVersion: number;
   $szOsFile: number;
   $mxPathname: number;
@@ -1855,7 +1855,7 @@ declare class sqlite3_vfs extends SQLiteStruct {
   xNextSystemCall: (vfsPtr: WasmPointer, zName: WasmPointer) => WasmPointer;
 }
 
-declare class sqlite3_io_methods extends SQLiteStruct {
+export class sqlite3_io_methods extends SQLiteStruct {
   iVersion: number;
 
   constructor(pointer?: WasmPointer);
@@ -1912,7 +1912,7 @@ declare class sqlite3_io_methods extends SQLiteStruct {
   xUnfetch: (file: WasmPointer, iOfst: number, p: WasmPointer) => Sqlite3Result;
 }
 
-declare class sqlite3_file extends SQLiteStruct {
+export class sqlite3_file extends SQLiteStruct {
   $pMethods: WasmPointer;
   structInfo: {
     sizeof: number;
@@ -1931,7 +1931,7 @@ declare class sqlite3_file extends SQLiteStruct {
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_vtab extends SQLiteStruct {
+export class sqlite3_vtab extends SQLiteStruct {
   pModule: WasmPointer;
   nRef: number;
   zErrMsg: WasmPointer;
@@ -1939,13 +1939,13 @@ declare class sqlite3_vtab extends SQLiteStruct {
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_vtab_cursor extends SQLiteStruct {
+export class sqlite3_vtab_cursor extends SQLiteStruct {
   pVtab: WasmPointer;
 
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_module extends SQLiteStruct {
+export class sqlite3_module extends SQLiteStruct {
   iVersion: number;
 
   constructor(pointer?: WasmPointer);
@@ -2014,7 +2014,7 @@ declare class sqlite3_module extends SQLiteStruct {
   xShadowName: (tableName: WasmPointer) => Sqlite3Result;
 }
 
-declare class sqlite3_index_constraint extends SQLiteStruct {
+export class sqlite3_index_constraint extends SQLiteStruct {
   iColumn: number;
   op: number;
   usable: number;
@@ -2023,21 +2023,21 @@ declare class sqlite3_index_constraint extends SQLiteStruct {
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_index_constraint_usage extends SQLiteStruct {
+export class sqlite3_index_constraint_usage extends SQLiteStruct {
   argvIndex: number;
   omit: number;
 
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_index_orderby extends SQLiteStruct {
+export class sqlite3_index_orderby extends SQLiteStruct {
   iColumn: number;
   desc: number;
 
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_index_info extends SQLiteStruct {
+export class sqlite3_index_info extends SQLiteStruct {
   nConstraint: number;
   aConstraint: WasmPointer;
   nOrderBy: number;
@@ -2058,7 +2058,7 @@ declare class sqlite3_index_info extends SQLiteStruct {
   constructor(pointer?: WasmPointer);
 }
 
-declare type Sqlite3Static = {
+export type Sqlite3Static = {
   /** The namespace for the C-style APIs. */
   capi: CAPI;
 
@@ -2406,12 +2406,12 @@ declare type Sqlite3Static = {
  */
 export default function init(): Promise<Sqlite3Static>;
 
-declare type ListLike<T> = {
+export type ListLike<T> = {
   length: number;
   forEach: (cb: (val: T) => void) => void;
 };
 
-declare type WASM_API = {
+export type WASM_API = {
   /**
    * The `sqlite3.wasm.exports` namespace object is a WASM-standard part of the
    * WASM module file and contains all "exported" C functions which are built
@@ -3539,7 +3539,7 @@ declare type WASM_API = {
 };
 
 // generated by Object.keys(sqlite3.capi).map(k => `${k}: any;`).join('\n')
-declare type CAPI = {
+export type CAPI = {
   sqlite3_vfs: typeof sqlite3_vfs;
   sqlite3_io_methods: typeof sqlite3_io_methods;
   sqlite3_file: typeof sqlite3_file;
