@@ -1399,7 +1399,7 @@ export class OpfsSAHPoolDatabase extends OpfsDatabase {
   constructor(filename: string);
 }
 
-type SAHPoolUtil = {
+export type SAHPoolUtil = {
   OpfsSAHPoolDb: typeof OpfsSAHPoolDatabase;
 
   /**
