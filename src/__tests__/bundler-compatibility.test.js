@@ -14,7 +14,10 @@ describe('Vite bundler compatibility', () => {
     }
 
     // Run vite build
-    execSync('npx vite build', { cwd: testDir, stdio: 'inherit' });
+    execSync('npx vite build --logLevel error', {
+      cwd: testDir,
+      stdio: 'inherit',
+    });
 
     // 1. Check if hashed WASM file exists in dist/assets
     const assetsDir = path.resolve(distDir, 'assets');
