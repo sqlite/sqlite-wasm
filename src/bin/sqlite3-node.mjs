@@ -29,7 +29,7 @@
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-20 10:57:44 346ad366a8ebed1e7936c59f8a40e9c8e7e31d0153bc4f654a47b2ddc39b18ca"
+** SQLITE_SOURCE_ID "2026-01-20 18:30:48 2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -105,50 +105,11 @@ if (ENVIRONMENT_IS_NODE) {
 
    This SQLite JS build configuration is entirely unsupported! It has
    not been tested beyond the ability to compile it. It may not
-   load. It may not work properly. Only builds targeting browser
-   environments are supported and tested.
+   load. It may not work properly. Only builds _directly_ targeting
+   browser environments ("vanilla" JS and ESM modules) are supported
+   and tested. Builds which _indirectly_ target browsers (namely
+   bundler-friendly builds) are not supported deliverables.
 */
-(function(Module){
-  const sIMS =
-        globalThis.sqlite3InitModuleState/*from extern-post-js.c-pp.js*/
-        || Object.assign(Object.create(null),{
-          /* In WASMFS builds this file gets loaded once per thread,
-             but sqlite3InitModuleState is not getting set for the
-             worker threads? That those workers seem to function fine
-             despite that is curious. */
-          debugModule: function(){
-            console.warn("globalThis.sqlite3InitModuleState is missing",arguments);
-          }
-        });
-  delete globalThis.sqlite3InitModuleState;
-  sIMS.debugModule('pre-js.js sqlite3InitModuleState =',sIMS);
-
-  /**
-     This custom locateFile() tries to figure out where to load `path`
-     from. The intent is to provide a way for foo/bar/X.js loaded from a
-     Worker constructor or importScripts() to be able to resolve
-     foo/bar/X.wasm (in the latter case, with some help):
-
-     1) If URL param named the same as `path` is set, it is returned.
-
-     2) If sqlite3InitModuleState.sqlite3Dir is set, then (thatName + path)
-     is returned (it's assumed to end with '/').
-
-     3) If this code is running in the main UI thread AND it was loaded
-     from a SCRIPT tag, the directory part of that URL is used
-     as the prefix. (This form of resolution unfortunately does not
-     function for scripts loaded via importScripts().)
-
-     4) If none of the above apply, (prefix+path) is returned.
-
-     None of the above apply in ES6 builds, which uses a much simpler
-     approach.
-  */
-  Module['locateFile'] = function(path, prefix) {
-    return new URL(path, import.meta.url).href;
-  }.bind(sIMS);
-
-})(Module);
 /* END FILE: api/pre-js.js. */
 // end include: ./bld/pre-js.node.js
 
@@ -4842,7 +4803,7 @@ Module.runSQLite3PostLoadInit = async function(
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-20 10:57:44 346ad366a8ebed1e7936c59f8a40e9c8e7e31d0153bc4f654a47b2ddc39b18ca"
+** SQLITE_SOURCE_ID "2026-01-20 18:30:48 2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552"
 **
 ** Emscripten SDK: 4.0.23
 */
@@ -7017,7 +6978,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-20 10:57:44 346ad366a8ebed1e7936c59f8a40e9c8e7e31d0153bc4f654a47b2ddc39b18ca","downloadVersion": 3520000,"scm":{ "sha3-256": "346ad366a8ebed1e7936c59f8a40e9c8e7e31d0153bc4f654a47b2ddc39b18ca","branch": "trunk","tags": "","datetime": "2026-01-20T10:57:44.925Z"}};
+  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-20 18:30:48 2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552","downloadVersion": 3520000,"scm":{ "sha3-256": "2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552","branch": "trunk","tags": "","datetime": "2026-01-20T18:30:48.704Z"}};
 });
 /**
   2022-07-08
@@ -18157,6 +18118,8 @@ const toExportForESM =
 
   const sIM = globalThis.sqlite3InitModule = function ff(...args){
     //console.warn("Using replaced sqlite3InitModule()",globalThis.location);
+    sIMS.emscriptenLocateFile = args[0]?.locateFile /* see pre-js.c-pp.js [tag:locateFile] */;
+    sIMS.emscriptenInstantiateWasm = args[0]?.instantiateWasm /* see pre-js.c-pp.js [tag:locateFile] */;
     return originalInit(...args).then((EmscriptenModule)=>{
       sIMS.debugModule("sqlite3InitModule() sIMS =",sIMS);
       sIMS.debugModule("sqlite3InitModule() EmscriptenModule =",EmscriptenModule);

@@ -135,6 +135,30 @@ test('Node.js build sanity check', async () => {
     expect(
       typeof db.selectValue('SELECT sqlite_offset(id) FROM off_test'),
     ).toBe('number');
+
+    // 13. Blobs
+    const blobData = new Uint8Array([0x00, 0xff, 0xaa, 0x55]);
+    db.exec({
+      sql: 'CREATE TABLE blobs (data BLOB)',
+    });
+    db.exec({
+      sql: 'INSERT INTO blobs (data) VALUES (?)',
+      bind: [blobData],
+    });
+    const retrievedBlob = db.selectValue('SELECT data FROM blobs');
+    expect(retrievedBlob).toBeInstanceOf(Uint8Array);
+    expect(retrievedBlob).toEqual(blobData);
+
+    // 14. Error handling
+    expect(() => {
+      db.exec('INVALID SQL');
+    }).toThrow();
+
+    db.exec('CREATE TABLE unique_test (id INTEGER PRIMARY KEY)');
+    db.exec('INSERT INTO unique_test VALUES (1)');
+    expect(() => {
+      db.exec('INSERT INTO unique_test VALUES (1)');
+    }).toThrow(/UNIQUE constraint failed/);
   } finally {
     // 11. Close the database
     db.close();
