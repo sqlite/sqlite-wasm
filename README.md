@@ -132,7 +132,7 @@ const start = (sqlite3) => {
 const initializeSQLite = async () => {
   try {
     log('Loading and initializing SQLite3 module...');
-    const sqlite3 = await sqlite3InitModule({ print: log, printErr: error });
+    const sqlite3 = await sqlite3InitModule();
     log('Done initializing. Running demo...');
     start(sqlite3);
   } catch (err) {
@@ -163,10 +163,7 @@ const start = (sqlite3) => {
 const initializeSQLite = async () => {
   try {
     log('Loading and initializing SQLite3 module...');
-    const sqlite3 = await sqlite3InitModule({
-      print: log,
-      printErr: error,
-    });
+    const sqlite3 = await sqlite3InitModule();
     log('Done initializing. Running demo...');
     start(sqlite3);
   } catch (err) {
