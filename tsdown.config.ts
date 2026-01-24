@@ -1,5 +1,5 @@
 import { defineConfig, type UserConfig } from 'tsdown';
-import { copyFileSync, rmSync } from 'node:fs';
+import { copyFileSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 
 const tsdownConfig: UserConfig = defineConfig({
   target: 'es2023',
@@ -18,12 +18,17 @@ const tsdownConfig: UserConfig = defineConfig({
   onSuccess: () => {
     copyFileSync('./src/bin/sqlite3.wasm', './dist/sqlite3.wasm');
     copyFileSync(
-      './dist/bin/sqlite3-opfs-async-proxy.mjs',
-      './dist/sqlite3-opfs-async-proxy.js',
-    );
-    copyFileSync(
       './dist/bin/sqlite3-worker1.mjs',
       './dist/sqlite3-worker1.mjs',
+    );
+    // Remove "export {};" to make sure sqlite3-opfs-async-proxy.js isn't a module
+    const proxyContent = readFileSync(
+      './dist/bin/sqlite3-opfs-async-proxy.mjs',
+      'utf-8',
+    );
+    writeFileSync(
+      './dist/sqlite3-opfs-async-proxy.js',
+      proxyContent.replace(/export\s*\{\s*}\s*;\s*$/, ''),
     );
     rmSync('./dist/bin', { recursive: true });
   },
