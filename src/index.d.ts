@@ -3670,6 +3670,30 @@ export type CAPI = {
   sqlite3_shutdown: () => Sqlite3Result;
 
   /**
+   * The sqlite3_interrupt(D) interface will cause any pending database
+   * operation to abort and return at its earliest opportunity.
+   *
+   * C Signature:
+   *
+   *     void sqlite3_interrupt(sqlite3*);
+   *
+   * See https://www.sqlite.org/c3ref/interrupt.html
+   */
+  sqlite3_interrupt: (db: DbPtr) => void;
+
+  /**
+   * The sqlite3_is_interrupted(D) interface can be used to determine whether an
+   * interrupt is currently pending for database connection D.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_is_interrupted(sqlite3*);
+   *
+   * See https://www.sqlite.org/c3ref/interrupt.html
+   */
+  sqlite3_is_interrupted: (db: DbPtr) => number;
+
+  /**
    * Used to make global configuration changes to SQLite in order to tune SQLite
    * to the specific needs of the application. The default configuration is
    * recommended for most applications and so this routine is usually not
@@ -4418,6 +4442,19 @@ export type CAPI = {
   sqlite3_stmt_readonly: (stmt: StmtPtr) => number;
 
   /**
+   * The sqlite3_stmt_busy(S) interface returns true (non-zero) if the prepared
+   * statement S has been stepped at least once but has not yet run to
+   * completion and/or has not been reset.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_stmt_busy(sqlite3_stmt*);
+   *
+   * See https://www.sqlite.org/c3ref/stmt_busy.html
+   */
+  sqlite3_stmt_busy: (stmt: StmtPtr) => number;
+
+  /**
    * Returns 1 if the prepared statement `stmt` is an `EXPLAIN` statement, or 2
    * if the statement `stmt` is an `EXPLAIN QUERY PLAN`. Returns 0 if `stmt` is
    * an ordinary statement or a NULL pointer
@@ -4492,7 +4529,7 @@ export type CAPI = {
   ) => Sqlite3Result;
 
   /**
-   * Bind a 64 bit integer number to a parameter in a prepared statement.
+   * Bind a 64-bit integer number to a parameter in a prepared statement.
    *
    * C Signature:
    *
@@ -4611,6 +4648,18 @@ export type CAPI = {
   ) => Sqlite3Result;
 
   /**
+   * The sqlite3_bind_parameter_name(P,N) interface returns the name of the N-th
+   * parameter in prepared statement P.
+   *
+   * C Signature:
+   *
+   *     const char *sqlite3_bind_parameter_name(sqlite3_stmt*, int);
+   *
+   * See https://www.sqlite.org/c3ref/bind_parameter_name.html
+   */
+  sqlite3_bind_parameter_name: (stmt: StmtPtr, N: number) => string | null;
+
+  /**
    * Use this routine to reset all host parameters to NULL.
    *
    * C Signature:
@@ -4644,6 +4693,18 @@ export type CAPI = {
    * See https://www.sqlite.org/c3ref/column_name.html
    */
   sqlite3_column_name: (stmt: StmtPtr, N: number) => string;
+
+  /**
+   * The sqlite3_column_decltype(S,N) routine returns the declared type of the
+   * N-th column in the result set of the prepared statement S.
+   *
+   * C Signature:
+   *
+   *     const char *sqlite3_column_decltype(sqlite3_stmt*, int);
+   *
+   * See https://www.sqlite.org/c3ref/column_decltype.html
+   */
+  sqlite3_column_decltype: (stmt: StmtPtr, N: number) => string | null;
 
   /**
    * Returns the result of passing the result of
@@ -5191,6 +5252,16 @@ export type CAPI = {
   ) => void;
 
   /**
+   * Sqlite3_set_errmsg() is a WASM-internal-use-only function which is like
+   * sqlite3_result_error() but targets a database connection's error state.
+   */
+  sqlite3_set_errmsg: (
+    db: DbPtr,
+    errCode: number,
+    msg: string | WasmPointer,
+  ) => Sqlite3Result;
+
+  /**
    * Sets the result from an application-defined function to be the `BLOB` whose
    * content is pointed to by the second parameter and which is `blobLen` bytes
    * long.
@@ -5570,6 +5641,19 @@ export type CAPI = {
    * See https://www.sqlite.org/c3ref/db_name.html
    */
   sqlite3_db_name: (db: DbPtr, dbIdx: number) => string;
+
+  /**
+   * The sqlite3_db_readonly(D,N) interface returns 1 if the database N of
+   * connection D is read-only, 0 if it is read/write, or -1 if N is not the
+   * name of a database on connection D.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_db_readonly(sqlite3*, const char *zDbName);
+   *
+   * See https://www.sqlite.org/c3ref/db_readonly.html
+   */
+  sqlite3_db_readonly: (db: DbPtr, dbName: string | WasmPointer) => number;
 
   /**
    * Return The Filename For A Database Connection
