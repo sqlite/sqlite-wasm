@@ -29,9 +29,9 @@
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-20 18:30:48 2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552"
+** SQLITE_SOURCE_ID "2026-01-25 15:18:31 8b53b97833afe27c0c3782c5fbc0437976215b571579f73a94c33e28d3fedb41"
 **
-** Emscripten SDK: 4.0.23
+** Emscripten SDK: 5.0.0
 */
 // This code implements the `-sMODULARIZE` settings by taking the generated
 // JS program code (INNER_JS_CODE) and wrapping it in a factory function.
@@ -620,9 +620,9 @@ async function createWasm() {
 
   
     /**
-     * @param {number} ptr
-     * @param {string} type
-     */
+   * @param {number} ptr
+   * @param {string} type
+   */
   function getValue(ptr, type = 'i8') {
     if (type.endsWith('*')) type = '*';
     switch (type) {
@@ -642,10 +642,10 @@ async function createWasm() {
 
   
     /**
-     * @param {number} ptr
-     * @param {number} value
-     * @param {string} type
-     */
+   * @param {number} ptr
+   * @param {number} value
+   * @param {string} type
+   */
   function setValue(ptr, value, type = 'i8') {
     if (type.endsWith('*')) type = '*';
     switch (type) {
@@ -724,99 +724,99 @@ async function createWasm() {
         return root + dir;
       },
   basename:(path) => path && path.match(/([^\/]+|\/)\/*$/)[1],
-  join:(...paths) => PATH.normalize(paths.join('/')),
-  join2:(l, r) => PATH.normalize(l + '/' + r),
+join:(...paths) => PATH.normalize(paths.join('/')),
+join2:(l, r) => PATH.normalize(l + '/' + r),
+};
+
+var initRandomFill = () => {
+
+    return (view) => crypto.getRandomValues(view);
   };
-  
-  var initRandomFill = () => {
-  
-      return (view) => crypto.getRandomValues(view);
-    };
-  var randomFill = (view) => {
-      // Lazily init on the first invocation.
-      (randomFill = initRandomFill())(view);
-    };
-  
-  
-  
-  var PATH_FS = {
-  resolve:(...args) => {
-        var resolvedPath = '',
-          resolvedAbsolute = false;
-        for (var i = args.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-          var path = (i >= 0) ? args[i] : FS.cwd();
-          // Skip empty and invalid entries
-          if (typeof path != 'string') {
-            throw new TypeError('Arguments to path.resolve must be strings');
-          } else if (!path) {
-            return ''; // an invalid portion invalidates the whole thing
-          }
-          resolvedPath = path + '/' + resolvedPath;
-          resolvedAbsolute = PATH.isAbs(path);
-        }
-        // At this point the path should be resolved to a full absolute path, but
-        // handle relative paths to be safe (might happen when process.cwd() fails)
-        resolvedPath = PATH.normalizeArray(resolvedPath.split('/').filter((p) => !!p), !resolvedAbsolute).join('/');
-        return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-      },
-  relative:(from, to) => {
-        from = PATH_FS.resolve(from).slice(1);
-        to = PATH_FS.resolve(to).slice(1);
-        function trim(arr) {
-          var start = 0;
-          for (; start < arr.length; start++) {
-            if (arr[start] !== '') break;
-          }
-          var end = arr.length - 1;
-          for (; end >= 0; end--) {
-            if (arr[end] !== '') break;
-          }
-          if (start > end) return [];
-          return arr.slice(start, end - start + 1);
-        }
-        var fromParts = trim(from.split('/'));
-        var toParts = trim(to.split('/'));
-        var length = Math.min(fromParts.length, toParts.length);
-        var samePartsLength = length;
-        for (var i = 0; i < length; i++) {
-          if (fromParts[i] !== toParts[i]) {
-            samePartsLength = i;
-            break;
-          }
-        }
-        var outputParts = [];
-        for (var i = samePartsLength; i < fromParts.length; i++) {
-          outputParts.push('..');
-        }
-        outputParts = outputParts.concat(toParts.slice(samePartsLength));
-        return outputParts.join('/');
-      },
+var randomFill = (view) => {
+    // Lazily init on the first invocation.
+    (randomFill = initRandomFill())(view);
   };
-  
-  
-  var UTF8Decoder = new TextDecoder();
-  
-  var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
-      var maxIdx = idx + maxBytesToRead;
-      if (ignoreNul) return maxIdx;
-      // TextDecoder needs to know the byte length in advance, it doesn't stop on
-      // null terminator by itself.
-      // As a tiny code save trick, compare idx against maxIdx using a negation,
-      // so that maxBytesToRead=undefined/NaN means Infinity.
-      while (heapOrArray[idx] && !(idx >= maxIdx)) ++idx;
-      return idx;
-    };
-  
-    /**
-     * Given a pointer 'idx' to a null-terminated UTF8-encoded string in the given
-     * array that contains uint8 values, returns a copy of that string as a
-     * Javascript String object.
-     * heapOrArray is either a regular array, or a JavaScript typed array view.
-     * @param {number=} idx
-     * @param {number=} maxBytesToRead
-     * @param {boolean=} ignoreNul - If true, the function will not stop on a NUL character.
-     * @return {string}
-     */
+
+
+
+var PATH_FS = {
+resolve:(...args) => {
+      var resolvedPath = '',
+        resolvedAbsolute = false;
+      for (var i = args.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+        var path = (i >= 0) ? args[i] : FS.cwd();
+        // Skip empty and invalid entries
+        if (typeof path != 'string') {
+          throw new TypeError('Arguments to path.resolve must be strings');
+        } else if (!path) {
+          return ''; // an invalid portion invalidates the whole thing
+        }
+        resolvedPath = path + '/' + resolvedPath;
+        resolvedAbsolute = PATH.isAbs(path);
+      }
+      // At this point the path should be resolved to a full absolute path, but
+      // handle relative paths to be safe (might happen when process.cwd() fails)
+      resolvedPath = PATH.normalizeArray(resolvedPath.split('/').filter((p) => !!p), !resolvedAbsolute).join('/');
+      return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+    },
+relative:(from, to) => {
+      from = PATH_FS.resolve(from).slice(1);
+      to = PATH_FS.resolve(to).slice(1);
+      function trim(arr) {
+        var start = 0;
+        for (; start < arr.length; start++) {
+          if (arr[start] !== '') break;
+        }
+        var end = arr.length - 1;
+        for (; end >= 0; end--) {
+          if (arr[end] !== '') break;
+        }
+        if (start > end) return [];
+        return arr.slice(start, end - start + 1);
+      }
+      var fromParts = trim(from.split('/'));
+      var toParts = trim(to.split('/'));
+      var length = Math.min(fromParts.length, toParts.length);
+      var samePartsLength = length;
+      for (var i = 0; i < length; i++) {
+        if (fromParts[i] !== toParts[i]) {
+          samePartsLength = i;
+          break;
+        }
+      }
+      var outputParts = [];
+      for (var i = samePartsLength; i < fromParts.length; i++) {
+        outputParts.push('..');
+      }
+      outputParts = outputParts.concat(toParts.slice(samePartsLength));
+      return outputParts.join('/');
+    },
+};
+
+
+var UTF8Decoder = new TextDecoder();
+
+var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
+    var maxIdx = idx + maxBytesToRead;
+    if (ignoreNul) return maxIdx;
+    // TextDecoder needs to know the byte length in advance, it doesn't stop on
+    // null terminator by itself.
+    // As a tiny code save trick, compare idx against maxIdx using a negation,
+    // so that maxBytesToRead=undefined/NaN means Infinity.
+    while (heapOrArray[idx] && !(idx >= maxIdx)) ++idx;
+    return idx;
+  };
+
+  /**
+   * Given a pointer 'idx' to a null-terminated UTF8-encoded string in the given
+   * array that contains uint8 values, returns a copy of that string as a
+   * Javascript String object.
+   * heapOrArray is either a regular array, or a JavaScript typed array view.
+   * @param {number=} idx
+   * @param {number=} maxBytesToRead
+   * @param {boolean=} ignoreNul - If true, the function will not stop on a NUL character.
+   * @return {string}
+   */
   var UTF8ArrayToString = (heapOrArray, idx = 0, maxBytesToRead, ignoreNul) => {
   
       var endPtr = findStringEnd(heapOrArray, idx, maxBytesToRead, ignoreNul);
@@ -3108,18 +3108,18 @@ async function createWasm() {
   
   
     /**
-     * Given a pointer 'ptr' to a null-terminated UTF8-encoded string in the
-     * emscripten HEAP, returns a copy of that string as a Javascript String object.
-     *
-     * @param {number} ptr
-     * @param {number=} maxBytesToRead - An optional length that specifies the
-     *   maximum number of bytes to read. You can omit this parameter to scan the
-     *   string until the first 0 byte. If maxBytesToRead is passed, and the string
-     *   at [ptr, ptr+maxBytesToReadr[ contains a null byte in the middle, then the
-     *   string will cut short at that byte index.
-     * @param {boolean=} ignoreNul - If true, the function will not stop on a NUL character.
-     * @return {string}
-     */
+   * Given a pointer 'ptr' to a null-terminated UTF8-encoded string in the
+   * emscripten HEAP, returns a copy of that string as a Javascript String object.
+   *
+   * @param {number} ptr
+   * @param {number=} maxBytesToRead - An optional length that specifies the
+   *   maximum number of bytes to read. You can omit this parameter to scan the
+   *   string until the first 0 byte. If maxBytesToRead is passed, and the string
+   *   at [ptr, ptr+maxBytesToReadr[ contains a null byte in the middle, then the
+   *   string will cut short at that byte index.
+   * @param {boolean=} ignoreNul - If true, the function will not stop on a NUL character.
+   * @return {string}
+   */
   var UTF8ToString = (ptr, maxBytesToRead, ignoreNul) => {
       if (!ptr) return '';
       var end = findStringEnd(HEAPU8, ptr, maxBytesToRead, ignoreNul);
@@ -4836,9 +4836,9 @@ Module.runSQLite3PostLoadInit = async function(
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-20 18:30:48 2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552"
+** SQLITE_SOURCE_ID "2026-01-25 15:18:31 8b53b97833afe27c0c3782c5fbc0437976215b571579f73a94c33e28d3fedb41"
 **
-** Emscripten SDK: 4.0.23
+** Emscripten SDK: 5.0.0
 */
 /*
   2022-05-22
@@ -7011,7 +7011,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-20 18:30:48 2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552","downloadVersion": 3520000,"scm":{ "sha3-256": "2b3b36da9d60c265dceec5964ea51c752d81f41459fb6849c8faea658b253552","branch": "trunk","tags": "","datetime": "2026-01-20T18:30:48.704Z"}};
+  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-25 15:18:31 8b53b97833afe27c0c3782c5fbc0437976215b571579f73a94c33e28d3fedb41","downloadVersion": 3520000,"scm":{ "sha3-256": "8b53b97833afe27c0c3782c5fbc0437976215b571579f73a94c33e28d3fedb41","branch": "trunk","tags": "","datetime": "2026-01-25T15:18:31.737Z"}};
 });
 /**
   2022-07-08
