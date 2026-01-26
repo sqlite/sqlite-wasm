@@ -5155,6 +5155,20 @@ export type CAPI = {
   sqlite3_context_db_handle: (ctx: WasmPointer) => WasmPointer;
 
   /**
+   * The sqlite3_get_autocommit() interface returns non-zero or zero if the
+   * given database connection is or is not in autocommit mode, respectively.
+   * Autocommit mode is on by default. Autocommit mode is disabled by a BEGIN
+   * statement. Autocommit mode is re-enabled by a COMMIT or ROLLBACK.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_get_autocommit(sqlite3*);
+   *
+   * See https://www.sqlite.org/c3ref/get_autocommit.html
+   */
+  sqlite3_get_autocommit(db: DbPtr): number;
+
+  /**
    * Returns a pointer to the metadata associated by the
    * `sqlite3_set_auxdata(ctx, n , pAux, xDelete)` function with the `n`th
    * argument value to the application-defined function. `n` is zero for the
