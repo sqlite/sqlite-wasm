@@ -148,7 +148,7 @@ export type SQLiteDataType =
 /** Specifies parameter bindings. */
 export type BindingSpec =
   | readonly BindableValue[]
-  | { [paramName: string]: BindableValue }
+  | Record<string, BindableValue>
   /** Assumed to have binding index `1` */
   | (SqlValue | boolean);
 
@@ -287,9 +287,7 @@ export class PreparedStatement {
    */
   get(ndx: number, asType?: SQLiteDataType): SqlValue;
   get(ndx: SqlValue[]): SqlValue[];
-  get(ndx: { [columnName: string]: SqlValue }): {
-    [columnName: string]: SqlValue;
-  };
+  get(ndx: Record<string, SqlValue>): Record<string, SqlValue>;
 
   /**
    * Equivalent to {@link PreparedStatement#get(ndx)} but coerces the result to a
@@ -486,11 +484,7 @@ export type ExecOptions = {
    * which might modify the statement.
    */
   callback?: (
-    row:
-      | SqlValue[]
-      | { [columnName: string]: SqlValue }
-      | PreparedStatement
-      | SqlValue,
+    row: SqlValue[] | Record<string, SqlValue> | PreparedStatement | SqlValue,
     stmt: PreparedStatement,
   ) => void | false;
 
@@ -520,7 +514,7 @@ export type ExecOptions = {
    * count, regardless of whether the statement actually produces any result
    * rows.
    */
-  resultRows?: (SqlValue[] | { [columnName: string]: SqlValue } | SqlValue)[];
+  resultRows?: (SqlValue[] | Record<string, SqlValue> | SqlValue)[];
 
   /**
    * Specifies the type of he `callback`'s first argument and the type of the
@@ -557,8 +551,8 @@ export type ExecRowModeArrayOptions = {
 };
 
 export type ExecRowModeObjectOptions = {
-  callback?: (row: { [columnName: string]: SqlValue }) => void | false;
-  resultRows?: { [columnName: string]: SqlValue }[];
+  callback?: (row: Record<string, SqlValue>) => void | false;
+  resultRows?: Record<string, SqlValue>[];
   rowMode: 'object';
 };
 
@@ -935,14 +929,14 @@ export class Database {
       ExecReturnResultRowsOptions & {
         sql?: undefined;
       },
-  ): { [columnName: string]: SqlValue }[];
+  ): Record<string, SqlValue>[];
   exec(
     opts: ExecBaseOptions &
       ExecRowModeObjectOptions &
       ExecReturnResultRowsOptions & {
         sql: FlexibleString;
       },
-  ): { [columnName: string]: SqlValue }[];
+  ): Record<string, SqlValue>[];
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
@@ -1158,7 +1152,7 @@ export class Database {
   selectObject(
     sql: FlexibleString,
     bind?: BindingSpec,
-  ): { [columnName: string]: SqlValue } | undefined;
+  ): Record<string, SqlValue> | undefined;
 
   /**
    * Works identically to {@link Database#selectArrays} except that each value in
@@ -1168,7 +1162,7 @@ export class Database {
   selectObjects(
     sql: FlexibleString,
     bind?: BindingSpec,
-  ): { [columnName: string]: SqlValue }[];
+  ): Record<string, SqlValue>[];
 
   /**
    * Prepares the given SQL, `step()`s the resulting {@link PreparedStatement}
@@ -1764,7 +1758,7 @@ export class SQLiteStruct {
 
   /** Behaves exactly like {@link SQLiteStruct#installMethods}. */
   installMethod(
-    methodsObject: { [methodName: string]: Function },
+    methodsObject: Record<string, Function>,
     applyArgcCheck?: boolean,
   ): this;
 
@@ -1784,7 +1778,7 @@ export class SQLiteStruct {
    * On success, returns this object. Throws on error.
    */
   installMethods(
-    methodsObject: { [methodName: string]: Function },
+    methodsObject: Record<string, Function>,
     applyArgcCheck?: boolean,
   ): this;
 }
@@ -1917,15 +1911,16 @@ export class sqlite3_file extends SQLiteStruct {
   structInfo: {
     sizeof: number;
     name: string;
-    members: {
-      [memberName: string]: {
+    members: Record<
+      string,
+      {
         offset: number;
         signature: string;
         sizeof: number;
         name: string;
         key: string;
-      };
-    };
+      }
+    >;
   };
 
   constructor(pointer?: WasmPointer);
@@ -8130,12 +8125,12 @@ export type CAPI = {
   SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN: 2048;
   SQLITE_IOCAP_POWERSAFE_OVERWRITE: 4096;
   SQLITE_IOCAP_IMMUTABLE: 8192;
-  SQLITE_IOCAP_BATCH_ATOMIC: 16384;
-  SQLITE_MAX_ALLOCATION_SIZE: 536870911;
+  SQLITE_IOCAP_BATCH_ATOMIC: 16_384;
+  SQLITE_MAX_ALLOCATION_SIZE: 536_870_911;
   SQLITE_LIMIT_LENGTH: 0;
-  SQLITE_MAX_LENGTH: 1000000000;
+  SQLITE_MAX_LENGTH: 1_000_000_000;
   SQLITE_LIMIT_SQL_LENGTH: 1;
-  SQLITE_MAX_SQL_LENGTH: 1000000000;
+  SQLITE_MAX_SQL_LENGTH: 1_000_000_000;
   SQLITE_LIMIT_COLUMN: 2;
   SQLITE_MAX_COLUMN: 2000;
   SQLITE_LIMIT_EXPR_DEPTH: 3;
@@ -8143,15 +8138,15 @@ export type CAPI = {
   SQLITE_LIMIT_COMPOUND_SELECT: 4;
   SQLITE_MAX_COMPOUND_SELECT: 500;
   SQLITE_LIMIT_VDBE_OP: 5;
-  SQLITE_MAX_VDBE_OP: 250000000;
+  SQLITE_MAX_VDBE_OP: 250_000_000;
   SQLITE_LIMIT_FUNCTION_ARG: 6;
   SQLITE_MAX_FUNCTION_ARG: 127;
   SQLITE_LIMIT_ATTACHED: 7;
   SQLITE_MAX_ATTACHED: 10;
   SQLITE_LIMIT_LIKE_PATTERN_LENGTH: 8;
-  SQLITE_MAX_LIKE_PATTERN_LENGTH: 50000;
+  SQLITE_MAX_LIKE_PATTERN_LENGTH: 50_000;
   SQLITE_LIMIT_VARIABLE_NUMBER: 9;
-  SQLITE_MAX_VARIABLE_NUMBER: 32766;
+  SQLITE_MAX_VARIABLE_NUMBER: 32_766;
   SQLITE_LIMIT_TRIGGER_DEPTH: 10;
   SQLITE_MAX_TRIGGER_DEPTH: 1000;
   SQLITE_LIMIT_WORKER_THREADS: 11;
@@ -8161,20 +8156,20 @@ export type CAPI = {
   SQLITE_OPEN_CREATE: 4;
   SQLITE_OPEN_URI: 64;
   SQLITE_OPEN_MEMORY: 128;
-  SQLITE_OPEN_NOMUTEX: 32768;
-  SQLITE_OPEN_FULLMUTEX: 65536;
-  SQLITE_OPEN_SHAREDCACHE: 131072;
-  SQLITE_OPEN_PRIVATECACHE: 262144;
-  SQLITE_OPEN_EXRESCODE: 33554432;
-  SQLITE_OPEN_NOFOLLOW: 16777216;
+  SQLITE_OPEN_NOMUTEX: 32_768;
+  SQLITE_OPEN_FULLMUTEX: 65_536;
+  SQLITE_OPEN_SHAREDCACHE: 131_072;
+  SQLITE_OPEN_PRIVATECACHE: 262_144;
+  SQLITE_OPEN_EXRESCODE: 33_554_432;
+  SQLITE_OPEN_NOFOLLOW: 16_777_216;
   SQLITE_OPEN_MAIN_DB: 256;
   SQLITE_OPEN_MAIN_JOURNAL: 2048;
   SQLITE_OPEN_TEMP_DB: 512;
   SQLITE_OPEN_TEMP_JOURNAL: 4096;
   SQLITE_OPEN_TRANSIENT_DB: 1024;
   SQLITE_OPEN_SUBJOURNAL: 8192;
-  SQLITE_OPEN_SUPER_JOURNAL: 16384;
-  SQLITE_OPEN_WAL: 524288;
+  SQLITE_OPEN_SUPER_JOURNAL: 16_384;
+  SQLITE_OPEN_WAL: 524_288;
   SQLITE_OPEN_DELETEONCLOSE: 8;
   SQLITE_OPEN_EXCLUSIVE: 16;
   SQLITE_PREPARE_PERSISTENT: 1;
@@ -8311,8 +8306,8 @@ export type CAPI = {
   SQLITE_TXN_READ: 1;
   SQLITE_TXN_WRITE: 2;
   SQLITE_DETERMINISTIC: 2048;
-  SQLITE_DIRECTONLY: 524288;
-  SQLITE_INNOCUOUS: 2097152;
+  SQLITE_DIRECTONLY: 524_288;
+  SQLITE_INNOCUOUS: 2_097_152;
   SQLITE_VERSION_NUMBER: number;
   SQLITE_VERSION: string;
   SQLITE_SOURCE_ID: string;
