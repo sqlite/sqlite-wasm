@@ -29,7 +29,7 @@
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-25 15:18:31 8b53b97833afe27c0c3782c5fbc0437976215b571579f73a94c33e28d3fedb41"
+** SQLITE_SOURCE_ID "2026-01-26 00:11:01 c38797d400dc4135108a6e303f2c10779ba9adf0daae28f1789f9106a68d21d5"
 **
 ** Emscripten SDK: 5.0.0
 */
@@ -4803,7 +4803,7 @@ Module.runSQLite3PostLoadInit = async function(
 **
 ** SQLITE_VERSION "3.52.0"
 ** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-25 15:18:31 8b53b97833afe27c0c3782c5fbc0437976215b571579f73a94c33e28d3fedb41"
+** SQLITE_SOURCE_ID "2026-01-26 00:11:01 c38797d400dc4135108a6e303f2c10779ba9adf0daae28f1789f9106a68d21d5"
 **
 ** Emscripten SDK: 5.0.0
 */
@@ -6978,7 +6978,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-25 15:18:31 8b53b97833afe27c0c3782c5fbc0437976215b571579f73a94c33e28d3fedb41","downloadVersion": 3520000,"scm":{ "sha3-256": "8b53b97833afe27c0c3782c5fbc0437976215b571579f73a94c33e28d3fedb41","branch": "trunk","tags": "","datetime": "2026-01-25T15:18:31.737Z"}};
+  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-26 00:11:01 c38797d400dc4135108a6e303f2c10779ba9adf0daae28f1789f9106a68d21d5","downloadVersion": 3520000,"scm":{ "sha3-256": "c38797d400dc4135108a6e303f2c10779ba9adf0daae28f1789f9106a68d21d5","branch": "trunk","tags": "","datetime": "2026-01-26T00:11:01.035Z"}};
 });
 /**
   2022-07-08
