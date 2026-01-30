@@ -1,6 +1,6 @@
 {
   "name": "@sqlite.org/sqlite-wasm",
-  "version": "3.51.2-build5",
+  "version": "3.51.2-build6",
   "description": "SQLite Wasm conveniently wrapped as an ES Module.",
   "type": "module",
   "repository": {
@@ -63,12 +63,12 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@types/node": "^25.0.10",
+    "@types/node": "^25.1.0",
     "@vitest/browser": "^4.0.18",
     "@vitest/browser-playwright": "^4.0.18",
-    "happy-dom": "^20.3.9",
+    "happy-dom": "^20.4.0",
     "http-server": "github:vapier/http-server",
-    "lefthook": "2.0.15",
+    "lefthook": "2.0.16",
     "playwright": "^1.58.0",
     "prettier": "^3.8.1",
     "prettier-plugin-jsdoc": "^1.8.0",
