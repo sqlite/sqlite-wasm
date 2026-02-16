@@ -2,6 +2,16 @@
 
 SQLite Wasm conveniently wrapped as an ES Module.
 
+> [!Warning]
+>
+> This project wraps the code of
+> [SQLite Wasm](https://sqlite.org/wasm/doc/trunk/index.md) with _no_ changes,
+> apart from added TypeScript types. Please do _not_ file issues or feature
+> requests regarding the underlying SQLite Wasm code here. Instead, please
+> follow the
+> [SQLite bug filing instructions](https://www.sqlite.org/src/wiki?name=Bug+Reports).
+> Filing TypeScript type related issues and feature requests is fine.
+
 ## Node.js support
 
 > [!Warning]
