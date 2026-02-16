@@ -2,6 +2,8 @@
 
 SQLite Wasm conveniently wrapped as an ES Module.
 
+## Bug reports
+
 > [!Warning]
 >
 > This project wraps the code of
