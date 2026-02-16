@@ -1,0 +1,16 @@
+name: TypeScript types
+description: Bug reports and feature requests about TypeScript types.
+body:
+  - type: dropdown
+    attributes:
+      label: Type
+      options:
+        - Bug Report
+        - Feature Request
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Description
+    validations:
+      required: true
