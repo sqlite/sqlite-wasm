@@ -1,5 +1,5 @@
 /** Types of values that can be passed to/retrieved from SQLite. */
-declare type SqlValue =
+export type SqlValue =
   | string
   | number
   | null
@@ -9,13 +9,13 @@ declare type SqlValue =
   | ArrayBuffer;
 
 /** A PreparedStatement or a WASM pointer to one. */
-declare type StmtPtr = PreparedStatement | WasmPointer;
+export type StmtPtr = PreparedStatement | WasmPointer;
 
 /** A Database or a WASM pointer to one. */
-declare type DbPtr = Database | WasmPointer;
+export type DbPtr = Database | WasmPointer;
 
 /** An integer result code from a SQLite C API call. */
-declare type Sqlite3Result =
+export type Sqlite3Result =
   | CAPI['SQLITE_OK']
   | CAPI['SQLITE_ERROR']
   | CAPI['SQLITE_INTERNAL']
@@ -122,7 +122,7 @@ declare type Sqlite3Result =
   | CAPI['SQLITE_OK_LOAD_PERMANENTLY'];
 
 /** A destructor for a BLOB or TEXT binding. */
-declare type DtorType =
+export type DtorType =
   | (() => void)
   | WasmPointer
   | CAPI['SQLITE_STATIC']
@@ -130,7 +130,7 @@ declare type DtorType =
   | CAPI['SQLITE_WASM_DEALLOC'];
 
 /** Types of values that can be passed to SQLite. */
-declare type BindableValue =
+export type BindableValue =
   | SqlValue
   /** Converted to NULL */
   | undefined
@@ -138,7 +138,7 @@ declare type BindableValue =
   | boolean;
 
 /** Internal data types supported by SQLite3. */
-declare type SQLiteDataType =
+export type SQLiteDataType =
   | CAPI['SQLITE_INTEGER']
   | CAPI['SQLITE_FLOAT']
   | CAPI['SQLITE_TEXT']
@@ -146,9 +146,9 @@ declare type SQLiteDataType =
   | CAPI['SQLITE_NULL'];
 
 /** Specifies parameter bindings. */
-declare type BindingSpec =
+export type BindingSpec =
   | readonly BindableValue[]
-  | { [paramName: string]: BindableValue }
+  | Record<string, BindableValue>
   /** Assumed to have binding index `1` */
   | (SqlValue | boolean);
 
@@ -161,7 +161,7 @@ declare type BindingSpec =
  * which take filename strings, and similar "small" strings, do not use this
  * feature.
  */
-declare type FlexibleString =
+export type FlexibleString =
   | string
   /** WASM C-string pointer, passed on to WASM as-is. */
   | WasmPointer
@@ -198,7 +198,7 @@ declare type FlexibleString =
  *   stmt.finalize();
  *   }
  */
-declare class PreparedStatement {
+export class PreparedStatement {
   /** Binds one more values to its bindable parameters. */
   bind(binding: BindingSpec): this;
 
@@ -287,9 +287,7 @@ declare class PreparedStatement {
    */
   get(ndx: number, asType?: SQLiteDataType): SqlValue;
   get(ndx: SqlValue[]): SqlValue[];
-  get(ndx: { [columnName: string]: SqlValue }): {
-    [columnName: string]: SqlValue;
-  };
+  get(ndx: Record<string, SqlValue>): Record<string, SqlValue>;
 
   /**
    * Equivalent to {@link PreparedStatement#get(ndx)} but coerces the result to a
@@ -424,7 +422,7 @@ declare class PreparedStatement {
   pointer: WasmPointer | undefined;
 }
 
-declare type ExecOptions = {
+export type ExecOptions = {
   /**
    * The SQL to run (unless it's provided as the first argument). The SQL may
    * contain any number of statements.
@@ -489,7 +487,7 @@ declare type ExecOptions = {
     | ((
         row:
           | SqlValue[]
-          | { [columnName: string]: SqlValue }
+          | Record<string, SqlValue>
           | PreparedStatement
           | SqlValue,
         stmt: PreparedStatement,
@@ -522,7 +520,7 @@ declare type ExecOptions = {
    * count, regardless of whether the statement actually produces any result
    * rows.
    */
-  resultRows?: (SqlValue[] | { [columnName: string]: SqlValue } | SqlValue)[];
+  resultRows?: (SqlValue[] | Record<string, SqlValue> | SqlValue)[];
 
   /**
    * Specifies the type of he `callback`'s first argument and the type of the
@@ -535,42 +533,42 @@ declare type ExecOptions = {
  * Derivate type of ExecOptions to be used as base mixin for method overloads on
  * `exec`
  */
-declare type ExecBaseOptions = Omit<
+export type ExecBaseOptions = Omit<
   ExecOptions,
   'callback' | 'resultRows' | 'rowMode' | 'returnValue' | 'sql'
 >;
 
-declare type ExecReturnThisOptions = {
+export type ExecReturnThisOptions = {
   returnValue?: 'this';
 };
 
-declare type ExecReturnResultRowsOptions = {
+export type ExecReturnResultRowsOptions = {
   returnValue: 'resultRows';
 };
 
-declare type ExecReturnSaveSqlOptions = {
+export type ExecReturnSaveSqlOptions = {
   returnValue: 'saveSql';
 };
 
-declare type ExecRowModeArrayOptions = {
+export type ExecRowModeArrayOptions = {
   callback?: (row: SqlValue[]) => void | false;
   resultRows?: SqlValue[][];
   rowMode?: 'array';
 };
 
-declare type ExecRowModeObjectOptions = {
-  callback?: (row: { [columnName: string]: SqlValue }) => void | false;
-  resultRows?: { [columnName: string]: SqlValue }[];
+export type ExecRowModeObjectOptions = {
+  callback?: (row: Record<string, SqlValue>) => void | false;
+  resultRows?: Record<string, SqlValue>[];
   rowMode: 'object';
 };
 
-declare type ExecRowModeStmtOptions = {
+export type ExecRowModeStmtOptions = {
   callback?: (row: PreparedStatement) => void | false;
   resultRows?: undefined;
   rowMode: 'stmt';
 };
 
-declare type ExecRowModeScalarOptions = {
+export type ExecRowModeScalarOptions = {
   callback?: (row: SqlValue) => void | false;
   resultRows?: SqlValue[];
 
@@ -589,7 +587,7 @@ declare type ExecRowModeScalarOptions = {
 };
 
 /** Options for creating a user-defined function that can be called from SQL. */
-declare type FunctionOptions = {
+export type FunctionOptions = {
   /**
    * Number of arguments which SQL calls to this function expect or require. The
    * default value is `X.length` MINUS 1, where X is either `xFunc` or `xStep`,
@@ -678,12 +676,12 @@ declare type FunctionOptions = {
   xDestroy?: (pAppPtr: WasmPointer) => void;
 };
 
-declare type ScalarFunctionOptions = FunctionOptions & {
+export type ScalarFunctionOptions = FunctionOptions & {
   /** Scalar function to be defined. */
   xFunc: (ctxPtr: number, ...args: SqlValue[]) => SqlValue;
 };
 
-declare type AggregateFunctionOptions = FunctionOptions & {
+export type AggregateFunctionOptions = FunctionOptions & {
   /**
    * 'Step' callback for an aggregate function.
    *
@@ -703,7 +701,7 @@ declare type AggregateFunctionOptions = FunctionOptions & {
   xFinal: (ctxPtr: number) => SqlValue;
 };
 
-declare type WindowFunctionOptions = FunctionOptions & {
+export type WindowFunctionOptions = FunctionOptions & {
   /**
    * 'Step' callback for a window function.
    *
@@ -758,7 +756,7 @@ declare type WindowFunctionOptions = FunctionOptions & {
  *   }
  *   ```;
  */
-declare class Database {
+export class Database {
   /**
    * Creates a connection to the given file, optionally creating it if needed.
    *
@@ -937,14 +935,14 @@ declare class Database {
       ExecReturnResultRowsOptions & {
         sql?: undefined;
       },
-  ): { [columnName: string]: SqlValue }[];
+  ): Record<string, SqlValue>[];
   exec(
     opts: ExecBaseOptions &
       ExecRowModeObjectOptions &
       ExecReturnResultRowsOptions & {
         sql: FlexibleString;
       },
-  ): { [columnName: string]: SqlValue }[];
+  ): Record<string, SqlValue>[];
   exec(
     sql: FlexibleString,
     opts: ExecBaseOptions &
@@ -1160,7 +1158,7 @@ declare class Database {
   selectObject(
     sql: FlexibleString,
     bind?: BindingSpec,
-  ): { [columnName: string]: SqlValue } | undefined;
+  ): Record<string, SqlValue> | undefined;
 
   /**
    * Works identically to {@link Database#selectArrays} except that each value in
@@ -1170,7 +1168,7 @@ declare class Database {
   selectObjects(
     sql: FlexibleString,
     bind?: BindingSpec,
-  ): { [columnName: string]: SqlValue }[];
+  ): Record<string, SqlValue>[];
 
   /**
    * Prepares the given SQL, `step()`s the resulting {@link PreparedStatement}
@@ -1289,7 +1287,7 @@ declare class Database {
  * When the sqlite3 API is installed in the main thread, the class is added,
  * which simplifies usage of the kvvfs.
  */
-declare class JsStorageDb extends Database {
+export class JsStorageDb extends Database {
   /** Create a new kvvfs-backed database in local or session storage. */
   constructor(options?: { filename?: 'local' | 'session'; flags?: string });
   constructor(mode: 'local' | 'session');
@@ -1357,7 +1355,7 @@ declare class JsStorageDb extends Database {
  *
  * How to emit those headers depends on the underlying web server.
  */
-declare class OpfsDatabase extends Database {
+export class OpfsDatabase extends Database {
   /**
    * Creates a connection to the given file, optionally creating it if needed.
    *
@@ -1397,11 +1395,11 @@ declare class OpfsDatabase extends Database {
   ): Promise<number>;
 }
 
-declare class OpfsSAHPoolDatabase extends OpfsDatabase {
+export class OpfsSAHPoolDatabase extends OpfsDatabase {
   constructor(filename: string);
 }
 
-type SAHPoolUtil = {
+export type SAHPoolUtil = {
   OpfsSAHPoolDb: typeof OpfsSAHPoolDatabase;
 
   /**
@@ -1558,19 +1556,21 @@ type SAHPoolUtil = {
 };
 
 /** Exception class for reporting WASM-side allocation errors. */
-declare class WasmAllocError extends Error {
+export class WasmAllocError extends Error {
   constructor(message: string);
   toss: any;
 }
 
 /** Exception class used primarily by the oo1 API. */
-declare class SQLite3Error extends Error {
+export class SQLite3Error extends Error {
   constructor(message: string);
   resultCode: number;
 }
 
 /** A pointer to a location in WASM heap memory. */
-declare type WasmPointer = number;
+export type WasmPointer = number;
+
+export type NullPointer = 0 | null | undefined;
 
 /** Common envelope for all Worker API #1 messages. */
 interface Worker1MessageBusEnvelope {
@@ -1772,9 +1772,7 @@ interface Worker1PromiserFactory {
   };
 }
 
-declare type NullPointer = 0 | null | undefined;
-
-declare type StructPtrMapper<T> = {
+export type StructPtrMapper<T> = {
   StructType: T;
   /**
    * Creates a new StructType object, writes its `pointer` value to the given
@@ -1827,7 +1825,7 @@ declare type StructPtrMapper<T> = {
   dispose: (ptr: WasmPointer) => void;
 };
 
-declare class SQLiteStruct {
+export class SQLiteStruct {
   /**
    * Calling a constructor with no arguments creates a new instance in the WASM
    * heap in order to connect it to C. In this case, client JavaScript code owns
@@ -1966,7 +1964,7 @@ declare class SQLiteStruct {
 
   /** Behaves exactly like {@link SQLiteStruct#installMethods}. */
   installMethod(
-    methodsObject: { [methodName: string]: Function },
+    methodsObject: Record<string, Function>,
     applyArgcCheck?: boolean,
   ): this;
 
@@ -1986,12 +1984,12 @@ declare class SQLiteStruct {
    * On success, returns this object. Throws on error.
    */
   installMethods(
-    methodsObject: { [methodName: string]: Function },
+    methodsObject: Record<string, Function>,
     applyArgcCheck?: boolean,
   ): this;
 }
 
-declare class sqlite3_vfs extends SQLiteStruct {
+export class sqlite3_vfs extends SQLiteStruct {
   $iVersion: number;
   $szOsFile: number;
   $mxPathname: number;
@@ -2057,7 +2055,7 @@ declare class sqlite3_vfs extends SQLiteStruct {
   xNextSystemCall: (vfsPtr: WasmPointer, zName: WasmPointer) => WasmPointer;
 }
 
-declare class sqlite3_io_methods extends SQLiteStruct {
+export class sqlite3_io_methods extends SQLiteStruct {
   iVersion: number;
 
   constructor(pointer?: WasmPointer);
@@ -2114,26 +2112,27 @@ declare class sqlite3_io_methods extends SQLiteStruct {
   xUnfetch: (file: WasmPointer, iOfst: number, p: WasmPointer) => Sqlite3Result;
 }
 
-declare class sqlite3_file extends SQLiteStruct {
+export class sqlite3_file extends SQLiteStruct {
   $pMethods: WasmPointer;
   structInfo: {
     sizeof: number;
     name: string;
-    members: {
-      [memberName: string]: {
+    members: Record<
+      string,
+      {
         offset: number;
         signature: string;
         sizeof: number;
         name: string;
         key: string;
-      };
-    };
+      }
+    >;
   };
 
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_vtab extends SQLiteStruct {
+export class sqlite3_vtab extends SQLiteStruct {
   pModule: WasmPointer;
   nRef: number;
   zErrMsg: WasmPointer;
@@ -2141,13 +2140,13 @@ declare class sqlite3_vtab extends SQLiteStruct {
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_vtab_cursor extends SQLiteStruct {
+export class sqlite3_vtab_cursor extends SQLiteStruct {
   pVtab: WasmPointer;
 
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_module extends SQLiteStruct {
+export class sqlite3_module extends SQLiteStruct {
   iVersion: number;
 
   constructor(pointer?: WasmPointer);
@@ -2216,7 +2215,7 @@ declare class sqlite3_module extends SQLiteStruct {
   xShadowName: (tableName: WasmPointer) => Sqlite3Result;
 }
 
-declare class sqlite3_index_constraint extends SQLiteStruct {
+export class sqlite3_index_constraint extends SQLiteStruct {
   iColumn: number;
   op: number;
   usable: number;
@@ -2225,21 +2224,21 @@ declare class sqlite3_index_constraint extends SQLiteStruct {
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_index_constraint_usage extends SQLiteStruct {
+export class sqlite3_index_constraint_usage extends SQLiteStruct {
   argvIndex: number;
   omit: number;
 
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_index_orderby extends SQLiteStruct {
+export class sqlite3_index_orderby extends SQLiteStruct {
   iColumn: number;
   desc: number;
 
   constructor(pointer?: WasmPointer);
 }
 
-declare class sqlite3_index_info extends SQLiteStruct {
+export class sqlite3_index_info extends SQLiteStruct {
   nConstraint: number;
   aConstraint: WasmPointer;
   nOrderBy: number;
@@ -2260,7 +2259,7 @@ declare class sqlite3_index_info extends SQLiteStruct {
   constructor(pointer?: WasmPointer);
 }
 
-declare type Sqlite3Static = {
+export type Sqlite3Static = {
   /** The namespace for the C-style APIs. */
   capi: CAPI;
 
@@ -2611,12 +2610,12 @@ declare type Sqlite3Static = {
  */
 export default function init(): Promise<Sqlite3Static>;
 
-declare type ListLike<T> = {
+export type ListLike<T> = {
   length: number;
   forEach: (cb: (val: T) => void) => void;
 };
 
-declare type WASM_API = {
+export type WASM_API = {
   /**
    * The `sqlite3.wasm.exports` namespace object is a WASM-standard part of the
    * WASM module file and contains all "exported" C functions which are built
@@ -3744,7 +3743,7 @@ declare type WASM_API = {
 };
 
 // generated by Object.keys(sqlite3.capi).map(k => `${k}: any;`).join('\n')
-declare type CAPI = {
+export type CAPI = {
   sqlite3_vfs: typeof sqlite3_vfs;
   sqlite3_io_methods: typeof sqlite3_io_methods;
   sqlite3_file: typeof sqlite3_file;
@@ -3873,6 +3872,30 @@ declare type CAPI = {
    * See https://www.sqlite.org/c3ref/initialize.html
    */
   sqlite3_shutdown: () => Sqlite3Result;
+
+  /**
+   * The sqlite3_interrupt(D) interface will cause any pending database
+   * operation to abort and return at its earliest opportunity.
+   *
+   * C Signature:
+   *
+   *     void sqlite3_interrupt(sqlite3*);
+   *
+   * See https://www.sqlite.org/c3ref/interrupt.html
+   */
+  sqlite3_interrupt: (db: DbPtr) => void;
+
+  /**
+   * The sqlite3_is_interrupted(D) interface can be used to determine whether an
+   * interrupt is currently pending for database connection D.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_is_interrupted(sqlite3*);
+   *
+   * See https://www.sqlite.org/c3ref/interrupt.html
+   */
+  sqlite3_is_interrupted: (db: DbPtr) => number;
 
   /**
    * Used to make global configuration changes to SQLite in order to tune SQLite
@@ -4623,6 +4646,19 @@ declare type CAPI = {
   sqlite3_stmt_readonly: (stmt: StmtPtr) => number;
 
   /**
+   * The sqlite3_stmt_busy(S) interface returns true (non-zero) if the prepared
+   * statement S has been stepped at least once but has not yet run to
+   * completion and/or has not been reset.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_stmt_busy(sqlite3_stmt*);
+   *
+   * See https://www.sqlite.org/c3ref/stmt_busy.html
+   */
+  sqlite3_stmt_busy: (stmt: StmtPtr) => number;
+
+  /**
    * Returns 1 if the prepared statement `stmt` is an `EXPLAIN` statement, or 2
    * if the statement `stmt` is an `EXPLAIN QUERY PLAN`. Returns 0 if `stmt` is
    * an ordinary statement or a NULL pointer
@@ -4697,7 +4733,7 @@ declare type CAPI = {
   ) => Sqlite3Result;
 
   /**
-   * Bind a 64 bit integer number to a parameter in a prepared statement.
+   * Bind a 64-bit integer number to a parameter in a prepared statement.
    *
    * C Signature:
    *
@@ -4816,6 +4852,18 @@ declare type CAPI = {
   ) => Sqlite3Result;
 
   /**
+   * The sqlite3_bind_parameter_name(P,N) interface returns the name of the N-th
+   * parameter in prepared statement P.
+   *
+   * C Signature:
+   *
+   *     const char *sqlite3_bind_parameter_name(sqlite3_stmt*, int);
+   *
+   * See https://www.sqlite.org/c3ref/bind_parameter_name.html
+   */
+  sqlite3_bind_parameter_name: (stmt: StmtPtr, N: number) => string | null;
+
+  /**
    * Use this routine to reset all host parameters to NULL.
    *
    * C Signature:
@@ -4849,6 +4897,18 @@ declare type CAPI = {
    * See https://www.sqlite.org/c3ref/column_name.html
    */
   sqlite3_column_name: (stmt: StmtPtr, N: number) => string;
+
+  /**
+   * The sqlite3_column_decltype(S,N) routine returns the declared type of the
+   * N-th column in the result set of the prepared statement S.
+   *
+   * C Signature:
+   *
+   *     const char *sqlite3_column_decltype(sqlite3_stmt*, int);
+   *
+   * See https://www.sqlite.org/c3ref/column_decltype.html
+   */
+  sqlite3_column_decltype: (stmt: StmtPtr, N: number) => string | null;
 
   /**
    * Returns the result of passing the result of
@@ -5360,6 +5420,20 @@ declare type CAPI = {
   sqlite3_context_db_handle: (ctx: WasmPointer) => WasmPointer;
 
   /**
+   * The sqlite3_get_autocommit() interface returns non-zero or zero if the
+   * given database connection is or is not in autocommit mode, respectively.
+   * Autocommit mode is on by default. Autocommit mode is disabled by a BEGIN
+   * statement. Autocommit mode is re-enabled by a COMMIT or ROLLBACK.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_get_autocommit(sqlite3*);
+   *
+   * See https://www.sqlite.org/c3ref/get_autocommit.html
+   */
+  sqlite3_get_autocommit(db: DbPtr): number;
+
+  /**
    * Returns a pointer to the metadata associated by the
    * `sqlite3_set_auxdata(ctx, n , pAux, xDelete)` function with the `n`th
    * argument value to the application-defined function. `n` is zero for the
@@ -5394,6 +5468,16 @@ declare type CAPI = {
     pAux: WasmPointer,
     xDelete: (() => void) | WasmPointer,
   ) => void;
+
+  /**
+   * Sqlite3_set_errmsg() is a WASM-internal-use-only function which is like
+   * sqlite3_result_error() but targets a database connection's error state.
+   */
+  sqlite3_set_errmsg: (
+    db: DbPtr,
+    errCode: number,
+    msg: string | WasmPointer,
+  ) => Sqlite3Result;
 
   /**
    * Sets the result from an application-defined function to be the `BLOB` whose
@@ -5775,6 +5859,19 @@ declare type CAPI = {
    * See https://www.sqlite.org/c3ref/db_name.html
    */
   sqlite3_db_name: (db: DbPtr, dbIdx: number) => string;
+
+  /**
+   * The sqlite3_db_readonly(D,N) interface returns 1 if the database N of
+   * connection D is read-only, 0 if it is read/write, or -1 if N is not the
+   * name of a database on connection D.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_db_readonly(sqlite3*, const char *zDbName);
+   *
+   * See https://www.sqlite.org/c3ref/db_readonly.html
+   */
+  sqlite3_db_readonly: (db: DbPtr, dbName: string | WasmPointer) => number;
 
   /**
    * Return The Filename For A Database Connection
@@ -8237,12 +8334,12 @@ declare type CAPI = {
   SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN: 2048;
   SQLITE_IOCAP_POWERSAFE_OVERWRITE: 4096;
   SQLITE_IOCAP_IMMUTABLE: 8192;
-  SQLITE_IOCAP_BATCH_ATOMIC: 16384;
-  SQLITE_MAX_ALLOCATION_SIZE: 536870911;
+  SQLITE_IOCAP_BATCH_ATOMIC: 16_384;
+  SQLITE_MAX_ALLOCATION_SIZE: 536_870_911;
   SQLITE_LIMIT_LENGTH: 0;
-  SQLITE_MAX_LENGTH: 1000000000;
+  SQLITE_MAX_LENGTH: 1_000_000_000;
   SQLITE_LIMIT_SQL_LENGTH: 1;
-  SQLITE_MAX_SQL_LENGTH: 1000000000;
+  SQLITE_MAX_SQL_LENGTH: 1_000_000_000;
   SQLITE_LIMIT_COLUMN: 2;
   SQLITE_MAX_COLUMN: 2000;
   SQLITE_LIMIT_EXPR_DEPTH: 3;
@@ -8250,15 +8347,15 @@ declare type CAPI = {
   SQLITE_LIMIT_COMPOUND_SELECT: 4;
   SQLITE_MAX_COMPOUND_SELECT: 500;
   SQLITE_LIMIT_VDBE_OP: 5;
-  SQLITE_MAX_VDBE_OP: 250000000;
+  SQLITE_MAX_VDBE_OP: 250_000_000;
   SQLITE_LIMIT_FUNCTION_ARG: 6;
   SQLITE_MAX_FUNCTION_ARG: 127;
   SQLITE_LIMIT_ATTACHED: 7;
   SQLITE_MAX_ATTACHED: 10;
   SQLITE_LIMIT_LIKE_PATTERN_LENGTH: 8;
-  SQLITE_MAX_LIKE_PATTERN_LENGTH: 50000;
+  SQLITE_MAX_LIKE_PATTERN_LENGTH: 50_000;
   SQLITE_LIMIT_VARIABLE_NUMBER: 9;
-  SQLITE_MAX_VARIABLE_NUMBER: 32766;
+  SQLITE_MAX_VARIABLE_NUMBER: 32_766;
   SQLITE_LIMIT_TRIGGER_DEPTH: 10;
   SQLITE_MAX_TRIGGER_DEPTH: 1000;
   SQLITE_LIMIT_WORKER_THREADS: 11;
@@ -8268,20 +8365,20 @@ declare type CAPI = {
   SQLITE_OPEN_CREATE: 4;
   SQLITE_OPEN_URI: 64;
   SQLITE_OPEN_MEMORY: 128;
-  SQLITE_OPEN_NOMUTEX: 32768;
-  SQLITE_OPEN_FULLMUTEX: 65536;
-  SQLITE_OPEN_SHAREDCACHE: 131072;
-  SQLITE_OPEN_PRIVATECACHE: 262144;
-  SQLITE_OPEN_EXRESCODE: 33554432;
-  SQLITE_OPEN_NOFOLLOW: 16777216;
+  SQLITE_OPEN_NOMUTEX: 32_768;
+  SQLITE_OPEN_FULLMUTEX: 65_536;
+  SQLITE_OPEN_SHAREDCACHE: 131_072;
+  SQLITE_OPEN_PRIVATECACHE: 262_144;
+  SQLITE_OPEN_EXRESCODE: 33_554_432;
+  SQLITE_OPEN_NOFOLLOW: 16_777_216;
   SQLITE_OPEN_MAIN_DB: 256;
   SQLITE_OPEN_MAIN_JOURNAL: 2048;
   SQLITE_OPEN_TEMP_DB: 512;
   SQLITE_OPEN_TEMP_JOURNAL: 4096;
   SQLITE_OPEN_TRANSIENT_DB: 1024;
   SQLITE_OPEN_SUBJOURNAL: 8192;
-  SQLITE_OPEN_SUPER_JOURNAL: 16384;
-  SQLITE_OPEN_WAL: 524288;
+  SQLITE_OPEN_SUPER_JOURNAL: 16_384;
+  SQLITE_OPEN_WAL: 524_288;
   SQLITE_OPEN_DELETEONCLOSE: 8;
   SQLITE_OPEN_EXCLUSIVE: 16;
   SQLITE_PREPARE_PERSISTENT: 1;
@@ -8418,8 +8515,8 @@ declare type CAPI = {
   SQLITE_TXN_READ: 1;
   SQLITE_TXN_WRITE: 2;
   SQLITE_DETERMINISTIC: 2048;
-  SQLITE_DIRECTONLY: 524288;
-  SQLITE_INNOCUOUS: 2097152;
+  SQLITE_DIRECTONLY: 524_288;
+  SQLITE_INNOCUOUS: 2_097_152;
   SQLITE_VERSION_NUMBER: number;
   SQLITE_VERSION: string;
   SQLITE_SOURCE_ID: string;

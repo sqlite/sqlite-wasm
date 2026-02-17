@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: All other issues
+    url: https://www.sqlite.org/src/wiki?name=Bug+Reports
+    about: View the SQLite bug filing instructions to find the right place.
