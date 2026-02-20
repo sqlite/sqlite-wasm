@@ -4463,6 +4463,31 @@ export type CAPI = {
   sqlite3_stmt_isexplain: (stmt: StmtPtr) => 0 | 1 | 2;
 
   /**
+   * Set the explain mode for a statement.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_stmt_explain(sqlite3_stmt *pStmt, int eMode);
+   *
+   * See https://sqlite.org/c3ref/stmt_explain.html
+   */
+  sqlite3_stmt_explain: (stmt: StmtPtr, eMode: number) => Sqlite3Result;
+
+  /**
+   * Return a pointer to the next prepared statement after `pStmt` associated
+   * with database connection `db`. If `pStmt` is null, return the first
+   * prepared statement for the database connection. Return 0 if there are no
+   * more.
+   *
+   * C Signature:
+   *
+   *     sqlite3_stmt * sqlite3_next_stmt(sqlite3 * pDb, sqlite3_stmt * pStmt);
+   *
+   * See https://sqlite.org/c3ref/next_stmt.html
+   */
+  sqlite3_next_stmt: (db: DbPtr, pStmt: StmtPtr | 0) => StmtPtr | 0;
+
+  /**
    * Bind a `BLOB` value to a parameter in a prepared statement.
    *
    * C Signature:
@@ -4700,6 +4725,39 @@ export type CAPI = {
    * See https://www.sqlite.org/c3ref/column_decltype.html
    */
   sqlite3_column_decltype: (stmt: StmtPtr, N: number) => string | null;
+
+  /**
+   * Return the name of the database from which a result column derives. Returns
+   * null if the column is not an unambiguous reference to a database column.
+   *
+   * C Signature:
+   *
+   *     const char *sqlite3_column_database_name(sqlite3_stmt *pStmt, int N);
+   */
+  sqlite3_column_database_name: (stmt: StmtPtr, N: number) => string | null;
+
+  /**
+   * Return the name of the table from which a result column derives. Returns
+   * null if the column is not an unambiguous reference to a database column.
+   *
+   * C Signature:
+   *
+   *     const char *sqlite3_column_table_name(sqlite3_stmt *pStmt, int N);
+   *
+   * See https://sqlite.org/c3ref/column_database_name.html
+   */
+  sqlite3_column_table_name: (stmt: StmtPtr, N: number) => string | null;
+
+  /**
+   * Return the name of the table column from which a result column derives.
+   * Returns null if the column is not an unambiguous reference to a database
+   * column.
+   *
+   * C Signature:
+   *
+   *     const char *sqlite3_column_origin_name(sqlite3_stmt *pStmt, int N);
+   */
+  sqlite3_column_origin_name: (stmt: StmtPtr, N: number) => string | null;
 
   /**
    * Returns the result of passing the result of
@@ -6214,6 +6272,44 @@ export type CAPI = {
   ) => Sqlite3Result;
 
   /**
+   * Used to retrieve runtime status information about a single database
+   * connection with 64-bit counters.
+   *
+   * C Signature:
+   *
+   *     int sqlite3_db_status64(
+   *       sqlite3 *db,
+   *       int op,
+   *       sqlite3_int64 *pCurrent,
+   *       sqlite3_int64 *pHighwtr,
+   *       int resetFlag
+   *     );
+   *
+   * See https://www.sqlite.org/c3ref/db_status.html
+   */
+  sqlite3_db_status64: (
+    db: DbPtr,
+    op:
+      | CAPI['SQLITE_DBSTATUS_LOOKASIDE_USED']
+      | CAPI['SQLITE_DBSTATUS_CACHE_USED']
+      | CAPI['SQLITE_DBSTATUS_SCHEMA_USED']
+      | CAPI['SQLITE_DBSTATUS_STMT_USED']
+      | CAPI['SQLITE_DBSTATUS_LOOKASIDE_HIT']
+      | CAPI['SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE']
+      | CAPI['SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL']
+      | CAPI['SQLITE_DBSTATUS_CACHE_HIT']
+      | CAPI['SQLITE_DBSTATUS_CACHE_MISS']
+      | CAPI['SQLITE_DBSTATUS_CACHE_WRITE']
+      | CAPI['SQLITE_DBSTATUS_DEFERRED_FKS']
+      | CAPI['SQLITE_DBSTATUS_CACHE_USED_SHARED']
+      | CAPI['SQLITE_DBSTATUS_CACHE_SPILL']
+      | CAPI['SQLITE_DBSTATUS_MAX'],
+    pCurrent: WasmPointer,
+    pHighwtr: WasmPointer,
+    resetFlag: number,
+  ) => Sqlite3Result;
+
+  /**
    * Retrieve and reset counter values from a prepared statement.
    *
    * C Signature:
@@ -7446,7 +7542,7 @@ export type CAPI = {
    *       int flags
    *     );
    *
-   * See https://www.sqlite.org/c3ref/changeset_apply.html
+   * See https://sqlite.org/session/sqlite3changeset_apply.html
    *
    * @param db Apply change to `"main"` db of this handle
    * @param nChangeset Size of changeset blob in bytes
@@ -7463,6 +7559,53 @@ export type CAPI = {
     nChangeset: number,
     pChangeset: WasmPointer,
     xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
+    xConflict:
+      | ((
+          pCtx: WasmPointer,
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
+          pIter: WasmPointer,
+        ) =>
+          | CAPI['SQLITE_CHANGESET_OMIT']
+          | CAPI['SQLITE_CHANGESET_ABORT']
+          | CAPI['SQLITE_CHANGESET_REPLACE'])
+      | WasmPointer,
+    pCtx: WasmPointer,
+    ppRebase: WasmPointer,
+    pnRebase: WasmPointer,
+    flags: number,
+  ) => Sqlite3Result;
+
+  /**
+   * Apply a changeset or patchset to a database (V3 variant). This is like
+   * `sqlite3changeset_apply_v2()` but the filter callback is invoked once per
+   * change and receives an iterator handle for the current change.
+   *
+   * C Signature:
+   *
+   *     int sqlite3changeset_apply_v3(
+   *       sqlite3 *db,
+   *       int nChangeset,
+   *       void *pChangeset,
+   *       int(*xFilter)(void *pCtx, sqlite3_changeset_iter *p),
+   *       int (*xConflict)(void *pCtx, int eConflict, sqlite3_changeset_iter *p),
+   *       void *pCtx,
+   *       void **ppRebase,
+   *       int *pnRebase,
+   *       int flags
+   *     );
+   *
+   * See https://sqlite.org/session/sqlite3changeset_apply.html
+   */
+  sqlite3changeset_apply_v3: (
+    db: DbPtr,
+    nChangeset: number,
+    pChangeset: WasmPointer,
+    xFilter: ((pCtx: WasmPointer, pIter: WasmPointer) => number) | WasmPointer,
     xConflict:
       | ((
           pCtx: WasmPointer,
@@ -7564,6 +7707,48 @@ export type CAPI = {
       | WasmPointer,
     pIn: WasmPointer,
     xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
+    xConflict:
+      | ((
+          pCtx: WasmPointer,
+          eConflict:
+            | CAPI['SQLITE_CHANGESET_DATA']
+            | CAPI['SQLITE_CHANGESET_NOTFOUND']
+            | CAPI['SQLITE_CHANGESET_CONFLICT']
+            | CAPI['SQLITE_CHANGESET_FOREIGN_KEY']
+            | CAPI['SQLITE_CHANGESET_CONSTRAINT'],
+        ) => number)
+      | WasmPointer,
+    pCtx: WasmPointer,
+    ppRebase: WasmPointer,
+    pnRebase: WasmPointer,
+    flags: number,
+  ) => Sqlite3Result;
+
+  /**
+   * Streaming version of `sqlite3changeset_apply_v3()`.
+   *
+   * C Signature:
+   *
+   *     int sqlite3changeset_apply_v3_strm(
+   *       sqlite3 *db,
+   *       int (*xInput)(void *pIn, void *pData, int *pnData),
+   *       void *pIn,
+   *       int(*xFilter)(void *pCtx, sqlite3_changeset_iter *p),
+   *       int (*xConflict)(void *pCtx, int eConflict, sqlite3_changeset_iter *p),
+   *       void *pCtx,
+   *       void **ppRebase, int *pnRebase,
+   *       int flags
+   *     );
+   *
+   * See https://sqlite.org/session/sqlite3changeset_apply.html
+   */
+  sqlite3changeset_apply_v3_strm: (
+    db: DbPtr,
+    xInput:
+      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
+      | WasmPointer,
+    pIn: WasmPointer,
+    xFilter: ((pCtx: WasmPointer, pIter: WasmPointer) => number) | WasmPointer,
     xConflict:
       | ((
           pCtx: WasmPointer,
