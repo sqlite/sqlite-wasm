@@ -1597,7 +1597,9 @@ interface Worker1InputEnvelope<
   Args = any,
 > extends Worker1MessageBusEnvelope {
   type: T;
-  args: Args;
+  args?: Args;
+  /** Timestamp set by the promiser before posting a message. */
+  departureTime?: number;
 }
 
 /** Worker API #1 output message envelope. */
@@ -1608,6 +1610,30 @@ interface Worker1OutputEnvelope<
   type: T;
   result: Result;
 }
+
+/**
+ * Worker API #1 per-row callback payload for promiser `exec()` callback
+ * functions.
+ */
+interface Worker1ExecRowMessage {
+  /** Internally synthesized callback message type. */
+  type: `${string}:row`;
+  /** Current row value in the shape implied by `rowMode`. */
+  row?: SqlValue[] | Record<string, SqlValue> | SqlValue;
+  /** 1-based row number, or null as end-of-result-set sentinel. */
+  rowNumber: number | null;
+  /** Column names populated when requested by options. */
+  columnNames?: string[];
+}
+
+/** Worker API #1 exec options accepted by the promiser wrapper. */
+type Worker1ExecArgs = Omit<ExecOptions, 'callback'> & {
+  /**
+   * Promiser-specific callback mode. String callback IDs are not accepted by
+   * the promiser wrapper.
+   */
+  callback?: (row: Worker1ExecRowMessage) => void;
+};
 
 /** Worker API #1 error response result. */
 interface Worker1ErrorResult {
@@ -1698,7 +1724,7 @@ interface Worker1ConfigGetResult {
 interface Worker1ArgsMap {
   open: Worker1OpenArgs;
   close: Worker1CloseArgs | undefined;
-  exec: ExecOptions | string;
+  exec: Worker1ExecArgs | string;
   export: undefined;
   'config-get': undefined;
 }
@@ -1738,7 +1764,7 @@ interface Worker1PromiserConfig {
   worker?: Worker | (() => Worker);
 
   /** Callback called when the worker is ready. */
-  onready?: (promiser: Worker1Promiser) => void;
+  onready?: (promiser: Worker1Promiser) => void | Promise<void>;
 
   /** Callback for unhandled worker messages. */
   onunhandled?: (event: MessageEvent) => void;
