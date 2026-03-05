@@ -1558,7 +1558,7 @@ export type SAHPoolUtil = {
 /** Exception class for reporting WASM-side allocation errors. */
 export class WasmAllocError extends Error {
   constructor(message: string);
-  toss: any;
+  toss: (...args: unknown[]) => never;
 }
 
 /** Exception class used primarily by the oo1 API. */
@@ -1581,7 +1581,7 @@ interface Worker1MessageBusEnvelope {
    * Optional arbitrary value. The worker will copy it as-is into response
    * messages to assist in client-side dispatching.
    */
-  messageId?: any;
+  messageId?: unknown;
 
   /**
    * A db identifier string (returned by 'open') which tells the operation which
@@ -1594,7 +1594,7 @@ interface Worker1MessageBusEnvelope {
 /** Worker API #1 input message envelope. */
 interface Worker1InputEnvelope<
   T extends string,
-  Args = any,
+  Args = unknown,
 > extends Worker1MessageBusEnvelope {
   type: T;
   args?: Args;
@@ -1605,7 +1605,7 @@ interface Worker1InputEnvelope<
 /** Worker API #1 output message envelope. */
 interface Worker1OutputEnvelope<
   T extends string,
-  Result = any,
+  Result = unknown,
 > extends Worker1MessageBusEnvelope {
   type: T;
   result: Result;
@@ -1644,7 +1644,7 @@ interface Worker1ErrorResult {
   /** The ErrorClass.name property from the thrown exception. */
   errorClass: string;
   /** The message object which triggered the error. */
-  input: any;
+  input: Worker1InputEnvelope<string, unknown>;
   /** If available, a stack trace array. */
   stack?: string[];
 }
@@ -1770,13 +1770,13 @@ interface Worker1PromiserConfig {
   onunhandled?: (event: MessageEvent) => void;
 
   /** Optional function to generate unique message IDs. */
-  generateMessageId?: (msg: any) => string;
+  generateMessageId?: (msg: Worker1InputEnvelope<string, unknown>) => string;
 
   /** Optional debug logging function. */
-  debug?: (...args: any[]) => void;
+  debug?: (...args: unknown[]) => void;
 
   /** Optional error logging function (undocumented). */
-  onerror?: (...args: any[]) => void;
+  onerror?: (...args: unknown[]) => void;
 }
 
 /** Factory for creating Worker1Promiser instances. */
