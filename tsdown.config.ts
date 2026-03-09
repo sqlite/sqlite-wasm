@@ -13,7 +13,9 @@ const tsdownConfig: UserConfig[] = [
     format: ['esm'],
     minify: 'dce-only',
     outputOptions: {
-      legalComments: 'inline',
+      comments: {
+        legal: true,
+      },
     },
     onSuccess: () => {
       copyFileSync('./src/bin/sqlite3.wasm', './dist/sqlite3.wasm');
@@ -29,7 +31,9 @@ const tsdownConfig: UserConfig[] = [
     format: ['iife'],
     minify: 'dce-only',
     outputOptions: {
-      legalComments: 'inline',
+      comments: {
+        legal: true,
+      },
     },
     onSuccess: () => {
       copyFileSync(
