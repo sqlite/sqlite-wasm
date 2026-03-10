@@ -57,7 +57,7 @@
     "fix": "npx prettier . --write",
     "prepare": "lefthook install",
     "prepublishOnly": "npm run build && npm run fix && npm run publint && npm run check-types",
-    "deploy": "npm run prepublishOnly && git add . && git commit -am 'New release' && git push && npm publish"
+    "deploy": "npm run prepublishOnly && git add . && git commit -am 'New release' && git push && npm publish --tag latest"
   },
   "engines": {
     "node": ">=22"
