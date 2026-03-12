@@ -1,3 +1,1 @@
-import { default as sqlite3InitModule } from './bin/sqlite3-node.mjs';
-
-export default sqlite3InitModule;
+export default './bin/sqlite3-node.mjs';
