@@ -1,1 +1,1 @@
-export default './bin/sqlite3-node.mjs';
+export { default } from './bin/sqlite3-node.mjs';
