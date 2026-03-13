@@ -1558,12 +1558,14 @@ export type SAHPoolUtil = {
 /** Exception class for reporting WASM-side allocation errors. */
 export class WasmAllocError extends Error {
   constructor(message: string);
+
   toss: (...args: unknown[]) => never;
 }
 
 /** Exception class used primarily by the oo1 API. */
 export class SQLite3Error extends Error {
   constructor(message: string);
+
   resultCode: number;
 }
 
@@ -2022,6 +2024,7 @@ export class sqlite3_vfs extends SQLiteStruct {
   pAppData: WasmPointer;
 
   constructor(pointer?: WasmPointer);
+
   xOpen: (
     vfsPtr: WasmPointer,
     zName: WasmPointer,
@@ -2083,6 +2086,7 @@ export class sqlite3_io_methods extends SQLiteStruct {
   iVersion: number;
 
   constructor(pointer?: WasmPointer);
+
   xClose: (file: WasmPointer) => Sqlite3Result;
   xRead: (
     file: WasmPointer,
@@ -2174,6 +2178,7 @@ export class sqlite3_module extends SQLiteStruct {
   iVersion: number;
 
   constructor(pointer?: WasmPointer);
+
   xCreate: (
     db: WasmPointer,
     pAux: WasmPointer,
@@ -3791,6 +3796,37 @@ export type CAPI = {
   sqlite3_libversion: () => string;
 
   /**
+   * Calls the given _synchronous_ callback function. If that function returns
+   * sqlite3.capi.SQLITE_BUSY _or_ throws an SQLite3Error which a resultCode
+   * property of that value then it will suppress that error and try again, up
+   * to the given maximum number of times. If the callback returns any other
+   * value than that, it is returned. If the maximum number of retries has been
+   * reached, an SQLite3Error with a resultCode value of
+   * sqlite3.capi.SQLITE_BUSY is thrown. If the callback throws any exception
+   * other than the aforementioned BUSY exception, it is propagated. If it
+   * throws a BUSY exception on its final attempt, that is propagated as well.
+   *
+   * If the beforeRetry argument is given, it must be a _synchronous_ function.
+   * It is called immediately before each retry of the callback (not for the
+   * initial call), passed the attempt number (so it starts with 2, not 1). If
+   * it throws, the exception is handled as described above. Its result value is
+   * ignored.
+   *
+   * To effectively retry "forever", pass a negative maxTimes value, with the
+   * caveat that there is no recovery from that if the code gets stuck in a
+   * deadlock situation.
+   *
+   * @param maxTimes Max retries (-1 for infinite).
+   * @param callback Function to retry.
+   * @param beforeRetry Optional function to call before each retry.
+   */
+  sqlite3_js_retry_busy: <T>(
+    maxTimes: number,
+    callback: () => T,
+    beforeRetry?: (retryCount: number) => void,
+  ) => T;
+
+  /**
    * Returns a string constant whose value is the same as the `SQLITE_SOURCE_ID`
    * C preprocessor macro. Except if SQLite is built using an edited copy of the
    * amalgamation, then the last four characters of the hash might be different
@@ -4913,6 +4949,21 @@ export type CAPI = {
    * See https://www.sqlite.org/c3ref/bind_parameter_name.html
    */
   sqlite3_bind_parameter_name: (stmt: StmtPtr, N: number) => string | null;
+  /**
+   * The sqlite3_bind_zeroblob() routine binds a BLOB of length N that is filled
+   * with zeroes.
+   *
+   * @param stmt Statement to bind to.
+   * @param index 1-based index of the parameter to bind.
+   * @param N Number of zeroes to bind.
+   * @returns SQLITE_OK on success, or an error code.
+   * @see https://sqlite.org/c3ref/bind_blob.html
+   */
+  sqlite3_bind_zeroblob: (
+    stmt: StmtPtr,
+    index: number,
+    N: number,
+  ) => Sqlite3Result;
 
   /**
    * Use this routine to reset all host parameters to NULL.
@@ -8465,7 +8516,8 @@ export type CAPI = {
   SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE: 1020;
   SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE: 1021;
   SQLITE_DBCONFIG_ENABLE_COMMENTS: 1022;
-  SQLITE_DBCONFIG_MAX: 1022;
+  SQLITE_DBCONFIG_FP_DIGITS: 1023;
+  SQLITE_DBCONFIG_MAX: 1023;
   SQLITE_DBSTATUS_LOOKASIDE_USED: 0;
   SQLITE_DBSTATUS_CACHE_USED: 1;
   SQLITE_DBSTATUS_SCHEMA_USED: 2;
@@ -8569,6 +8621,8 @@ export type CAPI = {
   SQLITE_MAX_VARIABLE_NUMBER: 32_766;
   SQLITE_LIMIT_TRIGGER_DEPTH: 10;
   SQLITE_MAX_TRIGGER_DEPTH: 1000;
+  SQLITE_LIMIT_PARSER_DEPTH: 14;
+  SQLITE_MAX_PARSER_DEPTH: 1000;
   SQLITE_LIMIT_WORKER_THREADS: 11;
   SQLITE_MAX_WORKER_THREADS: 0;
   SQLITE_OPEN_READONLY: 1;
@@ -8595,6 +8649,7 @@ export type CAPI = {
   SQLITE_PREPARE_PERSISTENT: 1;
   SQLITE_PREPARE_NORMALIZE: 2;
   SQLITE_PREPARE_NO_VTAB: 4;
+  SQLITE_PREPARE_FROM_DDL: 16;
   SQLITE_OK: 0;
   SQLITE_ERROR: 1;
   SQLITE_INTERNAL: 2;
