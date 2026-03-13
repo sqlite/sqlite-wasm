@@ -1,11 +1,27 @@
 {
   "compilerOptions": {
-    "target": "es2023",
+    "outDir": "dist",
+    "target": "ES2023",
+    "lib": ["ESNext", "DOM"],
+    "types": ["vitest", "node"],
+    "allowJs": false,
+    "declaration": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "isolatedDeclarations": true,
+    "strictPropertyInitialization": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "moduleResolution": "nodenext",
     "noEmit": true,
     "strict": true,
     "skipLibCheck": true,
-    "moduleResolution": "nodenext",
     "module": "NodeNext"
   },
-  "include": ["tsdown.config.ts"]
+  "include": ["tsdown.config.ts", "src"]
 }

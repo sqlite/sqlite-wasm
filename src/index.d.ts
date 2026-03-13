@@ -1573,7 +1573,7 @@ export type WasmPointer = number;
 export type NullPointer = 0 | null | undefined;
 
 /** Common envelope for all Worker API #1 messages. */
-interface Worker1MessageBusEnvelope {
+type Worker1MessageBusEnvelope = {
   /** One of: 'open', 'close', 'exec', 'export', 'config-get' */
   type: string;
 
@@ -1589,33 +1589,33 @@ interface Worker1MessageBusEnvelope {
    * used.
    */
   dbId?: string;
-}
+};
 
 /** Worker API #1 input message envelope. */
-interface Worker1InputEnvelope<
+type Worker1InputEnvelope<
   T extends string,
   Args = unknown,
-> extends Worker1MessageBusEnvelope {
+> = Worker1MessageBusEnvelope & {
   type: T;
   args?: Args;
   /** Timestamp set by the promiser before posting a message. */
   departureTime?: number;
-}
+};
 
 /** Worker API #1 output message envelope. */
-interface Worker1OutputEnvelope<
+type Worker1OutputEnvelope<
   T extends string,
   Result = unknown,
-> extends Worker1MessageBusEnvelope {
+> = Worker1MessageBusEnvelope & {
   type: T;
   result: Result;
-}
+};
 
 /**
  * Worker API #1 per-row callback payload for promiser `exec()` callback
  * functions.
  */
-interface Worker1ExecRowMessage {
+type Worker1ExecRowMessage = {
   /** Internally synthesized callback message type. */
   type: `${string}:row`;
   /** Current row value in the shape implied by `rowMode`. */
@@ -1624,7 +1624,7 @@ interface Worker1ExecRowMessage {
   rowNumber: number | null;
   /** Column names populated when requested by options. */
   columnNames?: string[];
-}
+};
 
 /** Worker API #1 exec options accepted by the promiser wrapper. */
 type Worker1ExecArgs = Omit<ExecOptions, 'callback'> & {
@@ -1635,36 +1635,16 @@ type Worker1ExecArgs = Omit<ExecOptions, 'callback'> & {
   callback?: (row: Worker1ExecRowMessage) => void;
 };
 
-/** Worker API #1 error response result. */
-interface Worker1ErrorResult {
-  /** Type of the triggering operation: 'open', 'close', ... */
-  operation: string;
-  /** Error message text */
-  message: string;
-  /** The ErrorClass.name property from the thrown exception. */
-  errorClass: string;
-  /** The message object which triggered the error. */
-  input: Worker1InputEnvelope<string, unknown>;
-  /** If available, a stack trace array. */
-  stack?: string[];
-}
-
-/** Worker API #1 error response envelope. */
-interface Worker1ErrorEnvelope extends Worker1MessageBusEnvelope {
-  type: 'error';
-  result: Worker1ErrorResult;
-}
-
 /** Worker API #1 'open' arguments. */
-interface Worker1OpenArgs {
+type Worker1OpenArgs = {
   /** The db filename. */
   filename?: string;
   /** Sqlite3_vfs name. */
   vfs?: string;
-}
+};
 
 /** Worker API #1 'open' result. */
-interface Worker1OpenResult {
+type Worker1OpenResult = {
   /** Db filename, possibly differing from the input. */
   filename: string;
   /** Opaque ID value for the opened db. */
@@ -1673,40 +1653,40 @@ interface Worker1OpenResult {
   persistent: boolean;
   /** Name of the VFS the "main" db is using. */
   vfs: string;
-}
+};
 
 /** Worker API #1 'close' arguments. */
-interface Worker1CloseArgs {
+type Worker1CloseArgs = {
   /** If truthy, the database will be unlinked (deleted) after closing it. */
   unlink?: boolean;
-}
+};
 
 /** Worker API #1 'close' result. */
-interface Worker1CloseResult {
+type Worker1CloseResult = {
   /** Filename of closed db, or undefined if no db was closed. */
   filename?: string;
-}
+};
 
 /** Worker API #1 'exec' result. */
-interface Worker1ExecResult extends ExecOptions {
+type Worker1ExecResult = ExecOptions & {
   /** Number of changes made by the SQL. (v3.43+) */
   changeCount?: number | bigint;
   /** Result of sqlite3_last_insert_rowid(). (v3.50.0+) */
   lastInsertRowId?: bigint;
-}
+};
 
 /** Worker API #1 'export' result. */
-interface Worker1ExportResult {
+type Worker1ExportResult = {
   /** The exported database as a byte array. */
   byteArray: Uint8Array;
   /** The db filename. */
   filename: string;
   /** "application/x-sqlite3" */
   mimetype: string;
-}
+};
 
 /** Worker API #1 'config-get' result. */
-interface Worker1ConfigGetResult {
+type Worker1ConfigGetResult = {
   /** Sqlite3.version object */
   version: {
     libVersion: string;
@@ -1718,35 +1698,53 @@ interface Worker1ConfigGetResult {
   bigIntEnabled: boolean;
   /** Result of sqlite3.capi.sqlite3_js_vfs_list() */
   vfsList: string[];
-}
+};
 
 /** Map of Worker API #1 operation types to their argument types. */
-interface Worker1ArgsMap {
+type Worker1ArgsMap = {
   open: Worker1OpenArgs;
   close: Worker1CloseArgs | undefined;
   exec: Worker1ExecArgs | string;
   export: undefined;
-  'config-get': undefined;
-}
+  'config-get': undefined | Record<string, never>;
+};
+
+type Worker1OptionalArgsOp = {
+  [K in keyof Worker1ArgsMap]: undefined extends Worker1ArgsMap[K] ? K : never;
+}[keyof Worker1ArgsMap];
+
+type Worker1RequiredArgsOp = Exclude<
+  keyof Worker1ArgsMap,
+  Worker1OptionalArgsOp
+>;
 
 /** Map of Worker API #1 operation types to their result types. */
-interface Worker1ResultMap {
+type Worker1ResultMap = {
   open: Worker1OpenResult;
   close: Worker1CloseResult;
   exec: Worker1ExecResult;
   export: Worker1ExportResult;
   'config-get': Worker1ConfigGetResult;
-}
+};
 
 /** Function type returned by Worker1PromiserFactory. */
-interface Worker1Promiser {
+export type Worker1Promiser = {
   /**
    * Sends a message to the worker and returns a Promise which resolves to the
    * response message.
    */
-  <T extends keyof Worker1ArgsMap>(
+  <T extends Worker1RequiredArgsOp>(
     type: T,
     args: Worker1ArgsMap[T],
+  ): Promise<Worker1OutputEnvelope<T, Worker1ResultMap[T]>>;
+
+  /**
+   * Sends a message to the worker and returns a Promise which resolves to the
+   * response message.
+   */
+  <T extends Worker1OptionalArgsOp>(
+    type: T,
+    args?: Worker1ArgsMap[T],
   ): Promise<Worker1OutputEnvelope<T, Worker1ResultMap[T]>>;
 
   /**
@@ -1756,10 +1754,10 @@ interface Worker1Promiser {
   <T extends keyof Worker1ArgsMap>(
     msg: Worker1InputEnvelope<T, Worker1ArgsMap[T]>,
   ): Promise<Worker1OutputEnvelope<T, Worker1ResultMap[T]>>;
-}
+};
 
 /** Configuration for Worker1PromiserFactory. */
-interface Worker1PromiserConfig {
+type Worker1PromiserConfig = {
   /** A Worker instance or a function which returns one. */
   worker?: Worker | (() => Worker);
 
@@ -1777,10 +1775,10 @@ interface Worker1PromiserConfig {
 
   /** Optional error logging function (undocumented). */
   onerror?: (...args: unknown[]) => void;
-}
+};
 
 /** Factory for creating Worker1Promiser instances. */
-interface Worker1PromiserFactory {
+type Worker1PromiserFactory = {
   /** Creates a Worker1Promiser. */
   (config?: Worker1PromiserConfig): Worker1Promiser;
 
@@ -1796,7 +1794,7 @@ interface Worker1PromiserFactory {
     (onready: (promiser: Worker1Promiser) => void): Promise<Worker1Promiser>;
     defaultConfig: Worker1PromiserConfig;
   };
-}
+};
 
 export type StructPtrMapper<T> = {
   StructType: T;
@@ -2635,6 +2633,8 @@ export type Sqlite3Static = {
  * https://github.com/sqlite/sqlite-wasm/pull/129 for details.
  */
 export default function init(): Promise<Sqlite3Static>;
+
+export const sqlite3Worker1Promiser: Worker1PromiserFactory;
 
 export type ListLike<T> = {
   length: number;
