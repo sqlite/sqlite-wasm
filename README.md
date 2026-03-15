@@ -49,8 +49,11 @@ storage back-end.
 >
 > `Cross-Origin-Embedder-Policy: require-corp`
 
-```js
-import { sqlite3Worker1Promiser } from '@sqlite.org/sqlite-wasm';
+```ts
+import {
+  sqlite3Worker1Promiser,
+  type Worker1Promiser,
+} from '@sqlite.org/sqlite-wasm';
 
 const log = console.log;
 const error = console.error;
@@ -59,15 +62,15 @@ const initializeSQLite = async () => {
   try {
     log('Loading and initializing SQLite3 module...');
 
-    const promiser = await new Promise((resolve) => {
-      const _promiser = sqlite3Worker1Promiser({
-        onready: () => resolve(_promiser),
+    const promiser = await new Promise<Worker1Promiser>((resolve) => {
+      sqlite3Worker1Promiser({
+        onready: resolve,
       });
     });
 
     log('Done initializing. Running demo...');
 
-    const configResponse = await promiser('config-get', {});
+    const configResponse = await promiser('config-get');
     log('Running SQLite3 version', configResponse.result.version.libVersion);
 
     const openResponse = await promiser('open', {
@@ -87,8 +90,12 @@ const initializeSQLite = async () => {
   }
 };
 
-initializeSQLite();
+await initializeSQLite();
 ```
+
+For `config-get`, `promiser('config-get')` is the preferred form. For backward
+compatibility, `promiser('config-get', undefined)` and
+`promiser('config-get', {})` are also supported.
 
 The `promiser` object above implements the
 [Worker1 API](https://sqlite.org/wasm/doc/trunk/api-worker1.md#worker1-methods).
