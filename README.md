@@ -70,7 +70,7 @@ const initializeSQLite = async () => {
 
     log('Done initializing. Running demo...');
 
-    const configResponse = await promiser('config-get');
+    const configResponse = await promiser('config-get', {});
     log('Running SQLite3 version', configResponse.result.version.libVersion);
 
     const openResponse = await promiser('open', {
@@ -92,10 +92,6 @@ const initializeSQLite = async () => {
 
 await initializeSQLite();
 ```
-
-For `config-get`, `promiser('config-get')` is the preferred form. For backward
-compatibility, `promiser('config-get', undefined)` and
-`promiser('config-get', {})` are also supported.
 
 The `promiser` object above implements the
 [Worker1 API](https://sqlite.org/wasm/doc/trunk/api-worker1.md#worker1-methods).
