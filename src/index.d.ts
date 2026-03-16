@@ -1703,20 +1703,11 @@ type Worker1ConfigGetResult = {
 /** Map of Worker API #1 operation types to their argument types. */
 type Worker1ArgsMap = {
   open: Worker1OpenArgs;
-  close: Worker1CloseArgs | undefined;
+  close: Worker1CloseArgs;
   exec: Worker1ExecArgs | string;
-  export: undefined;
-  'config-get': undefined | Record<string, never>;
+  export: Record<string, never>;
+  'config-get': Record<string, never>;
 };
-
-type Worker1OptionalArgsOp = {
-  [K in keyof Worker1ArgsMap]: undefined extends Worker1ArgsMap[K] ? K : never;
-}[keyof Worker1ArgsMap];
-
-type Worker1RequiredArgsOp = Exclude<
-  keyof Worker1ArgsMap,
-  Worker1OptionalArgsOp
->;
 
 /** Map of Worker API #1 operation types to their result types. */
 type Worker1ResultMap = {
@@ -1733,18 +1724,9 @@ export type Worker1Promiser = {
    * Sends a message to the worker and returns a Promise which resolves to the
    * response message.
    */
-  <T extends Worker1RequiredArgsOp>(
+  <T extends keyof Worker1ArgsMap>(
     type: T,
     args: Worker1ArgsMap[T],
-  ): Promise<Worker1OutputEnvelope<T, Worker1ResultMap[T]>>;
-
-  /**
-   * Sends a message to the worker and returns a Promise which resolves to the
-   * response message.
-   */
-  <T extends Worker1OptionalArgsOp>(
-    type: T,
-    args?: Worker1ArgsMap[T],
   ): Promise<Worker1OutputEnvelope<T, Worker1ResultMap[T]>>;
 
   /**
