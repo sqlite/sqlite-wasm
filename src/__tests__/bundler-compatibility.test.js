@@ -45,8 +45,9 @@ describe('Vite bundler compatibility', () => {
     expect(bundleContent).toContain(wasmFile);
 
     // Specifically check that it's part of a new URL call or at least correctly referenced
+    // The exact format can vary based on the bundler's minification/transformations
     const urlPattern = new RegExp(
-      `new URL\\(".*${wasmFile}",\\s*import\\.meta\\.url\\)`,
+      `new URL\\(["'\`][^"'\`]*${wasmFile}["'\`],\\s*(?:["'\`]{2}\\+)?import\\.meta\\.url\\)`,
     );
     expect(bundleContent).toMatch(urlPattern);
   });
