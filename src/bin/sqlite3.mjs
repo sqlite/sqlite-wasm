@@ -27,11 +27,11 @@
 /* @preserve
 ** This code was built from sqlite3 version...
 **
-** SQLITE_VERSION "3.52.0"
-** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-30 06:37:34 407724c4e80efdf93d885e95b5209a100a3f470fe0298138be57201f65f9817e"
+** SQLITE_VERSION "3.53.0"
+** SQLITE_VERSION_NUMBER 3053000
+** SQLITE_SOURCE_ID "2026-04-09 11:41:38 4525003a53a7fc63ca75c59b22c79608659ca12f0131f52c18637f829977f20b"
 **
-** Emscripten SDK: 5.0.0
+** Emscripten SDK: 5.0.5
 */
 // This code implements the `-sMODULARIZE` settings by taking the generated
 // JS program code (INNER_JS_CODE) and wrapping it in a factory function.
@@ -92,7 +92,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 /**
    This file was preprocessed using:
 
-   ./c-pp-lite -o ./bld/pre-js.esm.js -Dtarget:es6-module -DModule.instantiateWasm api/pre-js.c-pp.js
+   ./c-pp -o ./bld/pre-js.esm.js -Dtarget:es6-module -DModule.instantiateWasm api/pre-js.c-pp.js
 */
 (function(Module){
   const sIMS =
@@ -302,37 +302,17 @@ var isFileURI = (filename) => filename.startsWith('file://');
 // include: runtime_stack_check.js
 // end include: runtime_stack_check.js
 // include: runtime_exceptions.js
+// Base Emscripten EH error class
+class EmscriptenEH {}
+
+class EmscriptenSjLj extends EmscriptenEH {}
+
 // end include: runtime_exceptions.js
 // include: runtime_debug.js
 // end include: runtime_debug.js
 var readyPromiseResolve, readyPromiseReject;
 
 // Memory management
-var
-/** @type {!Int8Array} */
-  HEAP8,
-/** @type {!Uint8Array} */
-  HEAPU8,
-/** @type {!Int16Array} */
-  HEAP16,
-/** @type {!Uint16Array} */
-  HEAPU16,
-/** @type {!Int32Array} */
-  HEAP32,
-/** @type {!Uint32Array} */
-  HEAPU32,
-/** @type {!Float32Array} */
-  HEAPF32,
-/** @type {!Float64Array} */
-  HEAPF64;
-
-// BigInt64Array type is not correctly defined in closure
-var
-/** not-@type {!BigInt64Array} */
-  HEAP64,
-/* BigUint64Array type is not correctly defined in closure
-/** not-@type {!BigUint64Array} */
-  HEAPU64;
 
 var runtimeInitialized = false;
 
@@ -430,11 +410,14 @@ function postRun() {
   // End ATPOSTRUNS hooks
 }
 
-/** @param {string|number=} what */
+/**
+ * @param {string|number=} what
+ * @noreturn
+ */
 function abort(what) {
   Module['onAbort']?.(what);
 
-  what = 'Aborted(' + what + ')';
+  what = `Aborted(${what})`;
   // TODO(sbc): Should we remove printing and leave it up to whoever
   // catches the exception?
   err(what);
@@ -605,6 +588,36 @@ async function createWasm() {
       }
     }
 
+  /** @type {!Int16Array} */
+  var HEAP16;
+
+  /** @type {!Int32Array} */
+  var HEAP32;
+
+  /** not-@type {!BigInt64Array} */
+  var HEAP64;
+
+  /** @type {!Int8Array} */
+  var HEAP8;
+
+  /** @type {!Float32Array} */
+  var HEAPF32;
+
+  /** @type {!Float64Array} */
+  var HEAPF64;
+
+  /** @type {!Uint16Array} */
+  var HEAPU16;
+
+  /** @type {!Uint32Array} */
+  var HEAPU32;
+
+  /** not-@type {!BigUint64Array} */
+  var HEAPU64;
+
+  /** @type {!Uint8Array} */
+  var HEAPU8;
+
   var callRuntimeCallbacks = (callbacks) => {
       while (callbacks.length > 0) {
         // Pass the module as the first argument.
@@ -730,12 +743,9 @@ join2:(l, r) => PATH.normalize(l + '/' + r),
 
 var initRandomFill = () => {
 
-    return (view) => crypto.getRandomValues(view);
+    return (view) => (crypto.getRandomValues(view), 0);
   };
-var randomFill = (view) => {
-    // Lazily init on the first invocation.
-    (randomFill = initRandomFill())(view);
-  };
+var randomFill = (view) => (randomFill = initRandomFill())(view);
 
 
 
@@ -1131,11 +1141,14 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
         } else if (FS.isFile(node.mode)) {
           node.node_ops = MEMFS.ops_table.file.node;
           node.stream_ops = MEMFS.ops_table.file.stream;
-          node.usedBytes = 0; // The actual number of bytes used in the typed array, as opposed to contents.length which gives the whole capacity.
-          // When the byte data of the file is populated, this will point to either a typed array, or a normal JS array. Typed arrays are preferred
-          // for performance, and used by default. However, typed arrays are not resizable like normal JS arrays are, so there is a small disk size
-          // penalty involved for appending file writes that continuously grow a file similar to std::vector capacity vs used -scheme.
-          node.contents = null; 
+          // The actual number of bytes used in the typed array, as opposed to
+          // contents.length which gives the whole capacity.
+          node.usedBytes = 0;
+          // The byte data of the file is stored in a typed array.
+          // Note: typed arrays are not resizable like normal JS arrays are, so
+          // there is a small penalty involved for appending file writes that
+          // continuously grow a file similar to std::vector capacity vs used.
+          node.contents = MEMFS.emptyFileContents ??= new Uint8Array(0);
         } else if (FS.isLink(node.mode)) {
           node.node_ops = MEMFS.ops_table.link.node;
           node.stream_ops = MEMFS.ops_table.link.stream;
@@ -1152,36 +1165,29 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
         return node;
       },
   getFileDataAsTypedArray(node) {
-        if (!node.contents) return new Uint8Array(0);
-        if (node.contents.subarray) return node.contents.subarray(0, node.usedBytes); // Make sure to not return excess unused bytes.
-        return new Uint8Array(node.contents);
+        return node.contents.subarray(0, node.usedBytes); // Make sure to not return excess unused bytes.
       },
   expandFileStorage(node, newCapacity) {
-        var prevCapacity = node.contents ? node.contents.length : 0;
+        var prevCapacity = node.contents.length;
         if (prevCapacity >= newCapacity) return; // No need to expand, the storage was already large enough.
-        // Don't expand strictly to the given requested limit if it's only a very small increase, but instead geometrically grow capacity.
-        // For small filesizes (<1MB), perform size*2 geometric increase, but for large sizes, do a much more conservative size*1.125 increase to
-        // avoid overshooting the allocation cap by a very large margin.
+        // Don't expand strictly to the given requested limit if it's only a very
+        // small increase, but instead geometrically grow capacity.
+        // For small filesizes (<1MB), perform size*2 geometric increase, but for
+        // large sizes, do a much more conservative size*1.125 increase to avoid
+        // overshooting the allocation cap by a very large margin.
         var CAPACITY_DOUBLING_MAX = 1024 * 1024;
         newCapacity = Math.max(newCapacity, (prevCapacity * (prevCapacity < CAPACITY_DOUBLING_MAX ? 2.0 : 1.125)) >>> 0);
-        if (prevCapacity != 0) newCapacity = Math.max(newCapacity, 256); // At minimum allocate 256b for each file when expanding.
-        var oldContents = node.contents;
+        if (prevCapacity) newCapacity = Math.max(newCapacity, 256); // At minimum allocate 256b for each file when expanding.
+        var oldContents = MEMFS.getFileDataAsTypedArray(node);
         node.contents = new Uint8Array(newCapacity); // Allocate new storage.
-        if (node.usedBytes > 0) node.contents.set(oldContents.subarray(0, node.usedBytes), 0); // Copy old data over to the new storage.
+        node.contents.set(oldContents);
       },
   resizeFileStorage(node, newSize) {
         if (node.usedBytes == newSize) return;
-        if (newSize == 0) {
-          node.contents = null; // Fully decommit when requesting a resize to zero.
-          node.usedBytes = 0;
-        } else {
-          var oldContents = node.contents;
-          node.contents = new Uint8Array(newSize); // Allocate new storage.
-          if (oldContents) {
-            node.contents.set(oldContents.subarray(0, Math.min(newSize, node.usedBytes))); // Copy old data over to the new storage.
-          }
-          node.usedBytes = newSize;
-        }
+        var oldContents = node.contents;
+        node.contents = new Uint8Array(newSize); // Allocate new storage.
+        node.contents.set(oldContents.subarray(0, Math.min(newSize, node.usedBytes))); // Copy old data over to the new storage.
+        node.usedBytes = newSize;
       },
   node_ops:{
   getattr(node) {
@@ -1287,11 +1293,7 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
           var contents = stream.node.contents;
           if (position >= stream.node.usedBytes) return 0;
           var size = Math.min(stream.node.usedBytes - position, length);
-          if (size > 8 && contents.subarray) { // non-trivial, and typed array
-            buffer.set(contents.subarray(position, position + size), offset);
-          } else {
-            for (var i = 0; i < size; i++) buffer[offset + i] = contents[position + i];
-          }
+          buffer.set(contents.subarray(position, position + size), offset);
           return size;
         },
   write(stream, buffer, offset, length, position, canOwn) {
@@ -1307,32 +1309,18 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
           var node = stream.node;
           node.mtime = node.ctime = Date.now();
   
-          if (buffer.subarray && (!node.contents || node.contents.subarray)) { // This write is from a typed array to a typed array?
-            if (canOwn) {
-              node.contents = buffer.subarray(offset, offset + length);
-              node.usedBytes = length;
-              return length;
-            } else if (node.usedBytes === 0 && position === 0) { // If this is a simple first write to an empty file, do a fast set since we don't need to care about old data.
-              node.contents = buffer.slice(offset, offset + length);
-              node.usedBytes = length;
-              return length;
-            } else if (position + length <= node.usedBytes) { // Writing to an already allocated and used subrange of the file?
-              node.contents.set(buffer.subarray(offset, offset + length), position);
-              return length;
-            }
-          }
-  
-          // Appending to an existing file and we need to reallocate, or source data did not come as a typed array.
-          MEMFS.expandFileStorage(node, position+length);
-          if (node.contents.subarray && buffer.subarray) {
+          if (canOwn) {
+            node.contents = buffer.subarray(offset, offset + length);
+            node.usedBytes = length;
+          } else if (node.usedBytes === 0 && position === 0) { // If this is a simple first write to an empty file, do a fast set since we don't need to care about old data.
+            node.contents = buffer.slice(offset, offset + length);
+            node.usedBytes = length;
+          } else {
+            MEMFS.expandFileStorage(node, position+length);
             // Use typed array write which is available.
             node.contents.set(buffer.subarray(offset, offset + length), position);
-          } else {
-            for (var i = 0; i < length; i++) {
-             node.contents[position + i] = buffer[offset + i]; // Or fall back to manual write if not.
-            }
+            node.usedBytes = Math.max(node.usedBytes, position + length);
           }
-          node.usedBytes = Math.max(node.usedBytes, position + length);
           return length;
         },
   llseek(stream, offset, whence) {
@@ -1357,7 +1345,7 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
           var allocated;
           var contents = stream.node.contents;
           // Only make a new copy when MAP_PRIVATE is specified.
-          if (!(flags & 2) && contents && contents.buffer === HEAP8.buffer) {
+          if (!(flags & 2) && contents.buffer === HEAP8.buffer) {
             // We can't emulate MAP_SHARED when the file is not backed by the
             // buffer we're mapping to (e.g. the HEAP buffer).
             allocated = false;
@@ -1391,6 +1379,7 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
   };
   
   var FS_modeStringToFlags = (str) => {
+      if (typeof str != 'string') return str;
       var flagModes = {
         'r': 0,
         'r+': 2,
@@ -1404,6 +1393,16 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
         throw new Error(`Unknown file open mode: ${str}`);
       }
       return flags;
+    };
+  
+  var FS_fileDataToTypedArray = (data) => {
+      if (typeof data == 'string') {
+        data = intArrayFromString(data, true);
+      }
+      if (!data.subarray) {
+        data = new Uint8Array(data);
+      }
+      return data;
     };
   
   var FS_getMode = (canRead, canWrite) => {
@@ -1503,8 +1502,6 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
   ignorePermissions:true,
   filesystems:null,
   syncFSRequests:0,
-  readFiles:{
-  },
   ErrnoError:class {
         name = 'ErrnoError';
         // We set the `name` property to be able to identify `FS.ErrnoError`
@@ -1770,9 +1767,11 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
         // return 0 if any user, group or owner bits are set.
         if (perms.includes('r') && !(node.mode & 292)) {
           return 2;
-        } else if (perms.includes('w') && !(node.mode & 146)) {
+        }
+        if (perms.includes('w') && !(node.mode & 146)) {
           return 2;
-        } else if (perms.includes('x') && !(node.mode & 73)) {
+        }
+        if (perms.includes('x') && !(node.mode & 73)) {
           return 2;
         }
         return 0;
@@ -1813,10 +1812,8 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
           if (FS.isRoot(node) || FS.getPath(node) === FS.cwd()) {
             return 10;
           }
-        } else {
-          if (FS.isDir(node.mode)) {
-            return 31;
-          }
+        } else if (FS.isDir(node.mode)) {
+          return 31;
         }
         return 0;
       },
@@ -1826,13 +1823,16 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
         }
         if (FS.isLink(node.mode)) {
           return 32;
-        } else if (FS.isDir(node.mode)) {
-          if (FS.flagsToPermissionString(flags) !== 'r' // opening for write
-              || (flags & (512 | 64))) { // TODO: check for O_SEARCH? (== search for dir only)
+        }
+        var mode = FS.flagsToPermissionString(flags);
+        if (FS.isDir(node.mode)) {
+          // opening for write
+          // TODO: check for O_SEARCH? (== search for dir only)
+          if (mode !== 'r' || (flags & (512 | 64))) {
             return 31;
           }
         }
-        return FS.nodePermissions(node, FS.flagsToPermissionString(flags));
+        return FS.nodePermissions(node, mode);
       },
   checkOpExists(op, err) {
         if (!op) {
@@ -2400,7 +2400,7 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
         if (path === "") {
           throw new FS.ErrnoError(44);
         }
-        flags = typeof flags == 'string' ? FS_modeStringToFlags(flags) : flags;
+        flags = FS_modeStringToFlags(flags);
         if ((flags & 64)) {
           mode = (mode & 4095) | 32768;
         } else {
@@ -2486,11 +2486,6 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
         }
         if (created) {
           FS.chmod(node, mode & 0o777);
-        }
-        if (Module['logReadFiles'] && !(flags & 1)) {
-          if (!(path in FS.readFiles)) {
-            FS.readFiles[path] = 1;
-          }
         }
         return stream;
       },
@@ -2638,14 +2633,8 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
   writeFile(path, data, opts = {}) {
         opts.flags = opts.flags || 577;
         var stream = FS.open(path, opts.flags, opts.mode);
-        if (typeof data == 'string') {
-          data = new Uint8Array(intArrayFromString(data, true));
-        }
-        if (ArrayBuffer.isView(data)) {
-          FS.write(stream, data, 0, data.byteLength, undefined, opts.canOwn);
-        } else {
-          abort('Unsupported data type');
-        }
+        data = FS_fileDataToTypedArray(data);
+        FS.write(stream, data, 0, data.byteLength, undefined, opts.canOwn);
         FS.close(stream);
       },
   cwd:() => FS.currentPath,
@@ -2865,11 +2854,7 @@ var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
         var mode = FS_getMode(canRead, canWrite);
         var node = FS.create(path, mode);
         if (data) {
-          if (typeof data == 'string') {
-            var arr = new Array(data.length);
-            for (var i = 0, len = data.length; i < len; ++i) arr[i] = data.charCodeAt(i);
-            data = arr;
-          }
+          data = FS_fileDataToTypedArray(data);
           // make sure we can write to the file
           FS.chmod(node, mode | 146);
           var stream = FS.open(node, 577);
@@ -4193,6 +4178,7 @@ var _sqlite3_status64,
   _sqlite3_bind_null,
   _sqlite3_bind_pointer,
   _sqlite3_bind_text,
+  _sqlite3_bind_zeroblob,
   _sqlite3_bind_parameter_count,
   _sqlite3_bind_parameter_name,
   _sqlite3_bind_parameter_index,
@@ -4456,6 +4442,7 @@ function assignWasmExports(wasmExports) {
   _sqlite3_bind_null = Module['_sqlite3_bind_null'] = wasmExports['sqlite3_bind_null'];
   _sqlite3_bind_pointer = Module['_sqlite3_bind_pointer'] = wasmExports['sqlite3_bind_pointer'];
   _sqlite3_bind_text = Module['_sqlite3_bind_text'] = wasmExports['sqlite3_bind_text'];
+  _sqlite3_bind_zeroblob = Module['_sqlite3_bind_zeroblob'] = wasmExports['sqlite3_bind_zeroblob'];
   _sqlite3_bind_parameter_count = Module['_sqlite3_bind_parameter_count'] = wasmExports['sqlite3_bind_parameter_count'];
   _sqlite3_bind_parameter_name = Module['_sqlite3_bind_parameter_name'] = wasmExports['sqlite3_bind_parameter_name'];
   _sqlite3_bind_parameter_index = Module['_sqlite3_bind_parameter_index'] = wasmExports['sqlite3_bind_parameter_index'];
@@ -4800,6 +4787,7 @@ Module.runSQLite3PostLoadInit = async function(
        - sqlite3-vtab-helper.c-pp.js => Utilities for virtual table impls
        - sqlite3-vfs-opfs.c-pp.js => OPFS VFS
        - sqlite3-vfs-opfs-sahpool.c-pp.js => OPFS SAHPool VFS
+       - sqlite3-vfs-opfs-wl.c-pp.js => WebLock-using OPFS VFS
      - post-js-footer.js          => this file's epilogue
 
      And all of that gets sandwiched between extern-pre-js.js and
@@ -4834,11 +4822,11 @@ Module.runSQLite3PostLoadInit = async function(
 /* @preserve
 ** This code was built from sqlite3 version...
 **
-** SQLITE_VERSION "3.52.0"
-** SQLITE_VERSION_NUMBER 3052000
-** SQLITE_SOURCE_ID "2026-01-30 06:37:34 407724c4e80efdf93d885e95b5209a100a3f470fe0298138be57201f65f9817e"
+** SQLITE_VERSION "3.53.0"
+** SQLITE_VERSION_NUMBER 3053000
+** SQLITE_SOURCE_ID "2026-04-09 11:41:38 4525003a53a7fc63ca75c59b22c79608659ca12f0131f52c18637f829977f20b"
 **
-** Emscripten SDK: 5.0.0
+** Emscripten SDK: 5.0.5
 */
 /*
   2022-05-22
@@ -4941,6 +4929,13 @@ Module.runSQLite3PostLoadInit = async function(
      used in WASMFS-capable builds of the library (which the canonical
      builds do not include).
 
+     - `disable` (as of 3.53.0) may be an object with the following
+     properties:
+       - `vfs`, an object, may contain a map of VFS names to booleans.
+       Any mapping to falsy are disabled. The supported names
+       are: "kvvfs", "opfs", "opfs-sahpool", "opfs-wl".
+       - Other disabling options may be added in the future.
+
    [^1] = This property may optionally be a function, in which case
           this function calls that function to fetch the value,
           enabling delayed evaluation.
@@ -4987,7 +4982,8 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
     );
     return sqlite3ApiBootstrap.sqlite3;
   }
-  const config = Object.assign(Object.create(null),{
+  const nu = (...obj)=>Object.assign(Object.create(null),...obj);
+  const config = nu({
     exports: undefined,
     memory: undefined,
     bigIntEnabled: !!globalThis.BigInt64Array,
@@ -5004,7 +5000,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
        certain wasm.xWrap.resultAdapter()s.
     */
     useStdAlloc: false
-  }, apiConfig || {});
+  }, apiConfig);
 
   Object.assign(config, {
     allocExportName: config.useStdAlloc ? 'malloc' : 'sqlite3_malloc',
@@ -5037,7 +5033,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
       not documented are installed as 1-to-1 proxies for their
       C-side counterparts.
   */
-  const capi = Object.create(null);
+  const capi = nu();
   /**
      Holds state which are specific to the WASM-related
      infrastructure and glue code.
@@ -5046,7 +5042,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
      dynamically after the api object is fully constructed, so
      not all are documented in this file.
   */
-  const wasm = Object.create(null);
+  const wasm = nu();
 
   /** Internal helper for SQLite3Error ctor. */
   const __rcStr = (rc)=>{
@@ -5594,6 +5590,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
     toss: function(...args){throw new Error(args.join(' '))},
     toss3,
     typedArrayPart: wasm.typedArrayPart,
+    nu,
     assert: function(arg,msg){
       if( !arg ){
         util.toss("Assertion failed:",msg);
@@ -5850,7 +5847,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
           rv[1] = m ? (f._rxInt.test(m[2]) ? +m[2] : m[2]) : true;
         };
       }
-      const rc = Object.create(null), ov = [0,0];
+      const rc = nu(), ov = [0,0];
       let i = 0, k;
       while((k = capi.sqlite3_compileoption_get(i++))){
         f._opt(k,ov);
@@ -5858,7 +5855,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
       }
       return f._result = rc;
     }else if(Array.isArray(optName)){
-      const rc = Object.create(null);
+      const rc = nu();
       optName.forEach((v)=>{
         rc[v] = capi.sqlite3_compileoption_used(v);
       });
@@ -5909,7 +5906,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
      The memory lives in the WASM heap and can be used with routines
      such as wasm.poke() and wasm.heap8u().slice().
   */
-  wasm.pstack = Object.assign(Object.create(null),{
+  wasm.pstack = nu({
     /**
        Sets the current pstack position to the given pointer. Results
        are undefined if the passed-in value did not come from
@@ -6131,7 +6128,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
       // sqlite3__wasm_init_wasmfs() is not available
       return this.dir = "";
     }
-  }.bind(Object.create(null));
+  }.bind(nu());
 
   /**
      Returns true if sqlite3.capi.sqlite3_wasmfs_opfs_dir() is a
@@ -6485,6 +6482,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
       case capi.SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE:
       case capi.SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE:
       case capi.SQLITE_DBCONFIG_ENABLE_COMMENTS:
+      case capi.SQLITE_DBCONFIG_FP_DIGITS:
         if( !this.ip ){
           this.ip = wasm.xWrap('sqlite3__wasm_db_config_ip','int',
                                ['sqlite3*', 'int', 'int', '*']);
@@ -6506,7 +6504,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
       default:
         return capi.SQLITE_MISUSE;
     }
-  }.bind(Object.create(null));
+  }.bind(nu());
 
   /**
      Given a (sqlite3_value*), this function attempts to convert it
@@ -6740,7 +6738,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
       if(rc) return SQLite3Error.toss(rc,arguments[2]+"() failed with code "+rc);
       const pv = wasm.peekPtr(this.ptr);
       return pv ? capi.sqlite3_value_to_js( pv, true ) : undefined;
-    }.bind(Object.create(null));
+    }.bind(nu());
 
     /**
        A wrapper around sqlite3_preupdate_new() which fetches the
@@ -6780,6 +6778,62 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
                                             'sqlite3changeset_old');
   }/*changeset/preupdate additions*/
 
+  /**
+     EXPERIMENTAL. For tentative addition in 3.53.0.
+
+     sqlite3_js_retry_busy(maxTimes,callback[,beforeRetry])
+
+     Calls the given _synchronous_ callback function. If that function
+     returns sqlite3.capi.SQLITE_BUSY _or_ throws an SQLite3Error
+     with a resultCode property of that value then it will suppress
+     that error and try again, up to the given maximum number of
+     times. If the callback returns any other value than that,
+     it is returned. If the maximum number of retries has been
+     reached, an SQLite3Error with a resultCode value of
+     sqlite3.capi.SQLITE_BUSY is thrown. If the callback throws any
+     exception other than the aforementioned BUSY exception, it is
+     propagated. If it throws a BUSY exception on its final attempt,
+     that is propagated as well.
+
+     If the beforeRetry argument is given, it must be a _synchronous_
+     function.  It is called immediately before each retry of the
+     callback (not for the initial call), passed the attempt number
+     (so it starts with 2, not 1). If it throws, the exception is
+     handled as described above. Its result value is ignored.
+
+     To effectively retry "forever", pass a negative maxTimes value,
+     with the caveat that there is no recovery from that unless the
+     beforeRetry() can figure out when to throw.
+
+     TODO: an async variant of this.
+  */
+  capi.sqlite3_js_retry_busy = function(maxTimes, callback, beforeRetry){
+    for(let n = 1; n <= maxTimes; ++n){
+      try{
+        if( beforeRetry && n>1 ) beforeRetry(n);
+        const rc = callback();
+        if( capi.SQLITE_BUSY===rc ){
+          if( n===maxTimes ){
+            throw new SQLite3Error(rc, [
+              "sqlite3_js_retry_busy() max retry attempts (",
+              maxTimes,
+              ") reached."
+            ].join(''));
+          }
+          continue;
+        }
+        return rc;
+      }catch(e){
+        if( n<maxTimes
+            && (e instanceof SQLite3Error)
+            && e.resultCode===capi.SQLITE_BUSY ){
+          continue;
+        }
+        throw e;
+      }
+    }
+  };
+
   /* The remainder of the API will be set up in later steps. */
   const sqlite3 = {
     WasmAllocError: WasmAllocError,
@@ -6798,7 +6852,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
        This object is initially a placeholder which gets replaced by a
        build-generated object.
     */
-    version: Object.create(null),
+    version: nu(),
 
     /**
        The library reserves the 'client' property for client-side use
@@ -6844,6 +6898,7 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
              so that we can add tests for them. */
           delete sqlite3.util;
           delete sqlite3.StructBinder;
+          delete sqlite3.opfs;
         }
         return sqlite3;
       };
@@ -6863,20 +6918,22 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
       return ff.isReady = p.catch(catcher);
     }.bind(sqlite3ApiBootstrap),
     /**
-       scriptInfo ideally gets injected into this object by the
-       infrastructure which assembles the JS/WASM module. It contains
-       state which must be collected before sqlite3ApiBootstrap() can
-       be declared. It is not necessarily available to any
-       sqlite3ApiBootstrap.initializers but "should" be in place (if
-       it's added at all) by the time that
-       sqlite3ApiBootstrap.initializersAsync is processed.
+       scriptInfo holds information about the currenty-loading script
+       so that we can locate the WASM file if it's somewhere other
+       than the build-time-defined directory. It ideally gets injected
+       into this object by the infrastructure which assembles the
+       JS/WASM module. It contains state which must be collected
+       before sqlite3ApiBootstrap() can be declared. It is not
+       necessarily available to any sqlite3ApiBootstrap.initializers
+       but "should" be in place (if it's added at all) by the time
+       that sqlite3ApiBootstrap.initializersAsync is processed.
 
        This state is not part of the public API, only intended for use
        with the sqlite3 API bootstrapping and wasm-loading process.
     */
     scriptInfo: undefined
   };
-  if( ('undefined'!==typeof sqlite3IsUnderTest/* from post-js-header.js */) ){
+  if( 'undefined'!==typeof sqlite3IsUnderTest/* from post-js-header.js */ ){
     sqlite3.__isUnderTest = !!sqlite3IsUnderTest;
   }
   try{
@@ -6913,10 +6970,10 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
       loader, and if we lose that capability for some reason then
       we'll lose access to this metadata.
 
-      These data are interesting for exploring how the wasm/JS
-      pieces connect, e.g. for exploring exactly what Emscripten
-      imports into WASM from its JS glue, but it's not
-      SQLite-related.
+      These data are interesting for exploring how the wasm/JS pieces
+      connect, e.g. for exploring exactly what Emscripten imports into
+      WASM from its JS glue, but it's not SQLite-related and is not
+      required for the library to work.
     */
     const iw = sqlite3.scriptInfo?.instantiateWasm;
     if( iw ){
@@ -7011,7 +7068,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.52.0", "libVersionNumber": 3052000, "sourceId": "2026-01-30 06:37:34 407724c4e80efdf93d885e95b5209a100a3f470fe0298138be57201f65f9817e","downloadVersion": 3520000,"scm":{ "sha3-256": "407724c4e80efdf93d885e95b5209a100a3f470fe0298138be57201f65f9817e","branch": "trunk","tags": "","datetime": "2026-01-30T06:37:34.096Z"}};
+  sqlite3.version = {"libVersion": "3.53.0", "libVersionNumber": 3053000, "sourceId": "2026-04-09 11:41:38 4525003a53a7fc63ca75c59b22c79608659ca12f0131f52c18637f829977f20b","downloadVersion": 3530000,"scm":{ "sha3-256": "4525003a53a7fc63ca75c59b22c79608659ca12f0131f52c18637f829977f20b","branch": "trunk","tags": "release major-release version-3.53.0","datetime": "2026-04-09T11:41:38.498Z"}};
 });
 /**
   2022-07-08
@@ -10858,6 +10915,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       ["sqlite3_bind_parameter_name", "string", "sqlite3_stmt*", "int"],
       ["sqlite3_bind_pointer", "int",
        "sqlite3_stmt*", "int", "*", "string:static", "*"],
+      /* sqlite_bind_text() is hand-written */
+      ["sqlite3_bind_zeroblob", "int", "sqlite3_stmt*", "int", "int"],
       ["sqlite3_busy_handler","int", [
         "sqlite3*",
         new wasm.xWrap.FuncPtrAdapter({
@@ -16087,6 +16146,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
 
   Documentation home page: https://sqlite.org/wasm
 */
+
 /**
    kvvfs - the Key/Value VFS - is an SQLite3 VFS which delegates
    storage of its pages and metadata to a key-value store.
@@ -16144,6 +16204,9 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
    backups.
 */
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
+  if( sqlite3.config.disable?.vfs?.kvvfs ){
+    return;
+  }
   'use strict';
   const capi = sqlite3.capi,
         sqlite3_kvvfs_methods = capi.sqlite3_kvvfs_methods,
@@ -16205,9 +16268,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
          kvvfsMethods.$nBufferSize is slightly larger than the output
          space needed for a kvvfs-encoded 64kb db page in a worse-cast
          encoding (128kb). It is not suitable for arbitrary buffer
-         use, only page de/encoding.  As the VFS system has no hook
-         into library finalization, these buffers are effectively
-         leaked except in the few places which use memBufferFree().
+         use, only page de/encoding.
       */
       n: kvvfsMethods.$nBufferSize,
       /**
@@ -16246,10 +16307,10 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
 
   const noop = ()=>{};
   const debug = sqlite3.__isUnderTest
-        ? (...args)=>sqlite3.config.debug("kvvfs:", ...args)
+        ? (...args)=>sqlite3.config.debug?.("kvvfs:", ...args)
         : noop;
-  const warn = (...args)=>sqlite3.config.warn("kvvfs:", ...args);
-  const error = (...args)=>sqlite3.config.error("kvvfs:", ...args);
+  const warn = (...args)=>sqlite3.config.warn?.("kvvfs:", ...args);
+  const error = (...args)=>sqlite3.config.error?.("kvvfs:", ...args);
 
   /**
      Implementation of JS's Storage interface for use as backing store
@@ -16270,17 +16331,21 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      and recreating it whenever a property index might be invalidated.
   */
   class KVVfsStorage {
-    #map;
-    #keys;
-    #getKeys(){return this.#keys ??= Object.keys(this.#map);}
+    #map = Object.create(null);
+    #keys = null;
+    #size = 0;
 
     constructor(){
       this.clear();
     }
 
+    #getKeys(){
+      return this.#keys ??= Object.keys(this.#map);
+    }
+
     key(n){
-      const k = this.#getKeys();
-      return n<k.length ? k[n] : null;
+      if(n < 0 || n >= this.#size) return null;
+      return this.#getKeys()[n];
     }
 
     getItem(k){
@@ -16288,14 +16353,17 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     }
 
     setItem(k,v){
-      if( !hop(this.#map, k) ){
+      if( !(k in this.#map) ){
+        ++this.#size;
         this.#keys = null;
       }
       this.#map[k] = ''+v;
     }
 
     removeItem(k){
-      if( delete this.#map[k] ){
+      if( k in this.#map ){
+        delete this.#map[k];
+        --this.#size;
         this.#keys = null;
       }
     }
@@ -16303,10 +16371,11 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     clear(){
       this.#map = Object.create(null);
       this.#keys = null;
+      this.#size = 0;
     }
 
     get length() {
-      return this.#getKeys().length;
+      return this.#size;
     }
   }/*KVVfsStorage*/;
 
@@ -17068,36 +17137,6 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
         }
       },
 
-      // We override xRead/xWrite only for logging/debugging. They
-      // should otherwise be disabled (it's faster that way).
-      xRead: function(pFile,pTgt,n,iOff64){
-        cache.popError();
-        try{
-          if( kvvfs?.log?.xRead ){
-            const h = pFileHandles.get(pFile);
-            util.assert(h, "Missing KVVfsFile handle");
-            debug("xRead", n, iOff64, h);
-          }
-          return originalMethods.ioDb.xRead(pFile, pTgt, n, iOff64);
-        }catch(e){
-          error("xRead",e);
-          return cache.setError(e);
-        }
-      },
-      xWrite: function(pFile,pSrc,n,iOff64){
-        cache.popError();
-        try{
-          if( kvvfs?.log?.xWrite ){
-            const h = pFileHandles.get(pFile);
-            util.assert(h, "Missing KVVfsFile handle");
-            debug("xWrite", n, iOff64, h);
-          }
-          return originalMethods.ioDb.xWrite(pFile, pSrc, n, iOff64);
-        }catch(e){
-          error("xWrite",e);
-          return cache.setError(e);
-        }
-      },
 
     }/*.ioDb*/,
 
@@ -17109,9 +17148,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     }/*.ioJrnl*/
   }/*methodOverrides*/;
 
-  debug("pVfs and friends", pVfs, pIoDb, pIoJrnl,
-        kvvfsMethods, capi.sqlite3_file.structInfo,
-        KVVfsFile.structInfo);
+
   try {
     util.assert( cache.buffer.n>1024*129, "Heap buffer is not large enough"
                  /* Native is SQLITE_KVOS_SZ is 133073 as of this writing */ );
@@ -17200,7 +17237,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      limitation which has since been overcome, but removal of
      JsStorageDb.prototype.clearStorage() would be a backwards compatibility
      break, so this function permits wiping the storage for those two
-     cases even if they are opened. Use with case.
+     cases even if they are opened. Use with care.
   */
   const sqlite3_js_kvvfs_clear = function callee(which){
     if( ''===which ){
@@ -17875,7 +17912,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
               }
               return rc;
             }catch(e){
-              return VT.xErrror('xConnect', e, capi.SQLITE_ERROR);
+              return VT.xError('xConnect', e, capi.SQLITE_ERROR);
             }
           },
           xCreate: wasm.ptr.null, // eponymous only
@@ -17974,6 +18011,1429 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
 
 })/*globalThis.sqlite3ApiBootstrap.initializers*/;
 /*
+  2026-03-04
+
+  The author disclaims copyright to this source code.  In place of a
+  legal notice, here is a blessing:
+
+  *   May you do good and not evil.
+  *   May you find forgiveness for yourself and forgive others.
+  *   May you share freely, never taking more than you give.
+
+  ***********************************************************************
+
+  This file holds code shared by sqlite3-vfs-opfs{,-wl}.c-pp.js. It
+  creates a private/internal sqlite3.opfs namespace common to the two
+  and used (only) by them and the test framework. It is not part of
+  the public API. The library deletes sqlite3.opfs in its final
+  bootstrapping steps unless it's specifically told to keep them (for
+  testing purposes only) using an undocumented and unsupported
+  mechanism.
+*/
+globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
+  'use strict';
+  if( sqlite3.config.disable?.vfs?.opfs &&
+      sqlite3.config.disable.vfs['opfs-vfs'] ){
+    return;
+  }
+  const toss = sqlite3.util.toss,
+        capi = sqlite3.capi,
+        util = sqlite3.util,
+        wasm = sqlite3.wasm;
+
+  /**
+     Generic utilities for working with OPFS. This will get filled out
+     by the Promise setup and, on success, installed as sqlite3.opfs.
+
+     This is an internal/private namespace intended for use solely by
+     the OPFS VFSes and test code for them. The library bootstrapping
+     process removes this object in non-testing contexts.
+  */
+  const opfsUtil = sqlite3.opfs = Object.create(null);
+
+  /**
+     Returns true if _this_ thread has access to the OPFS APIs.
+  */
+  opfsUtil.thisThreadHasOPFS = ()=>{
+    return globalThis.FileSystemHandle &&
+      globalThis.FileSystemDirectoryHandle &&
+      globalThis.FileSystemFileHandle &&
+      globalThis.FileSystemFileHandle.prototype.createSyncAccessHandle &&
+      navigator?.storage?.getDirectory;
+  };
+
+  /**
+     Must be called by the OPFS VFSes immediately after they determine
+     whether OPFS is available by calling
+     thisThreadHasOPFS(). Resolves to the OPFS storage root directory
+     and sets opfsUtil.rootDirectory to that value.
+  */
+  opfsUtil.getRootDir = async function f(){
+    return f.promise ??= navigator.storage.getDirectory().then(d=>{
+      opfsUtil.rootDirectory = d;
+      return d;
+    }).catch(e=>{
+      delete f.promise;
+      throw e;
+    });
+  };
+
+  /**
+     Expects an OPFS file path. It gets resolved, such that ".."
+     components are properly expanded, and returned. If the 2nd arg
+     is true, the result is returned as an array of path elements,
+     else an absolute path string is returned.
+  */
+  opfsUtil.getResolvedPath = function(filename,splitIt){
+    const p = new URL(filename, "file://irrelevant").pathname;
+    return splitIt ? p.split('/').filter((v)=>!!v) : p;
+  };
+
+  /**
+     Takes the absolute path to a filesystem element. Returns an
+     array of [handleOfContainingDir, filename]. If the 2nd argument
+     is truthy then each directory element leading to the file is
+     created along the way. Throws if any creation or resolution
+     fails.
+  */
+  opfsUtil.getDirForFilename = async function f(absFilename, createDirs = false){
+    const path = opfsUtil.getResolvedPath(absFilename, true);
+    const filename = path.pop();
+    let dh = await opfsUtil.getRootDir();
+    for(const dirName of path){
+      if(dirName){
+        dh = await dh.getDirectoryHandle(dirName, {create: !!createDirs});
+      }
+    }
+    return [dh, filename];
+  };
+
+  /**
+     Creates the given directory name, recursively, in
+     the OPFS filesystem. Returns true if it succeeds or the
+     directory already exists, else false.
+  */
+  opfsUtil.mkdir = async function(absDirName){
+    try {
+      await opfsUtil.getDirForFilename(absDirName+"/filepart", true);
+      return true;
+    }catch(e){
+      //sqlite3.config.warn("mkdir(",absDirName,") failed:",e);
+      return false;
+    }
+  };
+
+  /**
+     Checks whether the given OPFS filesystem entry exists,
+     returning true if it does, false if it doesn't or if an
+     exception is intercepted while trying to make the
+     determination.
+  */
+  opfsUtil.entryExists = async function(fsEntryName){
+    try {
+      const [dh, fn] = await opfsUtil.getDirForFilename(fsEntryName);
+      await dh.getFileHandle(fn);
+      return true;
+    }catch(e){
+      return false;
+    }
+  };
+
+  /**
+     Generates a random ASCII string len characters long, intended for
+     use as a temporary file name.
+  */
+  opfsUtil.randomFilename = function f(len=16){
+    if(!f._chars){
+      f._chars = "abcdefghijklmnopqrstuvwxyz"+
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"+
+        "012346789";
+      f._n = f._chars.length;
+    }
+    const a = [];
+    let i = 0;
+    for( ; i < len; ++i){
+      const ndx = Math.random() * (f._n * 64) % f._n | 0;
+      a[i] = f._chars[ndx];
+    }
+    return a.join("");
+    /*
+      An alternative impl. with an unpredictable length
+      but much simpler:
+
+      Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(36)
+    */
+  };
+
+  /**
+     Returns a promise which resolves to an object which represents
+     all files and directories in the OPFS tree. The top-most object
+     has two properties: `dirs` is an array of directory entries
+     (described below) and `files` is a list of file names for all
+     files in that directory.
+
+     Traversal starts at sqlite3.opfs.rootDirectory.
+
+     Each `dirs` entry is an object in this form:
+
+     ```
+     { name: directoryName,
+     dirs: [...subdirs],
+     files: [...file names]
+     }
+     ```
+
+     The `files` and `subdirs` entries are always set but may be
+     empty arrays.
+
+     The returned object has the same structure but its `name` is
+     an empty string. All returned objects are created with
+     Object.create(null), so have no prototype.
+
+     Design note: the entries do not contain more information,
+     e.g. file sizes, because getting such info is not only
+     expensive but is subject to locking-related errors.
+  */
+  opfsUtil.treeList = async function(){
+    const doDir = async function callee(dirHandle,tgt){
+      tgt.name = dirHandle.name;
+      tgt.dirs = [];
+      tgt.files = [];
+      for await (const handle of dirHandle.values()){
+        if('directory' === handle.kind){
+          const subDir = Object.create(null);
+          tgt.dirs.push(subDir);
+          await callee(handle, subDir);
+        }else{
+          tgt.files.push(handle.name);
+        }
+      }
+    };
+    const root = Object.create(null);
+    const dir = await opfsUtil.getRootDir();
+    await doDir(dir, root);
+    return root;
+  };
+
+  /**
+     Irrevocably deletes _all_ files in the current origin's OPFS.
+     Obviously, this must be used with great caution. It may throw
+     an exception if removal of anything fails (e.g. a file is
+     locked), but the precise conditions under which the underlying
+     APIs will throw are not documented (so we cannot tell you what
+     they are).
+  */
+  opfsUtil.rmfr = async function(){
+    const rd = await opfsUtil.getRootDir();
+    const dir = rd, opt = {recurse: true};
+    for await (const handle of dir.values()){
+      dir.removeEntry(handle.name, opt);
+    }
+  };
+
+  /**
+     Deletes the given OPFS filesystem entry.  As this environment
+     has no notion of "current directory", the given name must be an
+     absolute path. If the 2nd argument is truthy, deletion is
+     recursive (use with caution!).
+
+     The returned Promise resolves to true if the deletion was
+     successful, else false (but...). The OPFS API reports the
+     reason for the failure only in human-readable form, not
+     exceptions which can be type-checked to determine the
+     failure. Because of that...
+
+     If the final argument is truthy then this function will
+     propagate any exception on error, rather than returning false.
+  */
+  opfsUtil.unlink = async function(fsEntryName, recursive = false,
+                                   throwOnError = false){
+    try {
+      const [hDir, filenamePart] =
+            await opfsUtil.getDirForFilename(fsEntryName, false);
+      await hDir.removeEntry(filenamePart, {recursive});
+      return true;
+    }catch(e){
+      if(throwOnError){
+        throw new Error("unlink(",arguments[0],") failed: "+e.message,{
+          cause: e
+        });
+      }
+      return false;
+    }
+  };
+
+  /**
+     Traverses the OPFS filesystem, calling a callback for each
+     entry.  The argument may be either a callback function or an
+     options object with any of the following properties:
+
+     - `callback`: function which gets called for each filesystem
+     entry.  It gets passed 3 arguments: 1) the
+     FileSystemFileHandle or FileSystemDirectoryHandle of each
+     entry (noting that both are instanceof FileSystemHandle). 2)
+     the FileSystemDirectoryHandle of the parent directory. 3) the
+     current depth level, with 0 being at the top of the tree
+     relative to the starting directory. If the callback returns a
+     literal false, as opposed to any other falsy value, traversal
+     stops without an error. Any exceptions it throws are
+     propagated. Results are undefined if the callback manipulate
+     the filesystem (e.g. removing or adding entries) because the
+     how OPFS iterators behave in the face of such changes is
+     undocumented.
+
+     - `recursive` [bool=true]: specifies whether to recurse into
+     subdirectories or not. Whether recursion is depth-first or
+     breadth-first is unspecified!
+
+     - `directory` [FileSystemDirectoryEntry=sqlite3.opfs.rootDirectory]
+     specifies the starting directory.
+
+     If this function is passed a function, it is assumed to be the
+     callback.
+
+     Returns a promise because it has to (by virtue of being async)
+     but that promise has no specific meaning: the traversal it
+     performs is synchronous. The promise must be used to catch any
+     exceptions propagated by the callback, however.
+  */
+  opfsUtil.traverse = async function(opt){
+    const defaultOpt = {
+      recursive: true,
+      directory: await opfsUtil.getRootDir()
+    };
+    if('function'===typeof opt){
+      opt = {callback:opt};
+    }
+    opt = Object.assign(defaultOpt, opt||{});
+    const doDir = async function callee(dirHandle, depth){
+      for await (const handle of dirHandle.values()){
+        if(false === opt.callback(handle, dirHandle, depth)) return false;
+        else if(opt.recursive && 'directory' === handle.kind){
+          if(false === await callee(handle, depth + 1)) break;
+        }
+      }
+    };
+    doDir(opt.directory, 0);
+  };
+
+  /**
+     Impl of opfsUtil.importDb() when it's given a function as its
+     second argument.
+  */
+  const importDbChunked = async function(filename, callback){
+    const [hDir, fnamePart] = await opfsUtil.getDirForFilename(filename, true);
+    const hFile = await hDir.getFileHandle(fnamePart, {create:true});
+    let sah = await hFile.createSyncAccessHandle();
+    let nWrote = 0, chunk, checkedHeader = false, err = false;
+    try{
+      sah.truncate(0);
+      while( undefined !== (chunk = await callback()) ){
+        if(chunk instanceof ArrayBuffer) chunk = new Uint8Array(chunk);
+        if( !checkedHeader && 0===nWrote && chunk.byteLength>=15 ){
+          util.affirmDbHeader(chunk);
+          checkedHeader = true;
+        }
+        sah.write(chunk, {at: nWrote});
+        nWrote += chunk.byteLength;
+      }
+      if( nWrote < 512 || 0!==nWrote % 512 ){
+        toss("Input size",nWrote,"is not correct for an SQLite database.");
+      }
+      if( !checkedHeader ){
+        const header = new Uint8Array(20);
+        sah.read( header, {at: 0} );
+        util.affirmDbHeader( header );
+      }
+      sah.write(new Uint8Array([1,1]), {at: 18}/*force db out of WAL mode*/);
+      return nWrote;
+    }catch(e){
+      await sah.close();
+      sah = undefined;
+      await hDir.removeEntry( fnamePart ).catch(()=>{});
+      throw e;
+    }finally {
+      if( sah ) await sah.close();
+    }
+  };
+
+  /**
+     Asynchronously imports the given bytes (a byte array or
+     ArrayBuffer) into the given database file.
+
+     Results are undefined if the given db name refers to an opened
+     db.
+
+     If passed a function for its second argument, its behaviour
+     changes: imports its data in chunks fed to it by the given
+     callback function. It calls the callback (which may be async)
+     repeatedly, expecting either a Uint8Array or ArrayBuffer (to
+     denote new input) or undefined (to denote EOF). For so long as
+     the callback continues to return non-undefined, it will append
+     incoming data to the given VFS-hosted database file. When
+     called this way, the resolved value of the returned Promise is
+     the number of bytes written to the target file.
+
+     It very specifically requires the input to be an SQLite3
+     database and throws if that's not the case.  It does so in
+     order to prevent this function from taking on a larger scope
+     than it is specifically intended to. i.e. we do not want it to
+     become a convenience for importing arbitrary files into OPFS.
+
+     This routine rewrites the database header bytes in the output
+     file (not the input array) to force disabling of WAL mode.
+
+     On error this throws and the state of the input file is
+     undefined (it depends on where the exception was triggered).
+
+     On success, resolves to the number of bytes written.
+  */
+  opfsUtil.importDb = async function(filename, bytes){
+    if( bytes instanceof Function ){
+      return importDbChunked(filename, bytes);
+    }
+    if(bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
+    util.affirmIsDb(bytes);
+    const n = bytes.byteLength;
+    const [hDir, fnamePart] = await opfsUtil.getDirForFilename(filename, true);
+    let sah, err, nWrote = 0;
+    try {
+      const hFile = await hDir.getFileHandle(fnamePart, {create:true});
+      sah = await hFile.createSyncAccessHandle();
+      sah.truncate(0);
+      nWrote = sah.write(bytes, {at: 0});
+      if(nWrote != n){
+        toss("Expected to write "+n+" bytes but wrote "+nWrote+".");
+      }
+      sah.write(new Uint8Array([1,1]), {at: 18}) /* force db out of WAL mode */;
+      return nWrote;
+    }catch(e){
+      if( sah ){ await sah.close(); sah = undefined; }
+      await hDir.removeEntry( fnamePart ).catch(()=>{});
+      throw e;
+    }finally{
+      if( sah ) await sah.close();
+    }
+  };
+
+  /**
+     Checks for features required for OPFS VFSes and throws with a
+     descriptive error message if they're not found. This is intended
+     to be run as part of async VFS installation steps.
+  */
+  opfsUtil.vfsInstallationFeatureCheck = function(vfsName){
+    if( !globalThis.SharedArrayBuffer || !globalThis.Atomics ){
+      toss("Cannot install OPFS: Missing SharedArrayBuffer and/or Atomics.",
+           "The server must emit the COOP/COEP response headers to enable those.",
+           "See https://sqlite.org/wasm/doc/trunk/persistence.md#coop-coep");
+    }else if( 'undefined'===typeof WorkerGlobalScope ){
+      toss("The OPFS sqlite3_vfs cannot run in the main thread",
+           "because it requires Atomics.wait().");
+    }else if( !globalThis.FileSystemHandle ||
+              !globalThis.FileSystemDirectoryHandle ||
+              !globalThis.FileSystemFileHandle?.prototype?.createSyncAccessHandle ||
+              !navigator?.storage?.getDirectory ){
+      toss("Missing required OPFS APIs.");
+    }else if( 'opfs-wl'===vfsName && !globalThis.Atomics.waitAsync ){
+      toss('The',vfsName,'VFS requires Atomics.waitAsync(), which is not available.');
+    }
+  };
+
+  /**
+     Must be called by the VFS's main installation routine and passed
+     the options object that function receives and a reference to that
+     function itself (we don't need this anymore).
+
+     It throws if OPFS is not available.
+
+     If it returns falsy, it detected that OPFS should be disabled, in
+     which case the callee should immediately return/resolve to the
+     sqlite3 object.
+
+     Else it returns a new copy of the options object, fleshed out
+     with any missing defaults. The caller must:
+
+     - Set up any local state they need.
+
+     - Call opfsUtil.createVfsState(vfsName,opt), where opt is the
+     object returned by this function.
+
+     - Set up any references they may need to state returned
+     by the previous step.
+
+     - Call opfvs.bindVfs()
+  */
+  opfsUtil.initOptions = function callee(vfsName, options){
+    const urlParams = new URL(globalThis.location.href).searchParams;
+    if( urlParams.has(vfsName+'-disable') ){
+      //sqlite3.config.warn('Explicitly not installing "opfs" VFS due to opfs-disable flag.');
+      return;
+    }
+    try{
+      opfsUtil.vfsInstallationFeatureCheck(vfsName);
+    }catch(e){
+      return;
+    }
+    options = util.nu(options);
+    options.vfsName = vfsName;
+    options.verbose ??= urlParams.has('opfs-verbose')
+      ? +urlParams.get('opfs-verbose') : 1;
+    options.sanityChecks ??= urlParams.has('opfs-sanity-check');
+
+    if( !opfsUtil.proxyUri ){
+      opfsUtil.proxyUri = "sqlite3-opfs-async-proxy.js";
+      if( sqlite3.scriptInfo?.sqlite3Dir ){
+        /* Doing this from one scope up, outside of this function, does
+           not work. */
+        opfsUtil.proxyUri = (
+          sqlite3.scriptInfo.sqlite3Dir + opfsUtil.proxyUri
+        );
+      }
+    }
+    options.proxyUri ??= opfsUtil.proxyUri;
+    if('function' === typeof options.proxyUri){
+      options.proxyUri = options.proxyUri();
+    }
+    //sqlite3.config.warn("opfsUtil options =",JSON.stringify(options), 'urlParams =', urlParams);
+    return opfsUtil.options = options;
+  };
+
+  /**
+     Creates, populates, and returns the main state object used by the
+     "opfs" and "opfs-wl" VFSes, and transfered from those to their
+     async counterparts.
+
+     The returned object's vfs property holds the fully-populated
+     capi.sqlite3_vfs instance, tagged with lots of extra state which
+     the current VFSes need to have exposed to them.
+
+     After setting up any local state needed, the caller must call
+     theVfs.bindVfs(X,Y), where X is an object containing the
+     sqlite3_io_methods to override and Y is a callback which gets
+     triggered if init succeeds, before the final Promise decides
+     whether or not to reject.
+
+     This object must, when it's passed to the async part, contain
+     only cloneable or sharable objects. After the worker's "inited"
+     message arrives, other types of data may be added to it.
+  */
+  opfsUtil.createVfsState = function(){
+    const state = util.nu();
+    const options = opfsUtil.options;
+    state.verbose = options.verbose;
+
+    const loggers = [
+      sqlite3.config.error,
+      sqlite3.config.warn,
+      sqlite3.config.log
+    ];
+    const vfsName = options.vfsName
+          || toss("Maintenance required: missing VFS name");
+    const logImpl = (level,...args)=>{
+      if(state.verbose>level) loggers[level](vfsName+":",...args);
+    };
+    const log   = (...args)=>logImpl(2, ...args),
+          warn  = (...args)=>logImpl(1, ...args),
+          error = (...args)=>logImpl(0, ...args),
+          capi  = sqlite3.capi,
+          wasm  = sqlite3.wasm;
+
+    const opfsVfs = state.vfs = new capi.sqlite3_vfs();
+    const opfsIoMethods = opfsVfs.ioMethods = new capi.sqlite3_io_methods();
+
+    opfsIoMethods.$iVersion = 1;
+    opfsVfs.$iVersion = 2/*yes, two*/;
+    opfsVfs.$szOsFile = capi.sqlite3_file.structInfo.sizeof;
+    opfsVfs.$mxPathname = 1024/* sure, why not? The OPFS name length limit
+                                 is undocumented/unspecified. */;
+    opfsVfs.$zName = wasm.allocCString(vfsName);
+    opfsVfs.addOnDispose(
+      '$zName', opfsVfs.$zName, opfsIoMethods
+      /**
+         Pedantic sidebar: the entries in this array are items to
+         clean up when opfsVfs.dispose() is called, but in this
+         environment it will never be called. The VFS instance simply
+         hangs around until the WASM module instance is cleaned up. We
+         "could" _hypothetically_ clean it up by "importing" an
+         sqlite3_os_end() impl into the wasm build, but the shutdown
+         order of the wasm engine and the JS one are undefined so
+         there is no guaranty that the opfsVfs instance would be
+         available in one environment or the other when
+         sqlite3_os_end() is called (_if_ it gets called at all in a
+         wasm build, which is undefined). i.e. addOnDispose() here is
+         a matter of "correctness", not necessity. It just wouldn't do
+         to leave the impression that we're blindly leaking memory.
+      */
+    );
+
+    opfsVfs.metrics = util.nu({
+      counters: util.nu(),
+      dump: function(){
+        let k, n = 0, t = 0, w = 0;
+        for(k in state.opIds){
+          const m = metrics[k];
+          n += m.count;
+          t += m.time;
+          w += m.wait;
+          m.avgTime = (m.count && m.time) ? (m.time / m.count) : 0;
+          m.avgWait = (m.count && m.wait) ? (m.wait / m.count) : 0;
+        }
+        sqlite3.config.log(globalThis.location.href,
+                    "metrics for",globalThis.location.href,":",metrics,
+                    "\nTotal of",n,"op(s) for",t,
+                    "ms (incl. "+w+" ms of waiting on the async side)");
+        sqlite3.config.log("Serialization metrics:",opfsVfs.metrics.counters.s11n);
+        opfsVfs.worker?.postMessage?.({type:'opfs-async-metrics'});
+      },
+      reset: function(){
+        let k;
+        const r = (m)=>(m.count = m.time = m.wait = 0);
+        const m = opfsVfs.metrics.counters;
+        for(k in state.opIds){
+          r(m[k] = Object.create(null));
+        }
+        let s = m.s11n = Object.create(null);
+        s = s.serialize = Object.create(null);
+        s.count = s.time = 0;
+        s = m.s11n.deserialize = Object.create(null);
+        s.count = s.time = 0;
+      }
+    })/*opfsVfs.metrics*/;
+
+    /**
+       asyncIdleWaitTime is how long (ms) to wait, in the async proxy,
+       for each Atomics.wait() when waiting on inbound VFS API calls.
+       We need to wake up periodically to give the thread a chance to
+       do other things. If this is too high (e.g. 500ms) then even two
+       workers/tabs can easily run into locking errors. Some multiple
+       of this value is also used for determining how long to wait on
+       lock contention to free up.
+    */
+    state.asyncIdleWaitTime = 150;
+
+    /**
+       Whether the async counterpart should log exceptions to
+       the serialization channel. That produces a great deal of
+       noise for seemingly innocuous things like xAccess() checks
+       for missing files, so this option may have one of 3 values:
+
+       0 = no exception logging.
+
+       1 = only log exceptions for "significant" ops like xOpen(),
+       xRead(), and xWrite(). Exceptions related to, e.g., wait/retry
+       loops in acquiring SyncAccessHandles are not logged.
+
+       2 = log all exceptions.
+    */
+    state.asyncS11nExceptions = 1;
+    /* Size of file I/O buffer block. 64k = max sqlite3 page size, and
+       xRead/xWrite() will never deal in blocks larger than that. */
+    state.fileBufferSize = 1024 * 64;
+    state.sabS11nOffset = state.fileBufferSize;
+    /**
+       The size of the block in our SAB for serializing arguments and
+       result values. Needs to be large enough to hold serialized
+       values of any of the proxied APIs. Filenames are the largest
+       part but are limited to opfsVfs.$mxPathname bytes. We also
+       store exceptions there, so it needs to be long enough to hold
+       a reasonably long exception string.
+    */
+    state.sabS11nSize = opfsVfs.$mxPathname * 2;
+    /**
+       The SAB used for all data I/O between the synchronous and
+       async halves (file i/o and arg/result s11n).
+    */
+    state.sabIO = new SharedArrayBuffer(
+      state.fileBufferSize/* file i/o block */
+      + state.sabS11nSize/* argument/result serialization block */
+    );
+
+    /**
+       For purposes of Atomics.wait() and Atomics.notify(), we use a
+       SharedArrayBuffer with one slot reserved for each of the API
+       proxy's methods. The sync side of the API uses Atomics.wait()
+       on the corresponding slot and the async side uses
+       Atomics.notify() on that slot. state.opIds holds the SAB slot
+       IDs of each of those.
+    */
+    state.opIds = Object.create(null);
+    {
+      /* Indexes for use in our SharedArrayBuffer... */
+      let i = 0;
+      /* SAB slot used to communicate which operation is desired
+         between both workers. This worker writes to it and the other
+         listens for changes and clears it. The values written to it
+         are state.opIds.x[A-Z][a-z]+, defined below.*/
+      state.opIds.whichOp = i++;
+      /* Slot for storing return values. This side listens to that
+         slot and the async proxy writes to it. */
+      state.opIds.rc = i++;
+      /* Each function gets an ID which this worker writes to the
+         state.opIds.whichOp slot. The async-api worker uses
+         Atomic.wait() on the whichOp slot to figure out which
+         operation to run next. */
+      state.opIds.xAccess = i++;
+      state.opIds.xClose = i++;
+      state.opIds.xDelete = i++;
+      state.opIds.xDeleteNoWait = i++;
+      state.opIds.xFileSize = i++;
+      state.opIds.xLock = i++;
+      state.opIds.xOpen = i++;
+      state.opIds.xRead = i++;
+      state.opIds.xSleep = i++;
+      state.opIds.xSync = i++;
+      state.opIds.xTruncate = i++;
+      state.opIds.xUnlock = i++;
+      state.opIds.xWrite = i++;
+      state.opIds.mkdir = i++ /*currently unused*/;
+      /** Internal signals which are used only during development and
+          testing via the dev console. */
+      state.opIds['opfs-async-metrics'] = i++;
+      state.opIds['opfs-async-shutdown'] = i++;
+      /* The retry slot is used by the async part for wait-and-retry
+         semantics. It is never written to, only used as a convenient
+         place to wait-with-timeout for a value which will never be
+         written, i.e. sleep()ing, before retrying a failed attempt to
+         acquire a SharedAccessHandle. */
+      state.opIds.retry = i++;
+      state.sabOP = new SharedArrayBuffer(
+        i * 4/* 4==sizeof int32, noting that Atomics.wait() and
+                friends can only function on Int32Array views of an
+                SAB. */);
+    }
+    /**
+       SQLITE_xxx constants to export to the async worker
+       counterpart...
+    */
+    state.sq3Codes = Object.create(null);
+    for(const k of [
+      'SQLITE_ACCESS_EXISTS',
+      'SQLITE_ACCESS_READWRITE',
+      'SQLITE_BUSY',
+      'SQLITE_CANTOPEN',
+      'SQLITE_ERROR',
+      'SQLITE_IOERR',
+      'SQLITE_IOERR_ACCESS',
+      'SQLITE_IOERR_CLOSE',
+      'SQLITE_IOERR_DELETE',
+      'SQLITE_IOERR_FSYNC',
+      'SQLITE_IOERR_LOCK',
+      'SQLITE_IOERR_READ',
+      'SQLITE_IOERR_SHORT_READ',
+      'SQLITE_IOERR_TRUNCATE',
+      'SQLITE_IOERR_UNLOCK',
+      'SQLITE_IOERR_WRITE',
+      'SQLITE_LOCK_EXCLUSIVE',
+      'SQLITE_LOCK_NONE',
+      'SQLITE_LOCK_PENDING',
+      'SQLITE_LOCK_RESERVED',
+      'SQLITE_LOCK_SHARED',
+      'SQLITE_LOCKED',
+      'SQLITE_MISUSE',
+      'SQLITE_NOTFOUND',
+      'SQLITE_OPEN_CREATE',
+      'SQLITE_OPEN_DELETEONCLOSE',
+      'SQLITE_OPEN_MAIN_DB',
+      'SQLITE_OPEN_READONLY',
+      'SQLITE_LOCK_NONE',
+      'SQLITE_LOCK_SHARED',
+      'SQLITE_LOCK_RESERVED',
+      'SQLITE_LOCK_PENDING',
+      'SQLITE_LOCK_EXCLUSIVE'
+    ]){
+      state.sq3Codes[k] =
+        capi[k] ?? toss("Maintenance required: not found:",k);
+    }
+
+    state.opfsFlags = Object.assign(Object.create(null),{
+      /**
+         Flag for use with xOpen(). URI flag "opfs-unlock-asap=1"
+         enables this. See defaultUnlockAsap, below.
+      */
+      OPFS_UNLOCK_ASAP: 0x01,
+      /**
+         Flag for use with xOpen(). URI flag "delete-before-open=1"
+         tells the VFS to delete the db file before attempting to open
+         it. This can be used, e.g., to replace a db which has been
+         corrupted (without forcing us to expose a delete/unlink()
+         function in the public API).
+
+         Failure to unlink the file is ignored but may lead to
+         downstream errors.  An unlink can fail if, e.g., another tab
+         has the handle open.
+
+         It goes without saying that deleting a file out from under
+         another instance results in Undefined Behavior.
+      */
+      OPFS_UNLINK_BEFORE_OPEN: 0x02,
+      /**
+         If true, any async routine which must implicitly acquire a
+         sync access handle (i.e. an OPFS lock), without an active
+         xLock(), will release that lock at the end of the call which
+         acquires it. If false, such implicit locks are not released
+         until the VFS is idle for some brief amount of time, as
+         defined by state.asyncIdleWaitTime.
+
+         The benefit of enabling this is higher concurrency. The
+         down-side is much-reduced performance (as much as a 4x
+         decrease in speedtest1).
+      */
+      defaultUnlockAsap: false
+    });
+
+    opfsVfs.metrics.reset()/*must not be called until state.opIds is set up*/;
+    const metrics = opfsVfs.metrics.counters;
+
+    /**
+       Runs the given operation (by name) in the async worker
+       counterpart, waits for its response, and returns the result
+       which the async worker writes to SAB[state.opIds.rc]. The 2nd
+       and subsequent arguments must be the arguments for the async op
+       (see sqlite3-opfs-async-proxy.c-pp.js).
+    */
+    const opRun = opfsVfs.opRun = (op,...args)=>{
+      const opNdx = state.opIds[op] || toss(opfsVfs.vfsName+": Invalid op ID:",op);
+      state.s11n.serialize(...args);
+      Atomics.store(state.sabOPView, state.opIds.rc, -1);
+      Atomics.store(state.sabOPView, state.opIds.whichOp, opNdx);
+      Atomics.notify(state.sabOPView, state.opIds.whichOp)
+      /* async thread will take over here */;
+      const t = performance.now();
+      while('not-equal'!==Atomics.wait(state.sabOPView, state.opIds.rc, -1)){
+        /*
+          The reason for this loop is buried in the details of a long
+          discussion at:
+
+          https://github.com/sqlite/sqlite-wasm/issues/12
+
+          Summary: in at least one browser flavor, under high loads,
+          the wait()/notify() pairings can get out of sync and/or
+          spuriously wake up. Calling wait() here until it returns
+          'not-equal' gets them back in sync.
+        */
+      }
+      /* When the above wait() call returns 'not-equal', the async
+         half will have completed the operation and reported its
+         results in the state.opIds.rc slot of the SAB. It may have
+         also serialized an exception for us. */
+      const rc = Atomics.load(state.sabOPView, state.opIds.rc);
+      metrics[op].wait += performance.now() - t;
+      if(rc && state.asyncS11nExceptions){
+        const err = state.s11n.deserialize();
+        if(err) error(op+"() async error:",...err);
+      }
+      return rc;
+    };
+
+    const opTimer = Object.create(null);
+    opTimer.op = undefined;
+    opTimer.start = undefined;
+    const mTimeStart = opfsVfs.mTimeStart = (op)=>{
+      opTimer.start = performance.now();
+      opTimer.op = op;
+      ++metrics[op].count;
+    };
+    const mTimeEnd = opfsVfs.mTimeEnd = ()=>(
+      metrics[opTimer.op].time += performance.now() - opTimer.start
+    );
+
+    /**
+       Map of sqlite3_file pointers to objects constructed by xOpen().
+    */
+    const __openFiles = opfsVfs.__openFiles = Object.create(null);
+
+    /**
+       Impls for the sqlite3_io_methods methods. Maintenance reminder:
+       members are in alphabetical order to simplify finding them.
+    */
+    const ioSyncWrappers = opfsVfs.ioSyncWrappers = util.nu({
+      xCheckReservedLock: function(pFile,pOut){
+        /**
+           After consultation with a topic expert: "opfs-wl" will
+           continue to use the same no-op impl which "opfs" does
+           because:
+
+           - xCheckReservedLock() is just a hint. If SQLite needs to
+           lock, it's still going to try to lock.
+
+           - We cannot do this check synchronously in "opfs-wl",
+           so would need to pass it to the async proxy. That would
+           make it inordinately expensive considering that it's
+           just a hint.
+        */
+        wasm.poke(pOut, 0, 'i32');
+        return 0;
+      },
+      xClose: function(pFile){
+        mTimeStart('xClose');
+        let rc = 0;
+        const f = __openFiles[pFile];
+        if(f){
+          delete __openFiles[pFile];
+          rc = opRun('xClose', pFile);
+          if(f.sq3File) f.sq3File.dispose();
+        }
+        mTimeEnd();
+        return rc;
+      },
+      xDeviceCharacteristics: function(pFile){
+        return capi.SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN;
+      },
+      xFileControl: function(pFile, opId, pArg){
+        /*mTimeStart('xFileControl');
+         mTimeEnd();*/
+        return capi.SQLITE_NOTFOUND;
+      },
+      xFileSize: function(pFile,pSz64){
+        mTimeStart('xFileSize');
+        let rc = opRun('xFileSize', pFile);
+        if(0==rc){
+          try {
+            const sz = state.s11n.deserialize()[0];
+            wasm.poke(pSz64, sz, 'i64');
+          }catch(e){
+            error("Unexpected error reading xFileSize() result:",e);
+            rc = state.sq3Codes.SQLITE_IOERR;
+          }
+        }
+        mTimeEnd();
+        return rc;
+      },
+      xRead: function(pFile,pDest,n,offset64){
+       mTimeStart('xRead');
+        const f = __openFiles[pFile];
+        let rc;
+        try {
+          rc = opRun('xRead',pFile, n, Number(offset64));
+          if(0===rc || capi.SQLITE_IOERR_SHORT_READ===rc){
+            /**
+               Results get written to the SharedArrayBuffer f.sabView.
+               Because the heap is _not_ a SharedArrayBuffer, we have
+               to copy the results. TypedArray.set() seems to be the
+               fastest way to copy this. */
+            wasm.heap8u().set(f.sabView.subarray(0, n), Number(pDest));
+          }
+        }catch(e){
+          error("xRead(",arguments,") failed:",e,f);
+          rc = capi.SQLITE_IOERR_READ;
+        }
+        mTimeEnd();
+        return rc;
+      },
+      xSync: function(pFile,flags){
+        mTimeStart('xSync');
+        const rc = opRun('xSync', pFile, flags);
+        mTimeEnd();
+        return rc;
+      },
+      xTruncate: function(pFile,sz64){
+        mTimeStart('xTruncate');
+        const rc = opRun('xTruncate', pFile, Number(sz64));
+        mTimeEnd();
+        return rc;
+      },
+      xWrite: function(pFile,pSrc,n,offset64){
+        mTimeStart('xWrite');
+        const f = __openFiles[pFile];
+        let rc;
+        try {
+          f.sabView.set(wasm.heap8u().subarray(
+            Number(pSrc), Number(pSrc) + n
+          ));
+          rc = opRun('xWrite', pFile, n, Number(offset64));
+        }catch(e){
+          error("xWrite(",arguments,") failed:",e,f);
+          rc = capi.SQLITE_IOERR_WRITE;
+        }
+        mTimeEnd();
+        return rc;
+      }
+    })/*ioSyncWrappers*/;
+
+    /**
+       Impls for the sqlite3_vfs methods. Maintenance reminder: members
+       are in alphabetical order to simplify finding them.
+    */
+    const vfsSyncWrappers = opfsVfs.vfsSyncWrappers = {
+      xAccess: function(pVfs,zName,flags,pOut){
+       mTimeStart('xAccess');
+        const rc = opRun('xAccess', wasm.cstrToJs(zName));
+        wasm.poke( pOut, (rc ? 0 : 1), 'i32' );
+        mTimeEnd();
+        return 0;
+      },
+      xCurrentTime: function(pVfs,pOut){
+        wasm.poke(pOut, 2440587.5 + (new Date().getTime()/86400000),
+                  'double');
+        return 0;
+      },
+      xCurrentTimeInt64: function(pVfs,pOut){
+        wasm.poke(pOut, (2440587.5 * 86400000) + new Date().getTime(),
+                  'i64');
+        return 0;
+      },
+      xDelete: function(pVfs, zName, doSyncDir){
+        mTimeStart('xDelete');
+        const rc = opRun('xDelete', wasm.cstrToJs(zName), doSyncDir, false);
+        mTimeEnd();
+        return rc;
+      },
+      xFullPathname: function(pVfs,zName,nOut,pOut){
+        /* Until/unless we have some notion of "current dir"
+           in OPFS, simply copy zName to pOut... */
+        const i = wasm.cstrncpy(pOut, zName, nOut);
+        return i<nOut ? 0 : capi.SQLITE_CANTOPEN
+        /*CANTOPEN is required by the docs but SQLITE_RANGE would be a closer match*/;
+      },
+      xGetLastError: function(pVfs,nOut,pOut){
+        /* Mutex use in the overlying APIs cause xGetLastError() to
+           not be terribly useful for us. e.g. it can't be used to
+           convey error messages from xOpen() because there would be a
+           race condition between sqlite3_open()'s call to xOpen() and
+           this function. */
+        sqlite3.config.warn("OPFS xGetLastError() has nothing sensible to return.");
+        return 0;
+      },
+      //xSleep is optionally defined below
+      xOpen: function f(pVfs, zName, pFile, flags, pOutFlags){
+        mTimeStart('xOpen');
+        let opfsFlags = 0;
+        let jzName, zToFree;
+        if( !zName ){
+          jzName = opfsUtil.randomFilename();
+          zName = zToFree = wasm.allocCString(jzName);
+        }else if(wasm.isPtr(zName)){
+          if(capi.sqlite3_uri_boolean(zName, "opfs-unlock-asap", 0)){
+            /* -----------------------^^^^^ MUST pass the untranslated
+               C-string here. */
+            opfsFlags |= state.opfsFlags.OPFS_UNLOCK_ASAP;
+          }
+          if(capi.sqlite3_uri_boolean(zName, "delete-before-open", 0)){
+            opfsFlags |= state.opfsFlags.OPFS_UNLINK_BEFORE_OPEN;
+          }
+          jzName = wasm.cstrToJs(zName);
+          //sqlite3.config.warn("xOpen zName =",zName, "opfsFlags =",opfsFlags);
+        }else{
+          sqlite3.config.error("Impossible zName value in xOpen?", zName);
+          return capi.SQLITE_CANTOPEN;
+        }
+        const fh = util.nu({
+          fid: pFile,
+          filename: jzName,
+          sab: new SharedArrayBuffer(state.fileBufferSize),
+          flags: flags,
+          readOnly: !(capi.SQLITE_OPEN_CREATE & flags)
+            && !!(flags & capi.SQLITE_OPEN_READONLY)
+        });
+        const rc = opRun('xOpen', pFile, jzName, flags, opfsFlags);
+        if(rc){
+          if( zToFree ) wasm.dealloc(zToFree);
+        }else{
+          /* Recall that sqlite3_vfs::xClose() will be called, even on
+             error, unless pFile->pMethods is NULL. */
+          if(fh.readOnly){
+            wasm.poke(pOutFlags, capi.SQLITE_OPEN_READONLY, 'i32');
+          }
+          __openFiles[pFile] = fh;
+          fh.sabView = state.sabFileBufView;
+          fh.sq3File = new capi.sqlite3_file(pFile);
+          if( zToFree ) fh.sq3File.addOnDispose(zToFree);
+          fh.sq3File.$pMethods = opfsIoMethods.pointer;
+          fh.lockType = capi.SQLITE_LOCK_NONE;
+        }
+        mTimeEnd();
+        return rc;
+      }/*xOpen()*/
+    }/*vfsSyncWrappers*/;
+
+    const pDVfs = capi.sqlite3_vfs_find(null)/*pointer to default VFS*/;
+    if(pDVfs){
+      const dVfs = new capi.sqlite3_vfs(pDVfs);
+      opfsVfs.$xRandomness = dVfs.$xRandomness;
+      opfsVfs.$xSleep = dVfs.$xSleep;
+      dVfs.dispose();
+    }
+    if(!opfsVfs.$xRandomness){
+      /* If the default VFS has no xRandomness(), add a basic JS impl... */
+      opfsVfs.vfsSyncWrappers.xRandomness = function(pVfs, nOut, pOut){
+        const heap = wasm.heap8u();
+        let i = 0;
+        const npOut = Number(pOut);
+        for(; i < nOut; ++i) heap[npOut + i] = (Math.random()*255000) & 0xFF;
+        return i;
+      };
+    }
+    if(!opfsVfs.$xSleep){
+      /* If we can inherit an xSleep() impl from the default VFS then
+         assume it's sane and use it, otherwise install a JS-based
+         one. */
+      opfsVfs.vfsSyncWrappers.xSleep = function(pVfs,ms){
+        mTimeStart('xSleep');
+        Atomics.wait(state.sabOPView, state.opIds.xSleep, 0, ms);
+        mTimeEnd();
+        return 0;
+      };
+    }
+
+const initS11n = function(){
+  /**
+     This proxy de/serializes cross-thread function arguments and
+     output-pointer values via the state.sabIO SharedArrayBuffer,
+     using the region defined by (state.sabS11nOffset,
+     state.sabS11nOffset + state.sabS11nSize]. Only one dataset is
+     recorded at a time.
+
+     This is not a general-purpose format. It only supports the
+     range of operations, and data sizes, needed by the
+     sqlite3_vfs and sqlite3_io_methods operations. Serialized
+     data are transient and this serialization algorithm may
+     change at any time.
+
+     The data format can be succinctly summarized as:
+
+     Nt...Td...D
+
+     Where:
+
+     - N = number of entries (1 byte)
+
+     - t = type ID of first argument (1 byte)
+
+     - ...T = type IDs of the 2nd and subsequent arguments (1 byte
+     each).
+
+     - d = raw bytes of first argument (per-type size).
+
+     - ...D = raw bytes of the 2nd and subsequent arguments (per-type
+     size).
+
+     All types except strings have fixed sizes. Strings are stored
+     using their TextEncoder/TextDecoder representations. It would
+     arguably make more sense to store them as Int16Arrays of
+     their JS character values, but how best/fastest to get that
+     in and out of string form is an open point. Initial
+     experimentation with that approach did not gain us any speed.
+
+     Historical note: this impl was initially about 1% this size by
+     using using JSON.stringify/parse(), but using fit-to-purpose
+     serialization saves considerable runtime.
+  */
+  if(state.s11n) return state.s11n;
+  const textDecoder = new TextDecoder(),
+        textEncoder = new TextEncoder('utf-8'),
+        viewU8 = new Uint8Array(state.sabIO, state.sabS11nOffset, state.sabS11nSize),
+        viewDV = new DataView(state.sabIO, state.sabS11nOffset, state.sabS11nSize);
+  state.s11n = Object.create(null);
+  /* Only arguments and return values of these types may be
+     serialized. This covers the whole range of types needed by the
+     sqlite3_vfs API. */
+  const TypeIds = Object.create(null);
+  TypeIds.number  = { id: 1, size: 8, getter: 'getFloat64', setter: 'setFloat64' };
+  TypeIds.bigint  = { id: 2, size: 8, getter: 'getBigInt64', setter: 'setBigInt64' };
+  TypeIds.boolean = { id: 3, size: 4, getter: 'getInt32', setter: 'setInt32' };
+  TypeIds.string =  { id: 4 };
+
+  const getTypeId = (v)=>(
+    TypeIds[typeof v]
+      || toss("Maintenance required: this value type cannot be serialized.",v)
+  );
+  const getTypeIdById = (tid)=>{
+    switch(tid){
+      case TypeIds.number.id: return TypeIds.number;
+      case TypeIds.bigint.id: return TypeIds.bigint;
+      case TypeIds.boolean.id: return TypeIds.boolean;
+      case TypeIds.string.id: return TypeIds.string;
+      default: toss("Invalid type ID:",tid);
+    }
+  };
+
+  /**
+     Returns an array of the deserialized state stored by the most
+     recent serialize() operation (from this thread or the
+     counterpart thread), or null if the serialization buffer is
+     empty.  If passed a truthy argument, the serialization buffer
+     is cleared after deserialization.
+  */
+  state.s11n.deserialize = function(clear=false){
+    const t = performance.now();
+    const argc = viewU8[0];
+    const rc = argc ? [] : null;
+    if(argc){
+      const typeIds = [];
+      let offset = 1, i, n, v;
+      for(i = 0; i < argc; ++i, ++offset){
+        typeIds.push(getTypeIdById(viewU8[offset]));
+      }
+      for(i = 0; i < argc; ++i){
+        const t = typeIds[i];
+        if(t.getter){
+          v = viewDV[t.getter](offset, state.littleEndian);
+          offset += t.size;
+        }else{/*String*/
+          n = viewDV.getInt32(offset, state.littleEndian);
+          offset += 4;
+          v = textDecoder.decode(viewU8.slice(offset, offset+n));
+          offset += n;
+        }
+        rc.push(v);
+      }
+    }
+    if(clear) viewU8[0] = 0;
+    //log("deserialize:",argc, rc);
+    return rc;
+  };
+
+  /**
+     Serializes all arguments to the shared buffer for consumption
+     by the counterpart thread.
+
+     This routine is only intended for serializing OPFS VFS
+     arguments and (in at least one special case) result values,
+     and the buffer is sized to be able to comfortably handle
+     those.
+
+     If passed no arguments then it zeroes out the serialization
+     state.
+  */
+  state.s11n.serialize = function(...args){
+    const t = performance.now();
+    if(args.length){
+      //log("serialize():",args);
+      const typeIds = [];
+      let i = 0, offset = 1;
+      viewU8[0] = args.length & 0xff /* header = # of args */;
+      for(; i < args.length; ++i, ++offset){
+        /* Write the TypeIds.id value into the next args.length
+           bytes. */
+        typeIds.push(getTypeId(args[i]));
+        viewU8[offset] = typeIds[i].id;
+      }
+      for(i = 0; i < args.length; ++i) {
+        /* Deserialize the following bytes based on their
+           corresponding TypeIds.id from the header. */
+        const t = typeIds[i];
+        if(t.setter){
+          viewDV[t.setter](offset, args[i], state.littleEndian);
+          offset += t.size;
+        }else{/*String*/
+          const s = textEncoder.encode(args[i]);
+          viewDV.setInt32(offset, s.byteLength, state.littleEndian);
+          offset += 4;
+          viewU8.set(s, offset);
+          offset += s.byteLength;
+        }
+      }
+      //log("serialize() result:",viewU8.slice(0,offset));
+    }else{
+      viewU8[0] = 0;
+    }
+  };
+
+
+  return state.s11n;
+}/*initS11n()*/;
+    opfsVfs.initS11n = initS11n;
+
+    /**
+       To be called by the VFS's main installation routine after it has
+       wired up enough state to provide its overridden io-method impls
+       (which must be properties of the ioMethods argument). Returns a
+       Promise which the installation routine must return. callback must
+       be a function which performs any post-bootstrap touchups, namely
+       plugging in a sqlite3.oo1 wrapper. It is passed (sqlite3, opfsVfs),
+       where opfsVfs is the sqlite3_vfs object which was set up by
+       opfsUtil.createVfsState().
+    */
+    opfsVfs.bindVfs = function(ioMethods, callback){
+      Object.assign(opfsVfs.ioSyncWrappers, ioMethods);
+      const thePromise = new Promise(function(promiseResolve_, promiseReject_){
+        let promiseWasRejected = undefined;
+        const promiseReject = (err)=>{
+          promiseWasRejected = true;
+          opfsVfs.dispose();
+          return promiseReject_(err);
+        };
+        const promiseResolve = ()=>{
+          try{
+            callback(sqlite3, opfsVfs);
+          }catch(e){
+            return promiseReject(e);
+          }
+          promiseWasRejected = false;
+          return promiseResolve_(sqlite3);
+        };
+        const options = opfsUtil.options;
+        let proxyUri = options.proxyUri +(
+          (options.proxyUri.indexOf('?')<0) ? '?' : '&'
+        )+'vfs='+vfsName;
+        //sqlite3.config.error("proxyUri",options.proxyUri, (new Error()));
+        const W = opfsVfs.worker =
+        new Worker(new URL(proxyUri, import.meta.url));
+        let zombieTimer = setTimeout(()=>{
+          /* At attempt to work around a browser-specific quirk in which
+             the Worker load is failing in such a way that we neither
+             resolve nor reject it. This workaround gives that resolve/reject
+             a time limit and rejects if that timer expires. Discussion:
+             https://sqlite.org/forum/forumpost/a708c98dcb3ef */
+          if(undefined===promiseWasRejected){
+            promiseReject(
+              new Error("Timeout while waiting for OPFS async proxy worker.")
+            );
+          }
+        }, 4000);
+        W._originalOnError = W.onerror /* will be restored later */;
+        W.onerror = function(err){
+          // The error object doesn't contain any useful info when the
+          // failure is, e.g., that the remote script is 404.
+          error("Error initializing OPFS asyncer:",err);
+          promiseReject(new Error("Loading OPFS async Worker failed for unknown reasons."));
+        };
+
+        const opRun = opfsVfs.opRun;
+
+        const sanityCheck = function(){
+          const scope = wasm.scopedAllocPush();
+          const sq3File = new capi.sqlite3_file();
+          try{
+            const fid = sq3File.pointer;
+            const openFlags = capi.SQLITE_OPEN_CREATE
+                  | capi.SQLITE_OPEN_READWRITE
+            //| capi.SQLITE_OPEN_DELETEONCLOSE
+                  | capi.SQLITE_OPEN_MAIN_DB;
+            const pOut = wasm.scopedAlloc(8);
+            const dbFile = "/sanity/check/file"+randomFilename(8);
+            const zDbFile = wasm.scopedAllocCString(dbFile);
+            let rc;
+            state.s11n.serialize("This is ä string.");
+            rc = state.s11n.deserialize();
+            log("deserialize() says:",rc);
+            if("This is ä string."!==rc[0]) toss("String d13n error.");
+            opfsVfs.vfsSyncWrappers.xAccess(opfsVfs.pointer, zDbFile, 0, pOut);
+            rc = wasm.peek(pOut,'i32');
+            log("xAccess(",dbFile,") exists ?=",rc);
+            rc = opfsVfs.vfsSyncWrappers.xOpen(opfsVfs.pointer, zDbFile,
+                                               fid, openFlags, pOut);
+            log("open rc =",rc,"state.sabOPView[xOpen] =",
+                state.sabOPView[state.opIds.xOpen]);
+            if(0!==rc){
+              error("open failed with code",rc);
+              return;
+            }
+            opfsVfs.vfsSyncWrappers.xAccess(opfsVfs.pointer, zDbFile, 0, pOut);
+            rc = wasm.peek(pOut,'i32');
+            if(!rc) toss("xAccess() failed to detect file.");
+            rc = opfsVfs.ioSyncWrappers.xSync(sq3File.pointer, 0);
+            if(rc) toss('sync failed w/ rc',rc);
+            rc = opfsVfs.ioSyncWrappers.xTruncate(sq3File.pointer, 1024);
+            if(rc) toss('truncate failed w/ rc',rc);
+            wasm.poke(pOut,0,'i64');
+            rc = opfsVfs.ioSyncWrappers.xFileSize(sq3File.pointer, pOut);
+            if(rc) toss('xFileSize failed w/ rc',rc);
+            log("xFileSize says:",wasm.peek(pOut, 'i64'));
+            rc = opfsVfs.ioSyncWrappers.xWrite(sq3File.pointer, zDbFile, 10, 1);
+            if(rc) toss("xWrite() failed!");
+            const readBuf = wasm.scopedAlloc(16);
+            rc = opfsVfs.ioSyncWrappers.xRead(sq3File.pointer, readBuf, 6, 2);
+            wasm.poke(readBuf+6,0);
+            let jRead = wasm.cstrToJs(readBuf);
+            log("xRead() got:",jRead);
+            if("sanity"!==jRead) toss("Unexpected xRead() value.");
+            if(opfsVfs.vfsSyncWrappers.xSleep){
+              log("xSleep()ing before close()ing...");
+              opfsVfs.vfsSyncWrappers.xSleep(opfsVfs.pointer,2000);
+              log("waking up from xSleep()");
+            }
+            rc = opfsVfs.ioSyncWrappers.xClose(fid);
+            log("xClose rc =",rc,"sabOPView =",state.sabOPView);
+            log("Deleting file:",dbFile);
+            opfsVfs.vfsSyncWrappers.xDelete(opfsVfs.pointer, zDbFile, 0x1234);
+            opfsVfs.vfsSyncWrappers.xAccess(opfsVfs.pointer, zDbFile, 0, pOut);
+            rc = wasm.peek(pOut,'i32');
+            if(rc) toss("Expecting 0 from xAccess(",dbFile,") after xDelete().");
+            warn("End of OPFS sanity checks.");
+          }finally{
+            sq3File.dispose();
+            wasm.scopedAllocPop(scope);
+          }
+        }/*sanityCheck()*/;
+
+        W.onmessage = function({data}){
+          //sqlite3.config.warn(vfsName,"Worker.onmessage:",data);
+          switch(data.type){
+            case 'opfs-unavailable':
+              /* Async proxy has determined that OPFS is unavailable. There's
+                 nothing more for us to do here. */
+              promiseReject(new Error(data.payload.join(' ')));
+              break;
+            case 'opfs-async-loaded':
+              /* Arrives as soon as the asyc proxy finishes loading.
+                 Pass our config and shared state on to the async
+                 worker. */
+              delete state.vfs;
+              W.postMessage({type: 'opfs-async-init', args: util.nu(state)});
+              break;
+            case 'opfs-async-inited': {
+              /* Indicates that the async partner has received the 'init'
+                 and has finished initializing, so the real work can
+                 begin... */
+              if(true===promiseWasRejected){
+                break /* promise was already rejected via timer */;
+              }
+              clearTimeout(zombieTimer);
+              zombieTimer = null;
+              try {
+                sqlite3.vfs.installVfs({
+                  io: {struct: opfsVfs.ioMethods, methods: opfsVfs.ioSyncWrappers},
+                  vfs: {struct: opfsVfs, methods: opfsVfs.vfsSyncWrappers}
+                });
+                state.sabOPView = new Int32Array(state.sabOP);
+                state.sabFileBufView = new Uint8Array(state.sabIO, 0, state.fileBufferSize);
+                state.sabS11nView = new Uint8Array(state.sabIO, state.sabS11nOffset, state.sabS11nSize);
+                opfsVfs.initS11n();
+                delete opfsVfs.initS11n;
+                if(options.sanityChecks){
+                  warn("Running sanity checks because of opfs-sanity-check URL arg...");
+                  sanityCheck();
+                }
+                if(opfsUtil.thisThreadHasOPFS()){
+                  opfsUtil.getRootDir().then((d)=>{
+                    W.onerror = W._originalOnError;
+                    delete W._originalOnError;
+                    log("End of OPFS sqlite3_vfs setup.", opfsVfs);
+                    promiseResolve();
+                  }).catch(promiseReject);
+                }else{
+                  promiseResolve();
+                }
+              }catch(e){
+                error(e);
+                promiseReject(e);
+              }
+              break;
+            }
+            case 'debug':
+              warn("debug message from worker:",data);
+              break;
+            default: {
+              const errMsg = (
+                "Unexpected message from the OPFS async worker: " +
+                  JSON.stringify(data)
+              );
+              error(errMsg);
+              promiseReject(new Error(errMsg));
+              break;
+            }
+          }/*switch(data.type)*/
+        }/*W.onmessage()*/;
+      })/*thePromise*/;
+      return thePromise;
+    }/*bindVfs()*/;
+
+    return state;
+  }/*createVfsState()*/;
+
+}/*sqlite3ApiBootstrap.initializers*/);
+/*
   2022-09-18
 
   The author disclaims copyright to this source code.  In place of a
@@ -17994,7 +19454,12 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
 */
 'use strict';
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-/**
+  if( !sqlite3.opfs || sqlite3.config.disable?.vfs?.opfs ){
+    return;
+  }
+  const util = sqlite3.util,
+        opfsUtil = sqlite3.opfs || sqlite3.util.toss("Missing sqlite3.opfs");
+  /**
    installOpfsVfs() returns a Promise which, on success, installs an
    sqlite3_vfs named "opfs", suitable for use with all sqlite3 APIs
    which accept a VFS. It is intended to be called via
@@ -18032,7 +19497,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
   The argument may optionally be a plain object with the following
   configuration options:
 
-  - proxyUri: name of the async proxy JS file.
+  - proxyUri: name of the async proxy JS file or a synchronous function
+    which, when called, returns such a name.
 
   - verbose (=2): an integer 0-3. 0 disables all logging, 1 enables
     logging of errors. 2 enables logging of warnings and errors. 3
@@ -18044,1383 +19510,105 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     Promise resolves. This is only intended for testing and
     development of the VFS, not client-side use.
 
+  Additionaly, the (officially undocumented) 'opfs-disable' URL
+  argument will disable OPFS, making this function a no-op.
+
   On success, the Promise resolves to the top-most sqlite3 namespace
-  object and that object gets a new object installed in its
-  `opfs` property, containing several OPFS-specific utilities.
+  object. Success does not necessarily mean that it installs the VFS,
+  as there are legitimate non-error reasons for OPFS not to be
+  available.
 */
-const installOpfsVfs = function callee(options){
-  if(!globalThis.SharedArrayBuffer
-    || !globalThis.Atomics){
-    return Promise.reject(
-      new Error("Cannot install OPFS: Missing SharedArrayBuffer and/or Atomics. "+
-                "The server must emit the COOP/COEP response headers to enable those. "+
-                "See https://sqlite.org/wasm/doc/trunk/persistence.md#coop-coep")
-    );
-  }else if('undefined'===typeof WorkerGlobalScope){
-    return Promise.reject(
-      new Error("The OPFS sqlite3_vfs cannot run in the main thread "+
-                "because it requires Atomics.wait().")
-    );
-  }else if(!globalThis.FileSystemHandle ||
-           !globalThis.FileSystemDirectoryHandle ||
-           !globalThis.FileSystemFileHandle ||
-           !globalThis.FileSystemFileHandle.prototype.createSyncAccessHandle ||
-           !navigator?.storage?.getDirectory){
-    return Promise.reject(
-      new Error("Missing required OPFS APIs.")
-    );
-  }
-  if(!options || 'object'!==typeof options){
-    options = Object.create(null);
-  }
-  const urlParams = new URL(globalThis.location.href).searchParams;
-  if(urlParams.has('opfs-disable')){
-    //sqlite3.config.warn('Explicitly not installing "opfs" VFS due to opfs-disable flag.');
-    return Promise.resolve(sqlite3);
-  }
-  if(undefined===options.verbose){
-    options.verbose = urlParams.has('opfs-verbose')
-      ? (+urlParams.get('opfs-verbose') || 2) : 1;
-  }
-  if(undefined===options.sanityChecks){
-    options.sanityChecks = urlParams.has('opfs-sanity-check');
-  }
-  if(undefined===options.proxyUri){
-    options.proxyUri = callee.defaultProxyUri;
-  }
+const installOpfsVfs = async function(options){
+  options = opfsUtil.initOptions('opfs',options);
+  if( !options ) return sqlite3;
+  const capi = sqlite3.capi,
+        state = opfsUtil.createVfsState(),
+        opfsVfs = state.vfs,
+        metrics = opfsVfs.metrics.counters,
+        mTimeStart = opfsVfs.mTimeStart,
+        mTimeEnd = opfsVfs.mTimeEnd,
+        opRun = opfsVfs.opRun,
+        debug = (...args)=>sqlite3.config.debug("opfs:",...args),
+        warn = (...args)=>sqlite3.config.warn("opfs:",...args),
+        __openFiles = opfsVfs.__openFiles;
 
-  //sqlite3.config.warn("OPFS options =",options,globalThis.location);
+  //debug("options:",JSON.stringify(options));
+  /*
+    At this point, createVfsState() has populated:
 
-  if('function' === typeof options.proxyUri){
-    options.proxyUri = options.proxyUri();
-  }
-  const thePromise = new Promise(function(promiseResolve_, promiseReject_){
-    const loggers = [
-      sqlite3.config.error,
-      sqlite3.config.warn,
-      sqlite3.config.log
-    ];
-    const logImpl = (level,...args)=>{
-      if(options.verbose>level) loggers[level]("OPFS syncer:",...args);
-    };
-    const log =    (...args)=>logImpl(2, ...args);
-    const warn =   (...args)=>logImpl(1, ...args);
-    const error =  (...args)=>logImpl(0, ...args);
-    const toss = sqlite3.util.toss;
-    const capi = sqlite3.capi;
-    const util = sqlite3.util;
-    const wasm = sqlite3.wasm;
-    const sqlite3_vfs = capi.sqlite3_vfs;
-    const sqlite3_file = capi.sqlite3_file;
-    const sqlite3_io_methods = capi.sqlite3_io_methods;
-    /**
-       Generic utilities for working with OPFS. This will get filled out
-       by the Promise setup and, on success, installed as sqlite3.opfs.
+    - state: the configuration object we share with the async proxy.
 
-       ACHTUNG: do not rely on these APIs in client code. They are
-       experimental and subject to change or removal as the
-       OPFS-specific sqlite3_vfs evolves.
-    */
-    const opfsUtil = Object.create(null);
+    - opfsVfs: an sqlite3_vfs instance with lots of JS state attached
+    to it.
 
-    /**
-       Returns true if _this_ thread has access to the OPFS APIs.
-    */
-    const thisThreadHasOPFS = ()=>{
-      return globalThis.FileSystemHandle &&
-        globalThis.FileSystemDirectoryHandle &&
-        globalThis.FileSystemFileHandle &&
-        globalThis.FileSystemFileHandle.prototype.createSyncAccessHandle &&
-        navigator?.storage?.getDirectory;
-    };
-
-    /**
-       Not part of the public API. Solely for internal/development
-       use.
-    */
-    opfsUtil.metrics = {
-      dump: function(){
-        let k, n = 0, t = 0, w = 0;
-        for(k in state.opIds){
-          const m = metrics[k];
-          n += m.count;
-          t += m.time;
-          w += m.wait;
-          m.avgTime = (m.count && m.time) ? (m.time / m.count) : 0;
-          m.avgWait = (m.count && m.wait) ? (m.wait / m.count) : 0;
-        }
-        sqlite3.config.log(globalThis.location.href,
-                    "metrics for",globalThis.location.href,":",metrics,
-                    "\nTotal of",n,"op(s) for",t,
-                    "ms (incl. "+w+" ms of waiting on the async side)");
-        sqlite3.config.log("Serialization metrics:",metrics.s11n);
-        W.postMessage({type:'opfs-async-metrics'});
-      },
-      reset: function(){
-        let k;
-        const r = (m)=>(m.count = m.time = m.wait = 0);
-        for(k in state.opIds){
-          r(metrics[k] = Object.create(null));
-        }
-        let s = metrics.s11n = Object.create(null);
-        s = s.serialize = Object.create(null);
-        s.count = s.time = 0;
-        s = metrics.s11n.deserialize = Object.create(null);
-        s.count = s.time = 0;
-      }
-    }/*metrics*/;
-    const opfsIoMethods = new sqlite3_io_methods();
-    const opfsVfs = new sqlite3_vfs()
-          .addOnDispose( ()=>opfsIoMethods.dispose());
-    let promiseWasRejected = undefined;
-    const promiseReject = (err)=>{
-      promiseWasRejected = true;
-      opfsVfs.dispose();
-      return promiseReject_(err);
-    };
-    const promiseResolve = ()=>{
-      promiseWasRejected = false;
-      return promiseResolve_(sqlite3);
-    };
-    const W =
-    new Worker(new URL(options.proxyUri, import.meta.url));
-    setTimeout(()=>{
-      /* At attempt to work around a browser-specific quirk in which
-         the Worker load is failing in such a way that we neither
-         resolve nor reject it. This workaround gives that resolve/reject
-         a time limit and rejects if that timer expires. Discussion:
-         https://sqlite.org/forum/forumpost/a708c98dcb3ef */
-      if(undefined===promiseWasRejected){
-        promiseReject(
-          new Error("Timeout while waiting for OPFS async proxy worker.")
-        );
-      }
-    }, 4000);
-    W._originalOnError = W.onerror /* will be restored later */;
-    W.onerror = function(err){
-      // The error object doesn't contain any useful info when the
-      // failure is, e.g., that the remote script is 404.
-      error("Error initializing OPFS asyncer:",err);
-      promiseReject(new Error("Loading OPFS async Worker failed for unknown reasons."));
-    };
-    const pDVfs = capi.sqlite3_vfs_find(null)/*pointer to default VFS*/;
-    const dVfs = pDVfs
-          ? new sqlite3_vfs(pDVfs)
-          : null /* dVfs will be null when sqlite3 is built with
-                    SQLITE_OS_OTHER. */;
-    opfsIoMethods.$iVersion = 1;
-    opfsVfs.$iVersion = 2/*yes, two*/;
-    opfsVfs.$szOsFile = capi.sqlite3_file.structInfo.sizeof;
-    opfsVfs.$mxPathname = 1024/* sure, why not? The OPFS name length limit
-                                 is undocumented/unspecified. */;
-    opfsVfs.$zName = wasm.allocCString("opfs");
-    // All C-side memory of opfsVfs is zeroed out, but just to be explicit:
-    opfsVfs.$xDlOpen = opfsVfs.$xDlError = opfsVfs.$xDlSym = opfsVfs.$xDlClose = null;
-    opfsVfs.addOnDispose(
-      '$zName', opfsVfs.$zName,
-      'cleanup default VFS wrapper', ()=>(dVfs ? dVfs.dispose() : null)
-    );
-    /**
-       Pedantic sidebar about opfsVfs.ondispose: the entries in that array
-       are items to clean up when opfsVfs.dispose() is called, but in this
-       environment it will never be called. The VFS instance simply
-       hangs around until the WASM module instance is cleaned up. We
-       "could" _hypothetically_ clean it up by "importing" an
-       sqlite3_os_end() impl into the wasm build, but the shutdown order
-       of the wasm engine and the JS one are undefined so there is no
-       guaranty that the opfsVfs instance would be available in one
-       environment or the other when sqlite3_os_end() is called (_if_ it
-       gets called at all in a wasm build, which is undefined).
-    */
-    /**
-       State which we send to the async-api Worker or share with it.
-       This object must initially contain only cloneable or sharable
-       objects. After the worker's "inited" message arrives, other types
-       of data may be added to it.
-
-       For purposes of Atomics.wait() and Atomics.notify(), we use a
-       SharedArrayBuffer with one slot reserved for each of the API
-       proxy's methods. The sync side of the API uses Atomics.wait()
-       on the corresponding slot and the async side uses
-       Atomics.notify() on that slot.
-
-       The approach of using a single SAB to serialize comms for all
-       instances might(?) lead to deadlock situations in multi-db
-       cases. We should probably have one SAB here with a single slot
-       for locking a per-file initialization step and then allocate a
-       separate SAB like the above one for each file. That will
-       require a bit of acrobatics but should be feasible. The most
-       problematic part is that xOpen() would have to use
-       postMessage() to communicate its SharedArrayBuffer, and mixing
-       that approach with Atomics.wait/notify() gets a bit messy.
-    */
-    const state = Object.create(null);
-    state.verbose = options.verbose;
-    state.littleEndian = (()=>{
-      const buffer = new ArrayBuffer(2);
-      new DataView(buffer).setInt16(0, 256, true /* ==>littleEndian */);
-      // Int16Array uses the platform's endianness.
-      return new Int16Array(buffer)[0] === 256;
-    })();
-    /**
-       asyncIdleWaitTime is how long (ms) to wait, in the async proxy,
-       for each Atomics.wait() when waiting on inbound VFS API calls.
-       We need to wake up periodically to give the thread a chance to
-       do other things. If this is too high (e.g. 500ms) then even two
-       workers/tabs can easily run into locking errors. Some multiple
-       of this value is also used for determining how long to wait on
-       lock contention to free up.
-    */
-    state.asyncIdleWaitTime = 150;
-
-    /**
-       Whether the async counterpart should log exceptions to
-       the serialization channel. That produces a great deal of
-       noise for seemingly innocuous things like xAccess() checks
-       for missing files, so this option may have one of 3 values:
-
-       0 = no exception logging.
-
-       1 = only log exceptions for "significant" ops like xOpen(),
-       xRead(), and xWrite().
-
-       2 = log all exceptions.
-    */
-    state.asyncS11nExceptions = 1;
-    /* Size of file I/O buffer block. 64k = max sqlite3 page size, and
-       xRead/xWrite() will never deal in blocks larger than that. */
-    state.fileBufferSize = 1024 * 64;
-    state.sabS11nOffset = state.fileBufferSize;
-    /**
-       The size of the block in our SAB for serializing arguments and
-       result values. Needs to be large enough to hold serialized
-       values of any of the proxied APIs. Filenames are the largest
-       part but are limited to opfsVfs.$mxPathname bytes. We also
-       store exceptions there, so it needs to be long enough to hold
-       a reasonably long exception string.
-    */
-    state.sabS11nSize = opfsVfs.$mxPathname * 2;
-    /**
-       The SAB used for all data I/O between the synchronous and
-       async halves (file i/o and arg/result s11n).
-    */
-    state.sabIO = new SharedArrayBuffer(
-      state.fileBufferSize/* file i/o block */
-      + state.sabS11nSize/* argument/result serialization block */
-    );
-    state.opIds = Object.create(null);
-    const metrics = Object.create(null);
-    {
-      /* Indexes for use in our SharedArrayBuffer... */
-      let i = 0;
-      /* SAB slot used to communicate which operation is desired
-         between both workers. This worker writes to it and the other
-         listens for changes. */
-      state.opIds.whichOp = i++;
-      /* Slot for storing return values. This worker listens to that
-         slot and the other worker writes to it. */
-      state.opIds.rc = i++;
-      /* Each function gets an ID which this worker writes to
-         the whichOp slot. The async-api worker uses Atomic.wait()
-         on the whichOp slot to figure out which operation to run
-         next. */
-      state.opIds.xAccess = i++;
-      state.opIds.xClose = i++;
-      state.opIds.xDelete = i++;
-      state.opIds.xDeleteNoWait = i++;
-      state.opIds.xFileSize = i++;
-      state.opIds.xLock = i++;
-      state.opIds.xOpen = i++;
-      state.opIds.xRead = i++;
-      state.opIds.xSleep = i++;
-      state.opIds.xSync = i++;
-      state.opIds.xTruncate = i++;
-      state.opIds.xUnlock = i++;
-      state.opIds.xWrite = i++;
-      state.opIds.mkdir = i++;
-      state.opIds['opfs-async-metrics'] = i++;
-      state.opIds['opfs-async-shutdown'] = i++;
-      /* The retry slot is used by the async part for wait-and-retry
-         semantics. Though we could hypothetically use the xSleep slot
-         for that, doing so might lead to undesired side effects. */
-      state.opIds.retry = i++;
-      state.sabOP = new SharedArrayBuffer(
-        i * 4/* ==sizeof int32, noting that Atomics.wait() and friends
-                can only function on Int32Array views of an SAB. */);
-      opfsUtil.metrics.reset();
-    }
-    /**
-       SQLITE_xxx constants to export to the async worker
-       counterpart...
-    */
-    state.sq3Codes = Object.create(null);
-    [
-      'SQLITE_ACCESS_EXISTS',
-      'SQLITE_ACCESS_READWRITE',
-      'SQLITE_BUSY',
-      'SQLITE_CANTOPEN',
-      'SQLITE_ERROR',
-      'SQLITE_IOERR',
-      'SQLITE_IOERR_ACCESS',
-      'SQLITE_IOERR_CLOSE',
-      'SQLITE_IOERR_DELETE',
-      'SQLITE_IOERR_FSYNC',
-      'SQLITE_IOERR_LOCK',
-      'SQLITE_IOERR_READ',
-      'SQLITE_IOERR_SHORT_READ',
-      'SQLITE_IOERR_TRUNCATE',
-      'SQLITE_IOERR_UNLOCK',
-      'SQLITE_IOERR_WRITE',
-      'SQLITE_LOCK_EXCLUSIVE',
-      'SQLITE_LOCK_NONE',
-      'SQLITE_LOCK_PENDING',
-      'SQLITE_LOCK_RESERVED',
-      'SQLITE_LOCK_SHARED',
-      'SQLITE_LOCKED',
-      'SQLITE_MISUSE',
-      'SQLITE_NOTFOUND',
-      'SQLITE_OPEN_CREATE',
-      'SQLITE_OPEN_DELETEONCLOSE',
-      'SQLITE_OPEN_MAIN_DB',
-      'SQLITE_OPEN_READONLY'
-    ].forEach((k)=>{
-      if(undefined === (state.sq3Codes[k] = capi[k])){
-        toss("Maintenance required: not found:",k);
-      }
-    });
-    state.opfsFlags = Object.assign(Object.create(null),{
-      /**
-         Flag for use with xOpen(). URI flag "opfs-unlock-asap=1"
-         enables this. See defaultUnlockAsap, below.
-       */
-      OPFS_UNLOCK_ASAP: 0x01,
-      /**
-         Flag for use with xOpen(). URI flag "delete-before-open=1"
-         tells the VFS to delete the db file before attempting to open
-         it. This can be used, e.g., to replace a db which has been
-         corrupted (without forcing us to expose a delete/unlink()
-         function in the public API).
-
-         Failure to unlink the file is ignored but may lead to
-         downstream errors.  An unlink can fail if, e.g., another tab
-         has the handle open.
-
-         It goes without saying that deleting a file out from under another
-         instance results in Undefined Behavior.
-      */
-      OPFS_UNLINK_BEFORE_OPEN: 0x02,
-      /**
-         If true, any async routine which implicitly acquires a sync
-         access handle (i.e. an OPFS lock) will release that lock at
-         the end of the call which acquires it. If false, such
-         "autolocks" are not released until the VFS is idle for some
-         brief amount of time.
-
-         The benefit of enabling this is much higher concurrency. The
-         down-side is much-reduced performance (as much as a 4x decrease
-         in speedtest1).
-      */
-      defaultUnlockAsap: false
-    });
-
-    /**
-       Runs the given operation (by name) in the async worker
-       counterpart, waits for its response, and returns the result
-       which the async worker writes to SAB[state.opIds.rc]. The
-       2nd and subsequent arguments must be the arguments for the
-       async op.
-    */
-    const opRun = (op,...args)=>{
-      const opNdx = state.opIds[op] || toss("Invalid op ID:",op);
-      state.s11n.serialize(...args);
-      Atomics.store(state.sabOPView, state.opIds.rc, -1);
-      Atomics.store(state.sabOPView, state.opIds.whichOp, opNdx);
-      Atomics.notify(state.sabOPView, state.opIds.whichOp)
-      /* async thread will take over here */;
-      const t = performance.now();
-      while('not-equal'!==Atomics.wait(state.sabOPView, state.opIds.rc, -1)){
-        /*
-          The reason for this loop is buried in the details of a long
-          discussion at:
-
-          https://github.com/sqlite/sqlite-wasm/issues/12
-
-          Summary: in at least one browser flavor, under high loads,
-          the wait()/notify() pairings can get out of sync. Calling
-          wait() here until it returns 'not-equal' gets them back in
-          sync.
-        */
-      }
-      /* When the above wait() call returns 'not-equal', the async
-         half will have completed the operation and reported its results
-         in the state.opIds.rc slot of the SAB. */
-      const rc = Atomics.load(state.sabOPView, state.opIds.rc);
-      metrics[op].wait += performance.now() - t;
-      if(rc && state.asyncS11nExceptions){
-        const err = state.s11n.deserialize();
-        if(err) error(op+"() async error:",...err);
-      }
-      return rc;
-    };
-
-    /**
-       Not part of the public API. Only for test/development use.
-    */
-    opfsUtil.debug = {
-      asyncShutdown: ()=>{
-        warn("Shutting down OPFS async listener. The OPFS VFS will no longer work.");
-        opRun('opfs-async-shutdown');
-      },
-      asyncRestart: ()=>{
-        warn("Attempting to restart OPFS VFS async listener. Might work, might not.");
-        W.postMessage({type: 'opfs-async-restart'});
-      }
-    };
-
-    const initS11n = ()=>{
-      /**
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ACHTUNG: this code is 100% duplicated in the other half of
-         this proxy! The documentation is maintained in the
-         "synchronous half".
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-         This proxy de/serializes cross-thread function arguments and
-         output-pointer values via the state.sabIO SharedArrayBuffer,
-         using the region defined by (state.sabS11nOffset,
-         state.sabS11nOffset + state.sabS11nSize]. Only one dataset is
-         recorded at a time.
-
-         This is not a general-purpose format. It only supports the
-         range of operations, and data sizes, needed by the
-         sqlite3_vfs and sqlite3_io_methods operations. Serialized
-         data are transient and this serialization algorithm may
-         change at any time.
-
-         The data format can be succinctly summarized as:
-
-         Nt...Td...D
-
-         Where:
-
-         - N = number of entries (1 byte)
-
-         - t = type ID of first argument (1 byte)
-
-         - ...T = type IDs of the 2nd and subsequent arguments (1 byte
-         each).
-
-         - d = raw bytes of first argument (per-type size).
-
-         - ...D = raw bytes of the 2nd and subsequent arguments (per-type
-         size).
-
-         All types except strings have fixed sizes. Strings are stored
-         using their TextEncoder/TextDecoder representations. It would
-         arguably make more sense to store them as Int16Arrays of
-         their JS character values, but how best/fastest to get that
-         in and out of string form is an open point. Initial
-         experimentation with that approach did not gain us any speed.
-
-         Historical note: this impl was initially about 1% this size by
-         using using JSON.stringify/parse(), but using fit-to-purpose
-         serialization saves considerable runtime.
-      */
-      if(state.s11n) return state.s11n;
-      const textDecoder = new TextDecoder(),
-            textEncoder = new TextEncoder('utf-8'),
-            viewU8 = new Uint8Array(state.sabIO, state.sabS11nOffset, state.sabS11nSize),
-            viewDV = new DataView(state.sabIO, state.sabS11nOffset, state.sabS11nSize);
-      state.s11n = Object.create(null);
-      /* Only arguments and return values of these types may be
-         serialized. This covers the whole range of types needed by the
-         sqlite3_vfs API. */
-      const TypeIds = Object.create(null);
-      TypeIds.number  = { id: 1, size: 8, getter: 'getFloat64', setter: 'setFloat64' };
-      TypeIds.bigint  = { id: 2, size: 8, getter: 'getBigInt64', setter: 'setBigInt64' };
-      TypeIds.boolean = { id: 3, size: 4, getter: 'getInt32', setter: 'setInt32' };
-      TypeIds.string =  { id: 4 };
-
-      const getTypeId = (v)=>(
-        TypeIds[typeof v]
-          || toss("Maintenance required: this value type cannot be serialized.",v)
-      );
-      const getTypeIdById = (tid)=>{
-        switch(tid){
-            case TypeIds.number.id: return TypeIds.number;
-            case TypeIds.bigint.id: return TypeIds.bigint;
-            case TypeIds.boolean.id: return TypeIds.boolean;
-            case TypeIds.string.id: return TypeIds.string;
-            default: toss("Invalid type ID:",tid);
-        }
-      };
-
-      /**
-         Returns an array of the deserialized state stored by the most
-         recent serialize() operation (from this thread or the
-         counterpart thread), or null if the serialization buffer is
-         empty.  If passed a truthy argument, the serialization buffer
-         is cleared after deserialization.
-      */
-      state.s11n.deserialize = function(clear=false){
-        ++metrics.s11n.deserialize.count;
-        const t = performance.now();
-        const argc = viewU8[0];
-        const rc = argc ? [] : null;
-        if(argc){
-          const typeIds = [];
-          let offset = 1, i, n, v;
-          for(i = 0; i < argc; ++i, ++offset){
-            typeIds.push(getTypeIdById(viewU8[offset]));
-          }
-          for(i = 0; i < argc; ++i){
-            const t = typeIds[i];
-            if(t.getter){
-              v = viewDV[t.getter](offset, state.littleEndian);
-              offset += t.size;
-            }else{/*String*/
-              n = viewDV.getInt32(offset, state.littleEndian);
-              offset += 4;
-              v = textDecoder.decode(viewU8.slice(offset, offset+n));
-              offset += n;
-            }
-            rc.push(v);
-          }
-        }
-        if(clear) viewU8[0] = 0;
-        //log("deserialize:",argc, rc);
-        metrics.s11n.deserialize.time += performance.now() - t;
-        return rc;
-      };
-
-      /**
-         Serializes all arguments to the shared buffer for consumption
-         by the counterpart thread.
-
-         This routine is only intended for serializing OPFS VFS
-         arguments and (in at least one special case) result values,
-         and the buffer is sized to be able to comfortably handle
-         those.
-
-         If passed no arguments then it zeroes out the serialization
-         state.
-      */
-      state.s11n.serialize = function(...args){
-        const t = performance.now();
-        ++metrics.s11n.serialize.count;
-        if(args.length){
-          //log("serialize():",args);
-          const typeIds = [];
-          let i = 0, offset = 1;
-          viewU8[0] = args.length & 0xff /* header = # of args */;
-          for(; i < args.length; ++i, ++offset){
-            /* Write the TypeIds.id value into the next args.length
-               bytes. */
-            typeIds.push(getTypeId(args[i]));
-            viewU8[offset] = typeIds[i].id;
-          }
-          for(i = 0; i < args.length; ++i) {
-            /* Deserialize the following bytes based on their
-               corresponding TypeIds.id from the header. */
-            const t = typeIds[i];
-            if(t.setter){
-              viewDV[t.setter](offset, args[i], state.littleEndian);
-              offset += t.size;
-            }else{/*String*/
-              const s = textEncoder.encode(args[i]);
-              viewDV.setInt32(offset, s.byteLength, state.littleEndian);
-              offset += 4;
-              viewU8.set(s, offset);
-              offset += s.byteLength;
-            }
-          }
-          //log("serialize() result:",viewU8.slice(0,offset));
-        }else{
-          viewU8[0] = 0;
-        }
-        metrics.s11n.serialize.time += performance.now() - t;
-      };
-      return state.s11n;
-    }/*initS11n()*/;
-
-    /**
-       Generates a random ASCII string len characters long, intended for
-       use as a temporary file name.
-    */
-    const randomFilename = function f(len=16){
-      if(!f._chars){
-        f._chars = "abcdefghijklmnopqrstuvwxyz"+
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZ"+
-          "012346789";
-        f._n = f._chars.length;
-      }
-      const a = [];
-      let i = 0;
-      for( ; i < len; ++i){
-        const ndx = Math.random() * (f._n * 64) % f._n | 0;
-        a[i] = f._chars[ndx];
-      }
-      return a.join("");
-      /*
-        An alternative impl. with an unpredictable length
-        but much simpler:
-
-        Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(36)
-      */
-    };
-
-    /**
-       Map of sqlite3_file pointers to objects constructed by xOpen().
-    */
-    const __openFiles = Object.create(null);
-
-    const opTimer = Object.create(null);
-    opTimer.op = undefined;
-    opTimer.start = undefined;
-    const mTimeStart = (op)=>{
-      opTimer.start = performance.now();
-      opTimer.op = op;
-      ++metrics[op].count;
-    };
-    const mTimeEnd = ()=>(
-      metrics[opTimer.op].time += performance.now() - opTimer.start
-    );
-
-    /**
-       Impls for the sqlite3_io_methods methods. Maintenance reminder:
-       members are in alphabetical order to simplify finding them.
-    */
-    const ioSyncWrappers = {
-      xCheckReservedLock: function(pFile,pOut){
-        /**
-           As of late 2022, only a single lock can be held on an OPFS
-           file. We have no way of checking whether any _other_ db
-           connection has a lock except by trying to obtain and (on
-           success) release a sync-handle for it, but doing so would
-           involve an inherent race condition. For the time being,
-           pending a better solution, we simply report whether the
-           given pFile is open.
-
-           Update 2024-06-12: based on forum discussions, this
-           function now always sets pOut to 0 (false):
-
-           https://sqlite.org/forum/forumpost/a2f573b00cda1372
-        */
-        wasm.poke(pOut, 0, 'i32');
-        return 0;
-      },
-      xClose: function(pFile){
-        mTimeStart('xClose');
-        let rc = 0;
-        const f = __openFiles[pFile];
-        if(f){
-          delete __openFiles[pFile];
-          rc = opRun('xClose', pFile);
-          if(f.sq3File) f.sq3File.dispose();
-        }
-        mTimeEnd();
-        return rc;
-      },
-      xDeviceCharacteristics: function(pFile){
-        return capi.SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN;
-      },
-      xFileControl: function(pFile, opId, pArg){
-        /*mTimeStart('xFileControl');
-          mTimeEnd();*/
-        return capi.SQLITE_NOTFOUND;
-      },
-      xFileSize: function(pFile,pSz64){
-        mTimeStart('xFileSize');
-        let rc = opRun('xFileSize', pFile);
-        if(0==rc){
-          try {
-            const sz = state.s11n.deserialize()[0];
-            wasm.poke(pSz64, sz, 'i64');
-          }catch(e){
-            error("Unexpected error reading xFileSize() result:",e);
-            rc = state.sq3Codes.SQLITE_IOERR;
-          }
-        }
-        mTimeEnd();
-        return rc;
-      },
-      xLock: function(pFile,lockType){
-        mTimeStart('xLock');
-        const f = __openFiles[pFile];
-        let rc = 0;
-        /* All OPFS locks are exclusive locks. If xLock() has
-           previously succeeded, do nothing except record the lock
-           type. If no lock is active, have the async counterpart
-           lock the file. */
-        if( !f.lockType ) {
-          rc = opRun('xLock', pFile, lockType);
-          if( 0===rc ) f.lockType = lockType;
-        }else{
-          f.lockType = lockType;
-        }
-        mTimeEnd();
-        return rc;
-      },
-      xRead: function(pFile,pDest,n,offset64){
-        mTimeStart('xRead');
-        const f = __openFiles[pFile];
-        let rc;
-        try {
-          rc = opRun('xRead',pFile, n, Number(offset64));
-          if(0===rc || capi.SQLITE_IOERR_SHORT_READ===rc){
-            /**
-               Results get written to the SharedArrayBuffer f.sabView.
-               Because the heap is _not_ a SharedArrayBuffer, we have
-               to copy the results. TypedArray.set() seems to be the
-               fastest way to copy this. */
-            wasm.heap8u().set(f.sabView.subarray(0, n), Number(pDest));
-          }
-        }catch(e){
-          error("xRead(",arguments,") failed:",e,f);
-          rc = capi.SQLITE_IOERR_READ;
-        }
-        mTimeEnd();
-        return rc;
-      },
-      xSync: function(pFile,flags){
-        mTimeStart('xSync');
-        ++metrics.xSync.count;
-        const rc = opRun('xSync', pFile, flags);
-        mTimeEnd();
-        return rc;
-      },
-      xTruncate: function(pFile,sz64){
-        mTimeStart('xTruncate');
-        const rc = opRun('xTruncate', pFile, Number(sz64));
-        mTimeEnd();
-        return rc;
-      },
-      xUnlock: function(pFile,lockType){
-        mTimeStart('xUnlock');
-        const f = __openFiles[pFile];
-        let rc = 0;
-        if( capi.SQLITE_LOCK_NONE === lockType
-          && f.lockType ){
-          rc = opRun('xUnlock', pFile, lockType);
-        }
+    with any code common to both the "opfs" and "opfs-wl" VFSes. Now
+    comes the VFS-dependent work...
+  */
+  return opfsVfs.bindVfs(util.nu({
+    xLock: function(pFile,lockType){
+      mTimeStart('xLock');
+      ++metrics.xLock.count;
+      const f = __openFiles[pFile];
+      let rc = 0;
+      /* All OPFS locks are exclusive locks. If xLock() has
+         previously succeeded, do nothing except record the lock
+         type. If no lock is active, have the async counterpart
+         lock the file. */
+      if( f.lockType ) {
+        f.lockType = lockType;
+      }else{
+        rc = opRun('xLock', pFile, lockType);
         if( 0===rc ) f.lockType = lockType;
-        mTimeEnd();
-        return rc;
-      },
-      xWrite: function(pFile,pSrc,n,offset64){
-        mTimeStart('xWrite');
-        const f = __openFiles[pFile];
-        let rc;
-        try {
-          f.sabView.set(wasm.heap8u().subarray(
-            Number(pSrc), Number(pSrc) + n
-          ));
-          rc = opRun('xWrite', pFile, n, Number(offset64));
-        }catch(e){
-          error("xWrite(",arguments,") failed:",e,f);
-          rc = capi.SQLITE_IOERR_WRITE;
-        }
-        mTimeEnd();
-        return rc;
       }
-    }/*ioSyncWrappers*/;
-
-    /**
-       Impls for the sqlite3_vfs methods. Maintenance reminder: members
-       are in alphabetical order to simplify finding them.
-    */
-    const vfsSyncWrappers = {
-      xAccess: function(pVfs,zName,flags,pOut){
-        mTimeStart('xAccess');
-        const rc = opRun('xAccess', wasm.cstrToJs(zName));
-        wasm.poke( pOut, (rc ? 0 : 1), 'i32' );
-        mTimeEnd();
-        return 0;
-      },
-      xCurrentTime: function(pVfs,pOut){
-        /* If it turns out that we need to adjust for timezone, see:
-           https://stackoverflow.com/a/11760121/1458521 */
-        wasm.poke(pOut, 2440587.5 + (new Date().getTime()/86400000),
-                  'double');
-        return 0;
-      },
-      xCurrentTimeInt64: function(pVfs,pOut){
-        wasm.poke(pOut, (2440587.5 * 86400000) + new Date().getTime(),
-                  'i64');
-        return 0;
-      },
-      xDelete: function(pVfs, zName, doSyncDir){
-        mTimeStart('xDelete');
-        const rc = opRun('xDelete', wasm.cstrToJs(zName), doSyncDir, false);
-        mTimeEnd();
-        return rc;
-      },
-      xFullPathname: function(pVfs,zName,nOut,pOut){
-        /* Until/unless we have some notion of "current dir"
-           in OPFS, simply copy zName to pOut... */
-        const i = wasm.cstrncpy(pOut, zName, nOut);
-        return i<nOut ? 0 : capi.SQLITE_CANTOPEN
-        /*CANTOPEN is required by the docs but SQLITE_RANGE would be a closer match*/;
-      },
-      xGetLastError: function(pVfs,nOut,pOut){
-        /* TODO: store exception.message values from the async
-           partner in a dedicated SharedArrayBuffer, noting that we'd have
-           to encode them... TextEncoder can do that for us. */
-        warn("OPFS xGetLastError() has nothing sensible to return.");
-        return 0;
-      },
-      //xSleep is optionally defined below
-      xOpen: function f(pVfs, zName, pFile, flags, pOutFlags){
-        mTimeStart('xOpen');
-        let opfsFlags = 0;
-        if(0===zName){
-          zName = randomFilename();
-        }else if(wasm.isPtr(zName)){
-          if(capi.sqlite3_uri_boolean(zName, "opfs-unlock-asap", 0)){
-            /* -----------------------^^^^^ MUST pass the untranslated
-               C-string here. */
-            opfsFlags |= state.opfsFlags.OPFS_UNLOCK_ASAP;
-          }
-          if(capi.sqlite3_uri_boolean(zName, "delete-before-open", 0)){
-            opfsFlags |= state.opfsFlags.OPFS_UNLINK_BEFORE_OPEN;
-          }
-          zName = wasm.cstrToJs(zName);
-          //warn("xOpen zName =",zName, "opfsFlags =",opfsFlags);
-        }
-        const fh = Object.create(null);
-        fh.fid = pFile;
-        fh.filename = zName;
-        fh.sab = new SharedArrayBuffer(state.fileBufferSize);
-        fh.flags = flags;
-        fh.readOnly = !(capi.SQLITE_OPEN_CREATE & flags)
-          && !!(flags & capi.SQLITE_OPEN_READONLY);
-        const rc = opRun('xOpen', pFile, zName, flags, opfsFlags);
-        if(!rc){
-          /* Recall that sqlite3_vfs::xClose() will be called, even on
-             error, unless pFile->pMethods is NULL. */
-          if(fh.readOnly){
-            wasm.poke(pOutFlags, capi.SQLITE_OPEN_READONLY, 'i32');
-          }
-          __openFiles[pFile] = fh;
-          fh.sabView = state.sabFileBufView;
-          fh.sq3File = new sqlite3_file(pFile);
-          fh.sq3File.$pMethods = opfsIoMethods.pointer;
-          fh.lockType = capi.SQLITE_LOCK_NONE;
-        }
-        mTimeEnd();
-        return rc;
-      }/*xOpen()*/
-    }/*vfsSyncWrappers*/;
-
-    if(dVfs){
-      opfsVfs.$xRandomness = dVfs.$xRandomness;
-      opfsVfs.$xSleep = dVfs.$xSleep;
+      mTimeEnd();
+      return rc;
+    },
+    xUnlock: function(pFile,lockType){
+      mTimeStart('xUnlock');
+      ++metrics.xUnlock.count;
+      const f = __openFiles[pFile];
+      let rc = 0;
+      if( capi.SQLITE_LOCK_NONE === lockType
+          && f.lockType ){
+        rc = opRun('xUnlock', pFile, lockType);
+      }
+      if( 0===rc ) f.lockType = lockType;
+      mTimeEnd();
+      return rc;
     }
-    if(!opfsVfs.$xRandomness){
-      /* If the default VFS has no xRandomness(), add a basic JS impl... */
-      vfsSyncWrappers.xRandomness = function(pVfs, nOut, pOut){
-        const heap = wasm.heap8u();
-        let i = 0;
-        const npOut = Number(pOut);
-        for(; i < nOut; ++i) heap[npOut + i] = (Math.random()*255000) & 0xFF;
-        return i;
-      };
-    }
-    if(!opfsVfs.$xSleep){
-      /* If we can inherit an xSleep() impl from the default VFS then
-         assume it's sane and use it, otherwise install a JS-based
-         one. */
-      vfsSyncWrappers.xSleep = function(pVfs,ms){
-        Atomics.wait(state.sabOPView, state.opIds.xSleep, 0, ms);
-        return 0;
-      };
-    }
-
-    /**
-       Expects an OPFS file path. It gets resolved, such that ".."
-       components are properly expanded, and returned. If the 2nd arg
-       is true, the result is returned as an array of path elements,
-       else an absolute path string is returned.
-    */
-    opfsUtil.getResolvedPath = function(filename,splitIt){
-      const p = new URL(filename, "file://irrelevant").pathname;
-      return splitIt ? p.split('/').filter((v)=>!!v) : p;
-    };
-
-    /**
-       Takes the absolute path to a filesystem element. Returns an
-       array of [handleOfContainingDir, filename]. If the 2nd argument
-       is truthy then each directory element leading to the file is
-       created along the way. Throws if any creation or resolution
-       fails.
-    */
-    opfsUtil.getDirForFilename = async function f(absFilename, createDirs = false){
-      const path = opfsUtil.getResolvedPath(absFilename, true);
-      const filename = path.pop();
-      let dh = opfsUtil.rootDirectory;
-      for(const dirName of path){
-        if(dirName){
-          dh = await dh.getDirectoryHandle(dirName, {create: !!createDirs});
-        }
-      }
-      return [dh, filename];
-    };
-
-    /**
-       Creates the given directory name, recursively, in
-       the OPFS filesystem. Returns true if it succeeds or the
-       directory already exists, else false.
-    */
-    opfsUtil.mkdir = async function(absDirName){
-      try {
-        await opfsUtil.getDirForFilename(absDirName+"/filepart", true);
-        return true;
-      }catch(e){
-        //sqlite3.config.warn("mkdir(",absDirName,") failed:",e);
-        return false;
-      }
-    };
-    /**
-       Checks whether the given OPFS filesystem entry exists,
-       returning true if it does, false if it doesn't or if an
-       exception is intercepted while trying to make the
-       determination.
-    */
-    opfsUtil.entryExists = async function(fsEntryName){
-      try {
-        const [dh, fn] = await opfsUtil.getDirForFilename(fsEntryName);
-        await dh.getFileHandle(fn);
-        return true;
-      }catch(e){
-        return false;
-      }
-    };
-
-    /**
-       Generates a random ASCII string, intended for use as a
-       temporary file name. Its argument is the length of the string,
-       defaulting to 16.
-    */
-    opfsUtil.randomFilename = randomFilename;
-
-    /**
-       Returns a promise which resolves to an object which represents
-       all files and directories in the OPFS tree. The top-most object
-       has two properties: `dirs` is an array of directory entries
-       (described below) and `files` is a list of file names for all
-       files in that directory.
-
-       Traversal starts at sqlite3.opfs.rootDirectory.
-
-       Each `dirs` entry is an object in this form:
-
-       ```
-       { name: directoryName,
-         dirs: [...subdirs],
-         files: [...file names]
-       }
-       ```
-
-       The `files` and `subdirs` entries are always set but may be
-       empty arrays.
-
-       The returned object has the same structure but its `name` is
-       an empty string. All returned objects are created with
-       Object.create(null), so have no prototype.
-
-       Design note: the entries do not contain more information,
-       e.g. file sizes, because getting such info is not only
-       expensive but is subject to locking-related errors.
-    */
-    opfsUtil.treeList = async function(){
-      const doDir = async function callee(dirHandle,tgt){
-        tgt.name = dirHandle.name;
-        tgt.dirs = [];
-        tgt.files = [];
-        for await (const handle of dirHandle.values()){
-          if('directory' === handle.kind){
-            const subDir = Object.create(null);
-            tgt.dirs.push(subDir);
-            await callee(handle, subDir);
-          }else{
-            tgt.files.push(handle.name);
-          }
-        }
-      };
-      const root = Object.create(null);
-      await doDir(opfsUtil.rootDirectory, root);
-      return root;
-    };
-
-    /**
-       Irrevocably deletes _all_ files in the current origin's OPFS.
-       Obviously, this must be used with great caution. It may throw
-       an exception if removal of anything fails (e.g. a file is
-       locked), but the precise conditions under which the underlying
-       APIs will throw are not documented (so we cannot tell you what
-       they are).
-    */
-    opfsUtil.rmfr = async function(){
-      const dir = opfsUtil.rootDirectory, opt = {recurse: true};
-      for await (const handle of dir.values()){
-        dir.removeEntry(handle.name, opt);
-      }
-    };
-
-    /**
-       Deletes the given OPFS filesystem entry.  As this environment
-       has no notion of "current directory", the given name must be an
-       absolute path. If the 2nd argument is truthy, deletion is
-       recursive (use with caution!).
-
-       The returned Promise resolves to true if the deletion was
-       successful, else false (but...). The OPFS API reports the
-       reason for the failure only in human-readable form, not
-       exceptions which can be type-checked to determine the
-       failure. Because of that...
-
-       If the final argument is truthy then this function will
-       propagate any exception on error, rather than returning false.
-    */
-    opfsUtil.unlink = async function(fsEntryName, recursive = false,
-                                     throwOnError = false){
-      try {
-        const [hDir, filenamePart] =
-              await opfsUtil.getDirForFilename(fsEntryName, false);
-        await hDir.removeEntry(filenamePart, {recursive});
-        return true;
-      }catch(e){
-        if(throwOnError){
-          throw new Error("unlink(",arguments[0],") failed: "+e.message,{
-            cause: e
-          });
-        }
-        return false;
-      }
-    };
-
-    /**
-       Traverses the OPFS filesystem, calling a callback for each
-       entry.  The argument may be either a callback function or an
-       options object with any of the following properties:
-
-       - `callback`: function which gets called for each filesystem
-         entry.  It gets passed 3 arguments: 1) the
-         FileSystemFileHandle or FileSystemDirectoryHandle of each
-         entry (noting that both are instanceof FileSystemHandle). 2)
-         the FileSystemDirectoryHandle of the parent directory. 3) the
-         current depth level, with 0 being at the top of the tree
-         relative to the starting directory. If the callback returns a
-         literal false, as opposed to any other falsy value, traversal
-         stops without an error. Any exceptions it throws are
-         propagated. Results are undefined if the callback manipulate
-         the filesystem (e.g. removing or adding entries) because the
-         how OPFS iterators behave in the face of such changes is
-         undocumented.
-
-       - `recursive` [bool=true]: specifies whether to recurse into
-         subdirectories or not. Whether recursion is depth-first or
-         breadth-first is unspecified!
-
-       - `directory` [FileSystemDirectoryEntry=sqlite3.opfs.rootDirectory]
-         specifies the starting directory.
-
-       If this function is passed a function, it is assumed to be the
-       callback.
-
-       Returns a promise because it has to (by virtue of being async)
-       but that promise has no specific meaning: the traversal it
-       performs is synchronous. The promise must be used to catch any
-       exceptions propagated by the callback, however.
-    */
-    opfsUtil.traverse = async function(opt){
-      const defaultOpt = {
-        recursive: true,
-        directory: opfsUtil.rootDirectory
-      };
-      if('function'===typeof opt){
-        opt = {callback:opt};
-      }
-      opt = Object.assign(defaultOpt, opt||{});
-      const doDir = async function callee(dirHandle, depth){
-        for await (const handle of dirHandle.values()){
-          if(false === opt.callback(handle, dirHandle, depth)) return false;
-          else if(opt.recursive && 'directory' === handle.kind){
-            if(false === await callee(handle, depth + 1)) break;
-          }
-        }
-      };
-      doDir(opt.directory, 0);
-    };
-
-    /**
-       impl of importDb() when it's given a function as its second
-       argument.
-    */
-    const importDbChunked = async function(filename, callback){
-      const [hDir, fnamePart] = await opfsUtil.getDirForFilename(filename, true);
-      const hFile = await hDir.getFileHandle(fnamePart, {create:true});
-      let sah = await hFile.createSyncAccessHandle();
-      let nWrote = 0, chunk, checkedHeader = false, err = false;
-      try{
-        sah.truncate(0);
-        while( undefined !== (chunk = await callback()) ){
-          if(chunk instanceof ArrayBuffer) chunk = new Uint8Array(chunk);
-          if( !checkedHeader && 0===nWrote && chunk.byteLength>=15 ){
-            util.affirmDbHeader(chunk);
-            checkedHeader = true;
-          }
-          sah.write(chunk, {at: nWrote});
-          nWrote += chunk.byteLength;
-        }
-        if( nWrote < 512 || 0!==nWrote % 512 ){
-          toss("Input size",nWrote,"is not correct for an SQLite database.");
-        }
-        if( !checkedHeader ){
-          const header = new Uint8Array(20);
-          sah.read( header, {at: 0} );
-          util.affirmDbHeader( header );
-        }
-        sah.write(new Uint8Array([1,1]), {at: 18}/*force db out of WAL mode*/);
-        return nWrote;
-      }catch(e){
-        await sah.close();
-        sah = undefined;
-        await hDir.removeEntry( fnamePart ).catch(()=>{});
-        throw e;
-      }finally {
-        if( sah ) await sah.close();
-      }
-    };
-
-    /**
-       Asynchronously imports the given bytes (a byte array or
-       ArrayBuffer) into the given database file.
-
-       Results are undefined if the given db name refers to an opened
-       db.
-
-       If passed a function for its second argument, its behaviour
-       changes: imports its data in chunks fed to it by the given
-       callback function. It calls the callback (which may be async)
-       repeatedly, expecting either a Uint8Array or ArrayBuffer (to
-       denote new input) or undefined (to denote EOF). For so long as
-       the callback continues to return non-undefined, it will append
-       incoming data to the given VFS-hosted database file. When
-       called this way, the resolved value of the returned Promise is
-       the number of bytes written to the target file.
-
-       It very specifically requires the input to be an SQLite3
-       database and throws if that's not the case.  It does so in
-       order to prevent this function from taking on a larger scope
-       than it is specifically intended to. i.e. we do not want it to
-       become a convenience for importing arbitrary files into OPFS.
-
-       This routine rewrites the database header bytes in the output
-       file (not the input array) to force disabling of WAL mode.
-
-       On error this throws and the state of the input file is
-       undefined (it depends on where the exception was triggered).
-
-       On success, resolves to the number of bytes written.
-    */
-    opfsUtil.importDb = async function(filename, bytes){
-      if( bytes instanceof Function ){
-        return importDbChunked(filename, bytes);
-      }
-      if(bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
-      util.affirmIsDb(bytes);
-      const n = bytes.byteLength;
-      const [hDir, fnamePart] = await opfsUtil.getDirForFilename(filename, true);
-      let sah, err, nWrote = 0;
-      try {
-        const hFile = await hDir.getFileHandle(fnamePart, {create:true});
-        sah = await hFile.createSyncAccessHandle();
-        sah.truncate(0);
-        nWrote = sah.write(bytes, {at: 0});
-        if(nWrote != n){
-          toss("Expected to write "+n+" bytes but wrote "+nWrote+".");
-        }
-        sah.write(new Uint8Array([1,1]), {at: 18}) /* force db out of WAL mode */;
-        return nWrote;
-      }catch(e){
-        if( sah ){ await sah.close(); sah = undefined; }
-        await hDir.removeEntry( fnamePart ).catch(()=>{});
-        throw e;
-      }finally{
-        if( sah ) await sah.close();
-      }
-    };
-
+  }), function(sqlite3, vfs){
+    /* Post-VFS-registration initialization... */
     if(sqlite3.oo1){
       const OpfsDb = function(...args){
         const opt = sqlite3.oo1.DB.dbCtorHelper.normalizeArgs(...args);
-        opt.vfs = opfsVfs.$zName;
+        opt.vfs = vfs.$zName;
         sqlite3.oo1.DB.dbCtorHelper.call(this, opt);
       };
       OpfsDb.prototype = Object.create(sqlite3.oo1.DB.prototype);
       sqlite3.oo1.OpfsDb = OpfsDb;
       OpfsDb.importDb = opfsUtil.importDb;
-      sqlite3.oo1.DB.dbCtorHelper.setVfsPostOpenCallback(
-        opfsVfs.pointer,
-        function(oo1Db, sqlite3){
-          /* Set a relatively high default busy-timeout handler to
-             help OPFS dbs deal with multi-tab/multi-worker
-             contention. */
-          sqlite3.capi.sqlite3_busy_timeout(oo1Db, 10000);
-        }
-      );
-    }/*extend sqlite3.oo1*/
-
-    const sanityCheck = function(){
-      const scope = wasm.scopedAllocPush();
-      const sq3File = new sqlite3_file();
-      try{
-        const fid = sq3File.pointer;
-        const openFlags = capi.SQLITE_OPEN_CREATE
-              | capi.SQLITE_OPEN_READWRITE
-        //| capi.SQLITE_OPEN_DELETEONCLOSE
-              | capi.SQLITE_OPEN_MAIN_DB;
-        const pOut = wasm.scopedAlloc(8);
-        const dbFile = "/sanity/check/file"+randomFilename(8);
-        const zDbFile = wasm.scopedAllocCString(dbFile);
-        let rc;
-        state.s11n.serialize("This is ä string.");
-        rc = state.s11n.deserialize();
-        log("deserialize() says:",rc);
-        if("This is ä string."!==rc[0]) toss("String d13n error.");
-        vfsSyncWrappers.xAccess(opfsVfs.pointer, zDbFile, 0, pOut);
-        rc = wasm.peek(pOut,'i32');
-        log("xAccess(",dbFile,") exists ?=",rc);
-        rc = vfsSyncWrappers.xOpen(opfsVfs.pointer, zDbFile,
-                                   fid, openFlags, pOut);
-        log("open rc =",rc,"state.sabOPView[xOpen] =",
-            state.sabOPView[state.opIds.xOpen]);
-        if(0!==rc){
-          error("open failed with code",rc);
-          return;
-        }
-        vfsSyncWrappers.xAccess(opfsVfs.pointer, zDbFile, 0, pOut);
-        rc = wasm.peek(pOut,'i32');
-        if(!rc) toss("xAccess() failed to detect file.");
-        rc = ioSyncWrappers.xSync(sq3File.pointer, 0);
-        if(rc) toss('sync failed w/ rc',rc);
-        rc = ioSyncWrappers.xTruncate(sq3File.pointer, 1024);
-        if(rc) toss('truncate failed w/ rc',rc);
-        wasm.poke(pOut,0,'i64');
-        rc = ioSyncWrappers.xFileSize(sq3File.pointer, pOut);
-        if(rc) toss('xFileSize failed w/ rc',rc);
-        log("xFileSize says:",wasm.peek(pOut, 'i64'));
-        rc = ioSyncWrappers.xWrite(sq3File.pointer, zDbFile, 10, 1);
-        if(rc) toss("xWrite() failed!");
-        const readBuf = wasm.scopedAlloc(16);
-        rc = ioSyncWrappers.xRead(sq3File.pointer, readBuf, 6, 2);
-        wasm.poke(readBuf+6,0);
-        let jRead = wasm.cstrToJs(readBuf);
-        log("xRead() got:",jRead);
-        if("sanity"!==jRead) toss("Unexpected xRead() value.");
-        if(vfsSyncWrappers.xSleep){
-          log("xSleep()ing before close()ing...");
-          vfsSyncWrappers.xSleep(opfsVfs.pointer,2000);
-          log("waking up from xSleep()");
-        }
-        rc = ioSyncWrappers.xClose(fid);
-        log("xClose rc =",rc,"sabOPView =",state.sabOPView);
-        log("Deleting file:",dbFile);
-        vfsSyncWrappers.xDelete(opfsVfs.pointer, zDbFile, 0x1234);
-        vfsSyncWrappers.xAccess(opfsVfs.pointer, zDbFile, 0, pOut);
-        rc = wasm.peek(pOut,'i32');
-        if(rc) toss("Expecting 0 from xAccess(",dbFile,") after xDelete().");
-        warn("End of OPFS sanity checks.");
-      }finally{
-        sq3File.dispose();
-        wasm.scopedAllocPop(scope);
+      if( true ){
+        /* 2026-03-06: this was a design mis-decision and is
+           inconsistent with sqlite3_open() and friends, but is
+           retained against the risk of introducing regressions if
+           it's removed. */
+        sqlite3.oo1.DB.dbCtorHelper.setVfsPostOpenCallback(
+          opfsVfs.pointer,
+          function(oo1Db, sqlite3){
+            /* Set a relatively high default busy-timeout handler to
+               help OPFS dbs deal with multi-tab/multi-worker
+               contention. */
+            sqlite3.capi.sqlite3_busy_timeout(oo1Db, 10000);
+          }
+        );
       }
-    }/*sanityCheck()*/;
-
-    W.onmessage = function({data}){
-      //log("Worker.onmessage:",data);
-      switch(data.type){
-          case 'opfs-unavailable':
-            /* Async proxy has determined that OPFS is unavailable. There's
-               nothing more for us to do here. */
-            promiseReject(new Error(data.payload.join(' ')));
-            break;
-          case 'opfs-async-loaded':
-            /* Arrives as soon as the asyc proxy finishes loading.
-               Pass our config and shared state on to the async
-               worker. */
-            W.postMessage({type: 'opfs-async-init',args: state});
-            break;
-          case 'opfs-async-inited': {
-            /* Indicates that the async partner has received the 'init'
-               and has finished initializing, so the real work can
-               begin... */
-            if(true===promiseWasRejected){
-              break /* promise was already rejected via timer */;
-            }
-            try {
-              sqlite3.vfs.installVfs({
-                io: {struct: opfsIoMethods, methods: ioSyncWrappers},
-                vfs: {struct: opfsVfs, methods: vfsSyncWrappers}
-              });
-              state.sabOPView = new Int32Array(state.sabOP);
-              state.sabFileBufView = new Uint8Array(state.sabIO, 0, state.fileBufferSize);
-              state.sabS11nView = new Uint8Array(state.sabIO, state.sabS11nOffset, state.sabS11nSize);
-              initS11n();
-              if(options.sanityChecks){
-                warn("Running sanity checks because of opfs-sanity-check URL arg...");
-                sanityCheck();
-              }
-              if(thisThreadHasOPFS()){
-                navigator.storage.getDirectory().then((d)=>{
-                  W.onerror = W._originalOnError;
-                  delete W._originalOnError;
-                  sqlite3.opfs = opfsUtil;
-                  opfsUtil.rootDirectory = d;
-                  log("End of OPFS sqlite3_vfs setup.", opfsVfs);
-                  promiseResolve();
-                }).catch(promiseReject);
-              }else{
-                promiseResolve();
-              }
-            }catch(e){
-              error(e);
-              promiseReject(e);
-            }
-            break;
-          }
-          default: {
-            const errMsg = (
-              "Unexpected message from the OPFS async worker: " +
-              JSON.stringify(data)
-            );
-            error(errMsg);
-            promiseReject(new Error(errMsg));
-            break;
-          }
-      }/*switch(data.type)*/
-    }/*W.onmessage()*/;
-  })/*thePromise*/;
-  return thePromise;
+    }/*extend sqlite3.oo1*/
+  })/*bindVfs()*/;
 }/*installOpfsVfs()*/;
-installOpfsVfs.defaultProxyUri =
-  "sqlite3-opfs-async-proxy.js";
 globalThis.sqlite3ApiBootstrap.initializersAsync.push(async (sqlite3)=>{
-  try{
-    let proxyJs = installOpfsVfs.defaultProxyUri;
-    if( sqlite3?.scriptInfo?.sqlite3Dir ){
-      installOpfsVfs.defaultProxyUri =
-        sqlite3.scriptInfo.sqlite3Dir + proxyJs;
-      //sqlite3.config.warn("installOpfsVfs.defaultProxyUri =",installOpfsVfs.defaultProxyUri);
-    }
-    return installOpfsVfs().catch((e)=>{
-      sqlite3.config.warn("Ignoring inability to install OPFS sqlite3_vfs:",e.message);
-    });
-  }catch(e){
-    sqlite3.config.error("installOpfsVfs() exception:",e);
-    return Promise.reject(e);
-  }
+  return installOpfsVfs().catch((e)=>{
+    sqlite3.config.warn("Ignoring inability to install 'opfs' sqlite3_vfs:",e);
+  })
 });
 }/*sqlite3ApiBootstrap.initializers.push()*/);
 /*
@@ -19479,6 +19667,10 @@ globalThis.sqlite3ApiBootstrap.initializersAsync.push(async (sqlite3)=>{
 */
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
   'use strict';
+  if( sqlite3.config.disable?.vfs?.['opfs-sahpool'] ){
+    return;
+  }
+
   const toss = sqlite3.util.toss;
   const toss3 = sqlite3.util.toss3;
   const initPromises = Object.create(null) /* cache of (name:result) of VFS init results */;
@@ -20886,6 +21078,132 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     });
   }/*installOpfsSAHPoolVfs()*/;
 }/*sqlite3ApiBootstrap.initializers*/);
+/*
+  2026-02-20
+
+  The author disclaims copyright to this source code.  In place of a
+  legal notice, here is a blessing:
+
+  *   May you do good and not evil.
+  *   May you find forgiveness for yourself and forgive others.
+  *   May you share freely, never taking more than you give.
+
+  ***********************************************************************
+
+  This file is a reimplementation of the "opfs" VFS (as distinct from
+  "opfs-sahpool") which uses WebLocks for locking instead of a bespoke
+  Atomics.wait()/notify() protocol. This file holds the "synchronous
+  half" of the VFS, whereas it shares the "asynchronous half" with the
+  "opfs" VFS.
+
+  Testing has failed to show any genuine functional difference between
+  these VFSes other than "opfs-wl" being able to dole out xLock()
+  requests in a strictly FIFO manner by virtue of WebLocks being
+  globally managed by the browser. This tends to lead to, but does not
+  guaranty, fairer distribution of locks. Differences are unlikely to
+  be noticed except, perhaps, under very high contention.
+
+  This file is intended to be appended to the main sqlite3 JS
+  deliverable somewhere after opfs-common-shared.c-pp.js.
+*/
+'use strict';
+globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
+  if( !sqlite3.opfs || sqlite3.config.disable?.vfs?.['opfs-wl'] ){
+    return;
+  }
+  const util = sqlite3.util,
+        toss  = sqlite3.util.toss;
+  const opfsUtil = sqlite3.opfs;
+  const vfsName = 'opfs-wl';
+/**
+   installOpfsWlVfs() returns a Promise which, on success, installs an
+   sqlite3_vfs named "opfs-wl", suitable for use with all sqlite3 APIs
+   which accept a VFS. It is intended to be called via
+   sqlite3ApiBootstrap.initializers or an equivalent mechanism.
+
+   This VFS is essentially identical to the "opfs" VFS but uses
+   WebLocks for its xLock() and xUnlock() implementations.
+
+   Quirks specific to this VFS:
+
+   - The (officially undocumented) 'opfs-wl-disable' URL
+   argument will disable OPFS, making this function a no-op.
+
+   Aside from locking differences in the VFSes, this function
+   otherwise behaves the same as
+   sqlite3-vfs-opfs.c-pp.js:installOpfsVfs().
+*/
+const installOpfsWlVfs = async function(options){
+  options = opfsUtil.initOptions(vfsName,options);
+  if( !options ) return sqlite3;
+  const capi = sqlite3.capi,
+        state = opfsUtil.createVfsState(),
+        opfsVfs = state.vfs,
+        metrics = opfsVfs.metrics.counters,
+        mTimeStart = opfsVfs.mTimeStart,
+        mTimeEnd = opfsVfs.mTimeEnd,
+        opRun = opfsVfs.opRun,
+        debug = (...args)=>sqlite3.config.debug(vfsName+":",...args),
+        warn = (...args)=>sqlite3.config.warn(vfsName+":",...args),
+        __openFiles = opfsVfs.__openFiles;
+
+  //debug("state",JSON.stringify(options));
+  /*
+    At this point, createVfsState() has populated:
+
+    - state: the configuration object we share with the async proxy.
+
+    - opfsVfs: an sqlite3_vfs instance with lots of JS state attached
+    to it.
+
+    with any code common to both the "opfs" and "opfs-wl" VFSes. Now
+    comes the VFS-dependent work...
+  */
+  return opfsVfs.bindVfs(util.nu({
+    xLock: function(pFile,lockType){
+      mTimeStart('xLock');
+      //debug("xLock()...");
+      const f = __openFiles[pFile];
+      const rc = opRun('xLock', pFile, lockType);
+      if( !rc ) f.lockType = lockType;
+      mTimeEnd();
+      return rc;
+    },
+    xUnlock: function(pFile,lockType){
+      mTimeStart('xUnlock');
+      const f = __openFiles[pFile];
+      const rc = opRun('xUnlock', pFile, lockType);
+      if( !rc ) f.lockType = lockType;
+      mTimeEnd();
+      return rc;
+    }
+  }), function(sqlite3, vfs){
+    /* Post-VFS-registration initialization... */
+    if(sqlite3.oo1){
+      const OpfsWlDb = function(...args){
+        const opt = sqlite3.oo1.DB.dbCtorHelper.normalizeArgs(...args);
+        opt.vfs = vfs.$zName;
+        sqlite3.oo1.DB.dbCtorHelper.call(this, opt);
+      };
+      OpfsWlDb.prototype = Object.create(sqlite3.oo1.DB.prototype);
+      sqlite3.oo1.OpfsWlDb = OpfsWlDb;
+      OpfsWlDb.importDb = opfsUtil.importDb;
+      /* The "opfs" VFS variant adds a
+         oo1.DB.dbCtorHelper.setVfsPostOpenCallback() callback to set
+         a high busy_timeout. That was a design mis-decision and is
+         inconsistent with sqlite3_open() and friends, but is retained
+         against the risk of introducing regressions if it's removed.
+         This variant does not repeat that mistake.
+      */
+    }
+  })/*bindVfs()*/;
+}/*installOpfsWlVfs()*/;
+globalThis.sqlite3ApiBootstrap.initializersAsync.push(async (sqlite3)=>{
+  return installOpfsWlVfs().catch((e)=>{
+    sqlite3.config.warn("Ignoring inability to install the",vfsName,"sqlite3_vfs:",e);
+  });
+});
+}/*sqlite3ApiBootstrap.initializers.push()*/);
 /*
   2022-07-22
 
