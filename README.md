@@ -55,38 +55,30 @@ import {
   type Worker1Promiser,
 } from '@sqlite.org/sqlite-wasm';
 
-const log = console.log;
-const error = console.error;
-
 const initializeSQLite = async () => {
   try {
-    log('Loading and initializing SQLite3 module...');
-
-    const promiser = await new Promise<Worker1Promiser>((resolve) => {
-      sqlite3Worker1Promiser({
-        onready: resolve,
-      });
-    });
-
-    log('Done initializing. Running demo...');
+    const promiser = await sqlite3Worker1Promiser.v2();
 
     const configResponse = await promiser('config-get', {});
-    log('Running SQLite3 version', configResponse.result.version.libVersion);
+
+    console.log(
+      'Running SQLite3 version',
+      configResponse.result.version.libVersion,
+    );
 
     const openResponse = await promiser('open', {
-      filename: 'file:mydb.sqlite3?vfs=opfs',
+      filename: 'file:mydb-v2.sqlite3?vfs=opfs',
     });
-    const { dbId } = openResponse;
-    log(
+
+    console.log(
       'OPFS is available, created persisted database at',
       openResponse.result.filename.replace(/^file:(.*?)\?vfs=opfs$/, '$1'),
     );
-    // Your SQLite code here.
-  } catch (err) {
+  } catch (err: any) {
     if (!(err instanceof Error)) {
-      err = new Error(err.result.message);
+      err = new Error(err.result.message || 'Unknown error');
     }
-    error(err.name, err.message);
+    console.error(err.name, err.message);
   }
 };
 
