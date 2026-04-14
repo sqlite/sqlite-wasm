@@ -67,7 +67,7 @@
     "@typescript/native-preview": "^7.0.0-dev.20260414.1",
     "@vitest/browser": "^4.1.4",
     "@vitest/browser-playwright": "^4.1.4",
-    "happy-dom": "20.8.9",
+    "happy-dom": "20.9.0",
     "http-server": "^14.1.1",
     "lefthook": "2.1.5",
     "playwright": "^1.59.1",
