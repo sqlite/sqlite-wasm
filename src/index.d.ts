@@ -1767,15 +1767,14 @@ type Worker1PromiserFactory = {
   /** Creates a Worker1Promiser from a ready callback. */
   (onready: (promiser: Worker1Promiser) => void): Worker1Promiser;
 
-  /** Default configuration. */
-  defaultConfig: Worker1PromiserConfig;
+  /** V2 variant which returns a Promise that resolves to the promiser. */
+  v2(config?: Worker1PromiserConfig): Promise<Worker1Promiser>;
 
   /** V2 variant which returns a Promise that resolves to the promiser. */
-  v2: {
-    (config?: Worker1PromiserConfig): Promise<Worker1Promiser>;
-    (onready: (promiser: Worker1Promiser) => void): Promise<Worker1Promiser>;
-    defaultConfig: Worker1PromiserConfig;
-  };
+  v2(onready: (promiser: Worker1Promiser) => void): Promise<Worker1Promiser>;
+
+  /** Default configuration. */
+  defaultConfig: Worker1PromiserConfig;
 };
 
 export type StructPtrMapper<T> = {
