@@ -41,6 +41,9 @@
     "./package.json": "./package.json",
     "./sqlite3.wasm": "./dist/sqlite3.wasm"
   },
+  "workspaces": [
+    "demos/*"
+  ],
   "files": [
     "dist",
     "README.md"
@@ -52,6 +55,9 @@
     "publint": "npx publint",
     "check-types": "tsgo",
     "build": "tsdown",
+    "dev:sahpool": "npm run dev -w demos/sahpool-demo",
+    "dev:main-thread": "npm run dev -w demos/main-thread-demo",
+    "dev:in-worker": "npm run dev -w demos/in-worker-demo",
     "start": "npx http-server --coop",
     "start:node": "cd demo && node node.mjs",
     "format": "oxfmt",
