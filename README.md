@@ -2,6 +2,12 @@
 
 SQLite Wasm conveniently wrapped as an ES Module.
 
+## Installation
+
+```bash
+npm install @sqlite.org/sqlite-wasm
+```
+
 ## Bug reports
 
 > [!Warning]
@@ -21,72 +27,15 @@ SQLite Wasm conveniently wrapped as an ES Module.
 > Node.js is currently only supported for in-memory databases without
 > persistence.
 
-## Installation
-
-```bash
-npm install @sqlite.org/sqlite-wasm
-```
-
 ## Usage
 
-There are three ways to use SQLite Wasm:
+There are two ways to use SQLite Wasm:
 
-- [in the main thread with a wrapped worker](#in-a-wrapped-worker-with-opfs-if-available)
-  (🏆 preferred option)
 - [in a worker](#in-a-worker-with-opfs-if-available)
 - [in the main thread](#in-the-main-thread-without-opfs)
 
 Only the worker versions allow you to use the origin private file system (OPFS)
 storage back-end.
-
-### In a wrapped worker (with OPFS if available):
-
-> [!Warning]
->
-> For this to work, you need to set the following headers on your server:
->
-> `Cross-Origin-Opener-Policy: same-origin`
->
-> `Cross-Origin-Embedder-Policy: require-corp`
-
-```ts
-import {
-  sqlite3Worker1Promiser,
-  type Worker1Promiser,
-} from '@sqlite.org/sqlite-wasm';
-
-const initializeSQLite = async () => {
-  try {
-    const promiser = await sqlite3Worker1Promiser.v2();
-
-    const configResponse = await promiser('config-get', {});
-
-    console.log(
-      'Running SQLite3 version',
-      configResponse.result.version.libVersion,
-    );
-
-    const openResponse = await promiser('open', {
-      filename: 'file:mydb-v2.sqlite3?vfs=opfs',
-    });
-
-    console.log(
-      'OPFS is available, created persisted database at',
-      openResponse.result.filename.replace(/^file:(.*?)\?vfs=opfs$/, '$1'),
-    );
-  } catch (err: any) {
-    if (!(err instanceof Error)) {
-      err = new Error(err.result.message || 'Unknown error');
-    }
-    console.error(err.name, err.message);
-  }
-};
-
-await initializeSQLite();
-```
-
-The `promiser` object above implements the
-[Worker1 API](https://sqlite.org/wasm/doc/trunk/api-worker1.md#worker1-methods).
 
 ### In a worker (with OPFS if available):
 
@@ -107,16 +56,13 @@ const worker = new Worker('worker.js', { type: 'module' });
 // In `worker.js`.
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
-const log = console.log;
-const error = console.error;
-
 const start = (sqlite3) => {
-  log('Running SQLite3 version', sqlite3.version.libVersion);
+  console.log('Running SQLite3 version', sqlite3.version.libVersion);
   const db =
     'opfs' in sqlite3
       ? new sqlite3.oo1.OpfsDb('/mydb.sqlite3')
       : new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
-  log(
+  console.log(
     'opfs' in sqlite3
       ? `OPFS is available, created persisted database at ${db.filename}`
       : `OPFS is not available, created transient database ${db.filename}`,
@@ -126,12 +72,12 @@ const start = (sqlite3) => {
 
 const initializeSQLite = async () => {
   try {
-    log('Loading and initializing SQLite3 module...');
+    console.log('Loading and initializing SQLite3 module...');
     const sqlite3 = await sqlite3InitModule();
-    log('Done initializing. Running demo...');
+    console.log('Done initializing. Running demo...');
     start(sqlite3);
   } catch (err) {
-    error('Initialization error:', err.name, err.message);
+    console.error('Initialization error:', err.name, err.message);
   }
 };
 
@@ -139,30 +85,26 @@ initializeSQLite();
 ```
 
 The `db` object above implements the
-[Object Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
+[Object-Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
 
 ### In the main thread (without OPFS):
 
 ```js
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
-const log = console.log;
-const error = console.error;
-
 const start = (sqlite3) => {
   log('Running SQLite3 version', sqlite3.version.libVersion);
   const db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
   // Your SQLite code here.
 };
-
 const initializeSQLite = async () => {
   try {
-    log('Loading and initializing SQLite3 module...');
+    console.log('Loading and initializing SQLite3 module...');
     const sqlite3 = await sqlite3InitModule();
-    log('Done initializing. Running demo...');
+    console.log('Done initializing. Running demo...');
     start(sqlite3);
   } catch (err) {
-    error('Initialization error:', err.name, err.message);
+    console.error('Initialization error:', err.name, err.message);
   }
 };
 
@@ -170,7 +112,7 @@ initializeSQLite();
 ```
 
 The `db` object above implements the
-[Object Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
+[Object-Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
 
 ## Usage with vite
 
@@ -228,43 +170,43 @@ for this package.
 
 ## Building the SQLite Wasm locally
 
-1.  Build the Docker image:
+1. Build the Docker image:
 
-    ```bash
-    docker build -t sqlite-wasm-builder:env .
-    ```
+   ```bash
+   docker build -t sqlite-wasm-builder:env .
+   ```
 
-2.  Run the build:
+2. Run the build:
 
-    **Unix (Linux/macOS):**
+   **Unix (Linux/macOS):**
 
-    ```bash
-    docker run --rm \
-      -e SQLITE_REF="master" \
-      -v "$(pwd)/out":/out \
-      -v "$(pwd)/src/bin":/src/bin \
-      sqlite-wasm-builder:env build
-    ```
+   ```bash
+   docker run --rm \
+     -e SQLITE_REF="master" \
+     -v "$(pwd)/out":/out \
+     -v "$(pwd)/src/bin":/src/bin \
+     sqlite-wasm-builder:env build
+   ```
 
-    **Windows (PowerShell):**
+   **Windows (PowerShell):**
 
-    ```powershell
-    docker run --rm `
-      -e SQLITE_REF="master" `
-      -v "${PWD}/out:/out" `
-      -v "${PWD}/src/bin:/src/bin" `
-      sqlite-wasm-builder:env build
-    ```
+   ```powershell
+   docker run --rm `
+     -e SQLITE_REF="master" `
+     -v "${PWD}/out:/out" `
+     -v "${PWD}/src/bin:/src/bin" `
+     sqlite-wasm-builder:env build
+   ```
 
-    **Windows (Command Prompt):**
+   **Windows (Command Prompt):**
 
-    ```cmd
-    docker run --rm ^
-      -e SQLITE_REF="master" ^
-      -v "%cd%/out:/out" ^
-      -v "%cd%/src/bin:/src/bin" ^
-      sqlite-wasm-builder:env build
-    ```
+   ```cmd
+   docker run --rm ^
+     -e SQLITE_REF="master" ^
+     -v "%cd%/out:/out" ^
+     -v "%cd%/src/bin:/src/bin" ^
+     sqlite-wasm-builder:env build
+   ```
 
 ## Running tests
 
@@ -272,23 +214,31 @@ The test suite consists of Node.js tests and browser-based tests (using Vitest
 Browser Mode). Tests aim to sanity-check the exported scripts. We test for
 correct exports and **very** basic functionality.
 
-1.  Install dependencies:
+1. Install dependencies:
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
-2.  Install Playwright browsers (required for browser tests):
+2. Install Playwright browsers (required for browser tests):
 
-    ```bash
-    npx playwright install chromium --with-deps --no-shell
-    ```
+   ```bash
+   npx playwright install chromium --with-deps --no-shell
+   ```
 
-3.  Run all tests:
+3. Run all tests:
 
-    ```bash
-    npm test
-    ```
+   ```bash
+   npm test
+   ```
+
+## Deprecations
+
+The Worker1 and Promiser1 APIs are, as of 2026-04-15, deprecated. They _will not
+be removed_, but they also will not be extended further. It is their author's
+considered opinion that they are too fragile, too imperformant, and too limited
+for any non-toy software, and their use is _actively discouraged_. The "correct"
+way to use this library is documented in [Usage](#usage) section above.
 
 ## License
 
