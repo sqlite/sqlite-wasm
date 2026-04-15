@@ -63,18 +63,18 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@types/node": "^25.5.2",
-    "@typescript/native-preview": "^7.0.0-dev.20260409.1",
+    "@types/node": "^25.6.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260414.1",
     "@vitest/browser": "^4.1.4",
     "@vitest/browser-playwright": "^4.1.4",
-    "happy-dom": "20.8.9",
+    "happy-dom": "20.9.0",
     "http-server": "^14.1.1",
     "lefthook": "2.1.5",
     "playwright": "^1.59.1",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.2",
     "prettier-plugin-jsdoc": "^1.8.0",
     "publint": "^0.3.18",
-    "tsdown": "^0.21.7",
+    "tsdown": "^0.21.8",
     "typescript": "^6.0.2",
     "vitest": "^4.1.4"
   }

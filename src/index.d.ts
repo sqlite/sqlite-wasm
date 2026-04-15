@@ -1718,7 +1718,10 @@ type Worker1ResultMap = {
   'config-get': Worker1ConfigGetResult;
 };
 
-/** Function type returned by Worker1PromiserFactory. */
+/**
+ * @deprecated Sqlite3Worker1Promiser is deprecated as of 2026-04-15. Function
+ *   type returned by Worker1PromiserFactory.
+ */
 export type Worker1Promiser = {
   /**
    * Sends a message to the worker and returns a Promise which resolves to the
@@ -1738,7 +1741,10 @@ export type Worker1Promiser = {
   ): Promise<Worker1OutputEnvelope<T, Worker1ResultMap[T]>>;
 };
 
-/** Configuration for Worker1PromiserFactory. */
+/**
+ * @deprecated Sqlite3Worker1Promiser is deprecated as of 2026-04-15.
+ *   Configuration for Worker1PromiserFactory.
+ */
 type Worker1PromiserConfig = {
   /** A Worker instance or a function which returns one. */
   worker?: Worker | (() => Worker);
@@ -1759,7 +1765,10 @@ type Worker1PromiserConfig = {
   onerror?: (...args: unknown[]) => void;
 };
 
-/** Factory for creating Worker1Promiser instances. */
+/**
+ * @deprecated Sqlite3Worker1Promiser is deprecated as of 2026-04-15. Factory
+ *   for creating Worker1Promiser instances.
+ */
 type Worker1PromiserFactory = {
   /** Creates a Worker1Promiser. */
   (config?: Worker1PromiserConfig): Worker1Promiser;
@@ -1767,15 +1776,14 @@ type Worker1PromiserFactory = {
   /** Creates a Worker1Promiser from a ready callback. */
   (onready: (promiser: Worker1Promiser) => void): Worker1Promiser;
 
-  /** Default configuration. */
-  defaultConfig: Worker1PromiserConfig;
+  /** V2 variant which returns a Promise that resolves to the promiser. */
+  v2(config?: Worker1PromiserConfig): Promise<Worker1Promiser>;
 
   /** V2 variant which returns a Promise that resolves to the promiser. */
-  v2: {
-    (config?: Worker1PromiserConfig): Promise<Worker1Promiser>;
-    (onready: (promiser: Worker1Promiser) => void): Promise<Worker1Promiser>;
-    defaultConfig: Worker1PromiserConfig;
-  };
+  v2(onready: (promiser: Worker1Promiser) => void): Promise<Worker1Promiser>;
+
+  /** Default configuration. */
+  defaultConfig: Worker1PromiserConfig;
 };
 
 export type StructPtrMapper<T> = {
@@ -2616,6 +2624,7 @@ export type Sqlite3Static = {
  */
 export default function init(): Promise<Sqlite3Static>;
 
+/** @deprecated Sqlite3Worker1Promiser is deprecated as of 2026-04-15. */
 export const sqlite3Worker1Promiser: Worker1PromiserFactory;
 
 export type ListLike<T> = {
