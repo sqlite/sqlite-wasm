@@ -22,24 +22,17 @@ describe('Vite bundler compatibility', () => {
     // 1. Check if hashed WASM file exists in dist/assets
     const assetsDir = path.resolve(distDir, 'assets');
     const files = fs.readdirSync(assetsDir);
-    const wasmFile = files.find(
-      (f) => f.startsWith('sqlite3-') && f.endsWith('.wasm'),
-    );
+    const wasmFile = files.find((f) => f.startsWith('sqlite3-') && f.endsWith('.wasm'));
 
     expect(wasmFile).toBeDefined();
 
     // 2. Check if the JS bundle contains the hashed WASM filename
     const assetsDirJs = path.resolve(distDir, 'assets');
-    const jsFiles = fs
-      .readdirSync(assetsDirJs)
-      .filter((f) => f.endsWith('.js'));
+    const jsFiles = fs.readdirSync(assetsDirJs).filter((f) => f.endsWith('.js'));
     const mainBundle = jsFiles.find((f) => f.startsWith('index-'));
     expect(mainBundle).toBeDefined();
 
-    const bundleContent = fs.readFileSync(
-      path.resolve(assetsDirJs, mainBundle),
-      'utf8',
-    );
+    const bundleContent = fs.readFileSync(path.resolve(assetsDirJs, mainBundle), 'utf8');
 
     // It should contain something like: new URL("/assets/sqlite3-hash.wasm", import.meta.url)
     expect(bundleContent).toContain(wasmFile);

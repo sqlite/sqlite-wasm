@@ -1,12 +1,5 @@
 /** Types of values that can be passed to/retrieved from SQLite. */
-export type SqlValue =
-  | string
-  | number
-  | null
-  | bigint
-  | Uint8Array
-  | Int8Array
-  | ArrayBuffer;
+export type SqlValue = string | number | null | bigint | Uint8Array | Int8Array | ArrayBuffer;
 
 /** A PreparedStatement or a WASM pointer to one. */
 export type StmtPtr = PreparedStatement | WasmPointer;
@@ -216,9 +209,7 @@ export class PreparedStatement {
    * the value. Index can be the index number (**ACHTUNG**: 1-based!) or the
    * string corresponding to a named parameter.
    */
-  bindAsBlob(
-    value: string | null | undefined | Uint8Array | Int8Array | ArrayBuffer,
-  ): this;
+  bindAsBlob(value: string | null | undefined | Uint8Array | Int8Array | ArrayBuffer): this;
   bindAsBlob(
     idx: number | string,
     value: string | null | undefined | Uint8Array | Int8Array | ArrayBuffer,
@@ -485,11 +476,7 @@ export type ExecOptions = {
    */
   callback?:
     | ((
-        row:
-          | SqlValue[]
-          | Record<string, SqlValue>
-          | PreparedStatement
-          | SqlValue,
+        row: SqlValue[] | Record<string, SqlValue> | PreparedStatement | SqlValue,
         stmt: PreparedStatement,
       ) => void | false)
     | string;
@@ -855,16 +842,12 @@ export class Database {
    */
   exec(
     sql: FlexibleString,
-    opts?: (ExecBaseOptions &
-      ExecRowModeArrayOptions &
-      ExecReturnThisOptions) & {
+    opts?: (ExecBaseOptions & ExecRowModeArrayOptions & ExecReturnThisOptions) & {
       sql?: undefined;
     },
   ): this;
   exec(
-    opts: (ExecBaseOptions &
-      ExecRowModeArrayOptions &
-      ExecReturnThisOptions) & {
+    opts: (ExecBaseOptions & ExecRowModeArrayOptions & ExecReturnThisOptions) & {
       sql: FlexibleString;
     },
   ): this;
@@ -1101,10 +1084,7 @@ export class Database {
    * Creating an aggregate or window function requires the options-object form,
    * as described below.
    */
-  createFunction(
-    name: string,
-    func: (ctxPtr: number, ...values: SqlValue[]) => SqlValue,
-  ): this;
+  createFunction(name: string, func: (ctxPtr: number, ...values: SqlValue[]) => SqlValue): this;
   createFunction(
     name: string,
     func: (ctxPtr: number, ...values: SqlValue[]) => void,
@@ -1112,17 +1092,10 @@ export class Database {
   ): this;
   createFunction(
     name: string,
-    options:
-      | ScalarFunctionOptions
-      | AggregateFunctionOptions
-      | WindowFunctionOptions,
+    options: ScalarFunctionOptions | AggregateFunctionOptions | WindowFunctionOptions,
   ): this;
   createFunction(
-    options: (
-      | ScalarFunctionOptions
-      | AggregateFunctionOptions
-      | WindowFunctionOptions
-    ) & {
+    options: (ScalarFunctionOptions | AggregateFunctionOptions | WindowFunctionOptions) & {
       name: string;
     },
   ): this;
@@ -1155,20 +1128,14 @@ export class Database {
    * treated like an argument to Stmt.bind(), so may be any type supported by
    * that function. Throws on error.
    */
-  selectObject(
-    sql: FlexibleString,
-    bind?: BindingSpec,
-  ): Record<string, SqlValue> | undefined;
+  selectObject(sql: FlexibleString, bind?: BindingSpec): Record<string, SqlValue> | undefined;
 
   /**
    * Works identically to {@link Database#selectArrays} except that each value in
    * the returned array is an object, as per the `"object"` rowMode option to
    * {@link Database#exec}.
    */
-  selectObjects(
-    sql: FlexibleString,
-    bind?: BindingSpec,
-  ): Record<string, SqlValue>[];
+  selectObjects(sql: FlexibleString, bind?: BindingSpec): Record<string, SqlValue>[];
 
   /**
    * Prepares the given SQL, `step()`s the resulting {@link PreparedStatement}
@@ -1212,11 +1179,7 @@ export class Database {
    * argument is desired but no bind data are needed, pass `undefined` for the
    * 2nd argument. If there are no result rows, an empty array is returned.
    */
-  selectValues(
-    sql: FlexibleString,
-    bind?: BindingSpec,
-    asType?: SQLiteDataType,
-  ): SqlValue[];
+  selectValues(sql: FlexibleString, bind?: BindingSpec, asType?: SQLiteDataType): SqlValue[];
 
   /**
    * Returns the number of currently-opened {@link PreparedStatement} handles for
@@ -1272,10 +1235,7 @@ export class Database {
    * expected. If it does not throw, it returns its `db` argument (`this`, if
    * called as a member function).
    */
-  static checkRc: (
-    db: Database | number | null,
-    resultCode: number,
-  ) => Database;
+  static checkRc: (db: Database | number | null, resultCode: number) => Database;
 
   /** Instance method version of {@link checkRc()}. */
   checkRc: (resultCode: number) => this;
@@ -1592,10 +1552,7 @@ type Worker1MessageBusEnvelope = {
 };
 
 /** Worker API #1 input message envelope. */
-type Worker1InputEnvelope<
-  T extends string,
-  Args = unknown,
-> = Worker1MessageBusEnvelope & {
+type Worker1InputEnvelope<T extends string, Args = unknown> = Worker1MessageBusEnvelope & {
   type: T;
   args?: Args;
   /** Timestamp set by the promiser before posting a message. */
@@ -1603,10 +1560,7 @@ type Worker1InputEnvelope<
 };
 
 /** Worker API #1 output message envelope. */
-type Worker1OutputEnvelope<
-  T extends string,
-  Result = unknown,
-> = Worker1MessageBusEnvelope & {
+type Worker1OutputEnvelope<T extends string, Result = unknown> = Worker1MessageBusEnvelope & {
   type: T;
   result: Result;
 };
@@ -1902,9 +1856,7 @@ export class SQLiteStruct {
    * Any exceptions thrown by ondispose callbacks are ignored but may induce a
    * warning in the console.
    */
-  ondispose?:
-    | (() => void)
-    | ((() => void) | SQLiteStruct | WasmPointer | string)[];
+  ondispose?: (() => void) | ((() => void) | SQLiteStruct | WasmPointer | string)[];
 
   /**
    * Client code may call `aStructInstance.addOnDispose()` to push one or more
@@ -1977,10 +1929,7 @@ export class SQLiteStruct {
   ): (name: string, func: Function | WasmPointer) => this;
 
   /** Behaves exactly like {@link SQLiteStruct#installMethods}. */
-  installMethod(
-    methodsObject: Record<string, Function>,
-    applyArgcCheck?: boolean,
-  ): this;
+  installMethod(methodsObject: Record<string, Function>, applyArgcCheck?: boolean): this;
 
   /**
    * Installs methods into this StructType-type instance. Each entry in the
@@ -1997,10 +1946,7 @@ export class SQLiteStruct {
    *
    * On success, returns this object. Throws on error.
    */
-  installMethods(
-    methodsObject: Record<string, Function>,
-    applyArgcCheck?: boolean,
-  ): this;
+  installMethods(methodsObject: Record<string, Function>, applyArgcCheck?: boolean): this;
 }
 
 export class sqlite3_vfs extends SQLiteStruct {
@@ -2019,11 +1965,7 @@ export class sqlite3_vfs extends SQLiteStruct {
     flags: number,
     pOutputFlags: WasmPointer,
   ) => Sqlite3Result;
-  xDelete: (
-    vfsPtr: WasmPointer,
-    zName: WasmPointer,
-    syncDir: number,
-  ) => Sqlite3Result;
+  xDelete: (vfsPtr: WasmPointer, zName: WasmPointer, syncDir: number) => Sqlite3Result;
   xAccess: (
     vfsPtr: WasmPointer,
     zName: WasmPointer,
@@ -2038,34 +1980,15 @@ export class sqlite3_vfs extends SQLiteStruct {
   ) => Sqlite3Result;
   xDlOpen: (vfsPtr: WasmPointer, zFilename: WasmPointer) => WasmPointer;
   xDlError: (vfsPtr: WasmPointer, nByte: number, zErrMsg: WasmPointer) => void;
-  xDlSym: (
-    vfsPtr: WasmPointer,
-    pHandle: WasmPointer,
-    zSymbol: WasmPointer,
-  ) => WasmPointer;
+  xDlSym: (vfsPtr: WasmPointer, pHandle: WasmPointer, zSymbol: WasmPointer) => WasmPointer;
   xDlClose: (vfsPtr: WasmPointer, pHandle: WasmPointer) => void;
-  xRandomness: (
-    vfsPtr: WasmPointer,
-    nByte: number,
-    zOut: WasmPointer,
-  ) => Sqlite3Result;
+  xRandomness: (vfsPtr: WasmPointer, nByte: number, zOut: WasmPointer) => Sqlite3Result;
   xSleep: (vfsPtr: WasmPointer, microseconds: number) => Sqlite3Result;
   xCurrentTime: (vfsPtr: WasmPointer, pTimeOut: WasmPointer) => Sqlite3Result;
   xGetLastError: (vfsPtr: WasmPointer, nBuf: number, zBuf: WasmPointer) => void;
-  xCurrentTimeInt64: (
-    vfsPtr: WasmPointer,
-    pTimeOut: WasmPointer,
-  ) => Sqlite3Result;
-  xSetSystemCall: (
-    vfsPtr: WasmPointer,
-    zName: WasmPointer,
-    pCall: WasmPointer,
-  ) => Sqlite3Result;
-  xGetSystemCall: (
-    vfsPtr: WasmPointer,
-    zName: WasmPointer,
-    pCall: WasmPointer,
-  ) => WasmPointer;
+  xCurrentTimeInt64: (vfsPtr: WasmPointer, pTimeOut: WasmPointer) => Sqlite3Result;
+  xSetSystemCall: (vfsPtr: WasmPointer, zName: WasmPointer, pCall: WasmPointer) => Sqlite3Result;
+  xGetSystemCall: (vfsPtr: WasmPointer, zName: WasmPointer, pCall: WasmPointer) => WasmPointer;
   xNextSystemCall: (vfsPtr: WasmPointer, zName: WasmPointer) => WasmPointer;
 }
 
@@ -2074,32 +1997,15 @@ export class sqlite3_io_methods extends SQLiteStruct {
 
   constructor(pointer?: WasmPointer);
   xClose: (file: WasmPointer) => Sqlite3Result;
-  xRead: (
-    file: WasmPointer,
-    buf: WasmPointer,
-    iAmt: number,
-    iOfst: number,
-  ) => Sqlite3Result;
-  xWrite: (
-    file: WasmPointer,
-    buf: WasmPointer,
-    iAmt: number,
-    iOfst: number,
-  ) => Sqlite3Result;
+  xRead: (file: WasmPointer, buf: WasmPointer, iAmt: number, iOfst: number) => Sqlite3Result;
+  xWrite: (file: WasmPointer, buf: WasmPointer, iAmt: number, iOfst: number) => Sqlite3Result;
   xTruncate: (file: WasmPointer, size: number) => Sqlite3Result;
   xSync: (file: WasmPointer, flags: number) => Sqlite3Result;
   xFileSize: (file: WasmPointer, pSize: WasmPointer) => Sqlite3Result;
   xLock: (file: WasmPointer, lockType: number) => Sqlite3Result;
   xUnlock: (file: WasmPointer, lockType: number) => Sqlite3Result;
-  xCheckReservedLock: (
-    file: WasmPointer,
-    pResOut: WasmPointer,
-  ) => Sqlite3Result;
-  xFileControl: (
-    file: WasmPointer,
-    op: number,
-    pArg: WasmPointer,
-  ) => Sqlite3Result;
+  xCheckReservedLock: (file: WasmPointer, pResOut: WasmPointer) => Sqlite3Result;
+  xFileControl: (file: WasmPointer, op: number, pArg: WasmPointer) => Sqlite3Result;
   xSectorSize: (file: WasmPointer) => Sqlite3Result;
   xDeviceCharacteristics: (file: WasmPointer) => Sqlite3Result;
   xShmMap: (
@@ -2109,20 +2015,10 @@ export class sqlite3_io_methods extends SQLiteStruct {
     bExtend: number,
     pp: WasmPointer,
   ) => Sqlite3Result;
-  xShmLock: (
-    file: WasmPointer,
-    offset: number,
-    n: number,
-    flags: number,
-  ) => Sqlite3Result;
+  xShmLock: (file: WasmPointer, offset: number, n: number, flags: number) => Sqlite3Result;
   xShmBarrier: (file: WasmPointer) => void;
   xShmUnmap: (file: WasmPointer, deleteFlag: number) => Sqlite3Result;
-  xFetch: (
-    file: WasmPointer,
-    iOfst: number,
-    iAmt: number,
-    pp: WasmPointer,
-  ) => Sqlite3Result;
+  xFetch: (file: WasmPointer, iOfst: number, iAmt: number, pp: WasmPointer) => Sqlite3Result;
   xUnfetch: (file: WasmPointer, iOfst: number, p: WasmPointer) => Sqlite3Result;
 }
 
@@ -2199,11 +2095,7 @@ export class sqlite3_module extends SQLiteStruct {
   ) => Sqlite3Result;
   xNext: (pCursor: WasmPointer) => Sqlite3Result;
   xEof: (pCursor: WasmPointer) => Sqlite3Result;
-  xColumn: (
-    pCursor: WasmPointer,
-    pContext: WasmPointer,
-    i: number,
-  ) => Sqlite3Result;
+  xColumn: (pCursor: WasmPointer, pContext: WasmPointer, i: number) => Sqlite3Result;
   xRowid: (pCursor: WasmPointer, pRowid: WasmPointer) => Sqlite3Result;
   xUpdate: (
     pVtab: WasmPointer,
@@ -2448,9 +2340,7 @@ export type Sqlite3Static = {
       vfs?: {
         struct: sqlite3_vfs;
         methods: {
-          [K in keyof sqlite3_vfs as K extends `x${string}`
-            ? K
-            : never]?: sqlite3_vfs[K];
+          [K in keyof sqlite3_vfs as K extends `x${string}` ? K : never]?: sqlite3_vfs[K];
         };
         applyArgcCheck?: boolean;
         name?: string;
@@ -2699,14 +2589,8 @@ export type WASM_API = {
    * returns `[ptr,n]`, where `ptr` is the C-string's pointer and n is its
    * cstrlen().
    */
-  allocCString(
-    jsString: string,
-    returnPtrAndLength: undefined | false,
-  ): WasmPointer;
-  allocCString(
-    jsString: string,
-    returnPtrAndLength: true,
-  ): [WasmPointer, number];
+  allocCString(jsString: string, returnPtrAndLength: undefined | false): WasmPointer;
+  allocCString(jsString: string, returnPtrAndLength: true): [WasmPointer, number];
 
   /**
    * Creates a C-style array, using `alloc()`, suitable for passing to a C-level
@@ -2798,17 +2682,7 @@ export type WASM_API = {
    * instead of an integer.
    */
   sizeofIR: (
-    irStr:
-      | 'i8'
-      | 'i16'
-      | 'i32'
-      | 'f32'
-      | 'float'
-      | 'i64'
-      | 'f64'
-      | 'double'
-      | '_'
-      | string,
+    irStr: 'i8' | 'i16' | 'i32' | 'f32' | 'float' | 'i64' | 'f64' | 'double' | '_' | string,
   ) => Sqlite3Result;
 
   /* --------------------------------------------------------------------------
@@ -2886,14 +2760,8 @@ export type WASM_API = {
    * Works just like `allocCString()` but stores the result of the allocation in
    * the current scope.
    */
-  scopedAllocCString(
-    jsString: string,
-    returnWithLength: undefined | false,
-  ): WasmPointer;
-  scopedAllocCString(
-    jsString: string,
-    returnPtrAndLength: true,
-  ): [WasmPointer, number];
+  scopedAllocCString(jsString: string, returnWithLength: undefined | false): WasmPointer;
+  scopedAllocCString(jsString: string, returnPtrAndLength: true): [WasmPointer, number];
 
   /**
    * Works just like `allocPtr()` but stores the result of the allocation in the
@@ -3231,10 +3099,7 @@ export type WASM_API = {
    * To be clear, the expected C-style arguments to be passed to this function
    * are `(int, char **)` (optionally const-qualified).
    */
-  cArgvToJs: (
-    argc: number,
-    pArgv: WasmPointer,
-  ) => (string | null)[] | undefined;
+  cArgvToJs: (argc: number, pArgv: WasmPointer) => (string | null)[] | undefined;
 
   /**
    * Expects its argument to be a pointer into the WASM heap memory which refers
@@ -3276,11 +3141,7 @@ export type WASM_API = {
    * copy partial multibyte characters this way, and converting such strings
    * back to JS strings will have undefined results.
    */
-  cstrncpy: (
-    tgtPtr: WasmPointer,
-    srcPtr: WasmPointer,
-    n: number,
-  ) => Sqlite3Result;
+  cstrncpy: (tgtPtr: WasmPointer, srcPtr: WasmPointer, n: number) => Sqlite3Result;
 
   /**
    * Forewarning: this API is somewhat complicated and is, in practice, never
@@ -3357,9 +3218,7 @@ export type WASM_API = {
    * sets it to the value 0. Even in such cases, calls must behave as if the
    * allocated memory has exactly `srcTypedArray.byteLength` usable bytes.
    */
-  allocFromTypedArray: (
-    srcTypedArray: Uint8Array | Int8Array | ArrayBuffer,
-  ) => WasmPointer;
+  allocFromTypedArray: (srcTypedArray: Uint8Array | Int8Array | ArrayBuffer) => WasmPointer;
 
   /* ==========================================================================
    * Bridging JS/WASM Functions
@@ -3936,15 +3795,8 @@ export type CAPI = {
       | CAPI['SQLITE_CONFIG_URI'],
     arg: number,
   ): Sqlite3Result;
-  sqlite3_config(
-    op: CAPI['SQLITE_CONFIG_LOOKASIDE'],
-    arg1: number,
-    arg2: number,
-  ): Sqlite3Result;
-  sqlite3_config(
-    op: CAPI['SQLITE_CONFIG_MEMDB_MAXSIZE'],
-    arg: bigint,
-  ): Sqlite3Result;
+  sqlite3_config(op: CAPI['SQLITE_CONFIG_LOOKASIDE'], arg1: number, arg2: number): Sqlite3Result;
+  sqlite3_config(op: CAPI['SQLITE_CONFIG_MEMDB_MAXSIZE'], arg: bigint): Sqlite3Result;
 
   /**
    * Used to make configuration changes to a database connection. The interface
@@ -4332,12 +4184,7 @@ export type CAPI = {
   sqlite3_trace_v2: (
     db: DbPtr,
     mask: number,
-    xCallback: (
-      reason: number,
-      cbArg: WasmPointer,
-      arg1: WasmPointer,
-      arg2: WasmPointer,
-    ) => number,
+    xCallback: (reason: number, cbArg: WasmPointer, arg1: WasmPointer, arg2: WasmPointer) => number,
   ) => Sqlite3Result;
 
   /**
@@ -4371,10 +4218,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/open.html
    */
-  sqlite3_open: (
-    filename: string | WasmPointer,
-    ppDb: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_open: (filename: string | WasmPointer, ppDb: WasmPointer) => Sqlite3Result;
 
   /**
    * Open an SQLite database file as specified by the `filename` argument
@@ -4407,10 +4251,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/uri_parameter.html
    */
-  sqlite3_uri_parameter: (
-    uri: string | WasmPointer,
-    param: string | WasmPointer,
-  ) => string | null;
+  sqlite3_uri_parameter: (uri: string | WasmPointer, param: string | WasmPointer) => string | null;
 
   /**
    * Assumes that `param` is a boolean parameter and returns true (1) or false
@@ -4732,13 +4573,7 @@ export type CAPI = {
   sqlite3_bind_blob: (
     stmt: StmtPtr,
     idx: number,
-    blob:
-      | WasmPointer
-      | string
-      | readonly string[]
-      | Int8Array
-      | Uint8Array
-      | ArrayBuffer,
+    blob: WasmPointer | string | readonly string[] | Int8Array | Uint8Array | ArrayBuffer,
     n: number,
     dtor: DtorType,
   ) => Sqlite3Result;
@@ -4753,11 +4588,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/bind_blob.html
    */
-  sqlite3_bind_double: (
-    stmt: StmtPtr,
-    idx: number,
-    value: number,
-  ) => Sqlite3Result;
+  sqlite3_bind_double: (stmt: StmtPtr, idx: number, value: number) => Sqlite3Result;
 
   /**
    * Bind an integer number to a parameter in a prepared statement.
@@ -4768,11 +4599,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/bind_blob.html
    */
-  sqlite3_bind_int: (
-    stmt: StmtPtr,
-    idx: number,
-    value: number,
-  ) => Sqlite3Result;
+  sqlite3_bind_int: (stmt: StmtPtr, idx: number, value: number) => Sqlite3Result;
 
   /**
    * Bind a 64-bit integer number to a parameter in a prepared statement.
@@ -4783,11 +4610,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/bind_blob.html
    */
-  sqlite3_bind_int64: (
-    stmt: StmtPtr,
-    idx: number,
-    value: bigint,
-  ) => Sqlite3Result;
+  sqlite3_bind_int64: (stmt: StmtPtr, idx: number, value: bigint) => Sqlite3Result;
 
   /**
    * Bind a `NULL` value to a parameter in a prepared statement.
@@ -4819,13 +4642,7 @@ export type CAPI = {
   sqlite3_bind_text: (
     stmt: StmtPtr,
     idx: number,
-    text:
-      | string
-      | WasmPointer
-      | readonly string[]
-      | Int8Array
-      | Uint8Array
-      | ArrayBuffer,
+    text: string | WasmPointer | readonly string[] | Int8Array | Uint8Array | ArrayBuffer,
     n: number,
     dtor: DtorType,
   ) => Sqlite3Result;
@@ -4888,10 +4705,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/bind_parameter_index.html
    */
-  sqlite3_bind_parameter_index: (
-    stmt: StmtPtr,
-    name: string | WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_bind_parameter_index: (stmt: StmtPtr, name: string | WasmPointer) => Sqlite3Result;
 
   /**
    * The sqlite3_bind_parameter_name(P,N) interface returns the name of the N-th
@@ -5178,9 +4992,7 @@ export type CAPI = {
     nArg: number,
     eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
-    xFunc:
-      | ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue)
-      | WasmPointer,
+    xFunc: ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue) | WasmPointer,
     xStep: ((ctx: WasmPointer, ...values: SqlValue[]) => void) | WasmPointer,
     xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
   ) => Sqlite3Result;
@@ -5211,9 +5023,7 @@ export type CAPI = {
     nArg: number,
     eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
-    xFunc:
-      | ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue)
-      | WasmPointer,
+    xFunc: ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue) | WasmPointer,
     xStep: ((ctx: WasmPointer, ...values: SqlValue[]) => void) | WasmPointer,
     xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
     xDestroy: (() => void) | WasmPointer,
@@ -5246,9 +5056,7 @@ export type CAPI = {
     nArg: number,
     eTextRep: CAPI['SQLITE_UTF8'],
     pApp: WasmPointer,
-    xStep:
-      | ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue)
-      | WasmPointer,
+    xStep: ((ctx: WasmPointer, ...values: SqlValue[]) => SqlValue) | WasmPointer,
     xFinal: ((ctx: WasmPointer) => SqlValue) | WasmPointer,
     xValue: ((ctx: WasmPointer) => void) | WasmPointer,
     xInverse: ((ctx: WasmPointer, ...values: SqlValue[]) => void) | WasmPointer,
@@ -5313,10 +5121,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/value_blob.html
    */
-  sqlite3_value_pointer: (
-    sqliteValue: WasmPointer,
-    type: string | WasmPointer,
-  ) => WasmPointer;
+  sqlite3_value_pointer: (sqliteValue: WasmPointer, type: string | WasmPointer) => WasmPointer;
 
   /**
    * Extract a `TEXT` value from a protected `sqlite3_value` object.
@@ -5463,10 +5268,7 @@ export type CAPI = {
    * See
    * https://sqlite.org/wasm/doc/trunk/api-c-style.md#sqlite3_js_aggregate_context
    */
-  sqlite3_js_aggregate_context: (
-    ctx: WasmPointer,
-    nBytes: number,
-  ) => WasmPointer;
+  sqlite3_js_aggregate_context: (ctx: WasmPointer, nBytes: number) => WasmPointer;
 
   /**
    * Returns a copy of the pointer that was the `pUserData` parameter (the 5th
@@ -5548,11 +5350,7 @@ export type CAPI = {
    * Sqlite3_set_errmsg() is a WASM-internal-use-only function which is like
    * sqlite3_result_error() but targets a database connection's error state.
    */
-  sqlite3_set_errmsg: (
-    db: DbPtr,
-    errCode: number,
-    msg: string | WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_set_errmsg: (db: DbPtr, errCode: number, msg: string | WasmPointer) => Sqlite3Result;
 
   /**
    * Sets the result from an application-defined function to be the `BLOB` whose
@@ -5606,11 +5404,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/result_blob.html
    */
-  sqlite3_result_error: (
-    ctx: WasmPointer,
-    msg: string | WasmPointer,
-    msgLen: number,
-  ) => void;
+  sqlite3_result_error: (ctx: WasmPointer, msg: string | WasmPointer, msgLen: number) => void;
 
   /**
    * Causes SQLite to throw an error indicating that a string or BLOB is too
@@ -5804,16 +5598,7 @@ export type CAPI = {
    */
   sqlite3_result_js: (
     ctx: WasmPointer,
-    val:
-      | Error
-      | null
-      | boolean
-      | number
-      | bigint
-      | string
-      | Uint8Array
-      | Int8Array
-      | undefined,
+    val: Error | null | boolean | number | bigint | string | Uint8Array | Int8Array | undefined,
   ) => void;
 
   /**
@@ -5900,12 +5685,7 @@ export type CAPI = {
     db: DbPtr,
     cbArg: WasmPointer,
     callback:
-      | ((
-          cbArg: WasmPointer,
-          db: DbPtr,
-          eTextRep: number,
-          name: string | WasmPointer,
-        ) => void)
+      | ((cbArg: WasmPointer, db: DbPtr, eTextRep: number, name: string | WasmPointer) => void)
       | WasmPointer,
   ) => Sqlite3Result;
 
@@ -5971,11 +5751,7 @@ export type CAPI = {
   sqlite3_txn_state: (
     db: DbPtr,
     schema: string | WasmPointer,
-  ) =>
-    | CAPI['SQLITE_TXN_NONE']
-    | CAPI['SQLITE_TXN_READ']
-    | CAPI['SQLITE_TXN_WRITE']
-    | -1;
+  ) => CAPI['SQLITE_TXN_NONE'] | CAPI['SQLITE_TXN_READ'] | CAPI['SQLITE_TXN_WRITE'] | -1;
 
   /**
    * Registers a callback function to be invoked whenever a transaction is
@@ -6112,9 +5888,7 @@ export type CAPI = {
    * See https://www.sqlite.org/c3ref/auto_extension.html
    */
   sqlite3_auto_extension: (
-    xEntryPoint:
-      | ((db: DbPtr, pzErrMsg: WasmPointer, pThunk: WasmPointer) => number)
-      | WasmPointer,
+    xEntryPoint: ((db: DbPtr, pzErrMsg: WasmPointer, pThunk: WasmPointer) => number) | WasmPointer,
   ) => Sqlite3Result;
 
   /**
@@ -6252,11 +6026,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/overload_function.html
    */
-  sqlite3_overload_function: (
-    db: DbPtr,
-    funcName: string,
-    nArgs: number,
-  ) => Sqlite3Result;
+  sqlite3_overload_function: (db: DbPtr, funcName: string, nArgs: number) => Sqlite3Result;
 
   /**
    * Returns a pointer to a VFS given its name. Names are case-sensitive.
@@ -6293,9 +6063,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/vfs_find.html
    */
-  sqlite3_vfs_unregister: (
-    vfs: sqlite3_vfs | WasmPointer | string,
-  ) => Sqlite3Result;
+  sqlite3_vfs_unregister: (vfs: sqlite3_vfs | WasmPointer | string) => Sqlite3Result;
 
   /**
    * Low-Level Control Of Database Files
@@ -6386,11 +6154,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/keyword_count.html
    */
-  sqlite3_keyword_name: (
-    i: number,
-    pOut: WasmPointer,
-    pOutLen: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_keyword_name: (i: number, pOut: WasmPointer, pOutLen: WasmPointer) => Sqlite3Result;
 
   /**
    * Checks to see whether or not the `n`-byte UTF8 identifier that `name`
@@ -6402,10 +6166,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/keyword_count.html
    */
-  sqlite3_keyword_check: (
-    name: string | WasmPointer,
-    n: number,
-  ) => Sqlite3Result;
+  sqlite3_keyword_check: (name: string | WasmPointer, n: number) => Sqlite3Result;
 
   /**
    * Used to retrieve runtime status information about the performance of
@@ -6570,10 +6331,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/stricmp.html
    */
-  sqlite3_stricmp: (
-    str1: string | WasmPointer,
-    str2: string | WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_stricmp: (str1: string | WasmPointer, str2: string | WasmPointer) => Sqlite3Result;
 
   /**
    * Compare the contents of two buffers containing UTF-8 strings in a
@@ -6604,10 +6362,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/strglob.html
    */
-  sqlite3_strglob: (
-    glob: string | WasmPointer,
-    str: string | WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_strglob: (glob: string | WasmPointer, str: string | WasmPointer) => Sqlite3Result;
 
   /**
    * Returns zero if and only if string `str` matches the `LIKE` pattern
@@ -6704,9 +6459,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/vtab_distinct.html
    */
-  sqlite3_vtab_distinct: (
-    indexInfo: sqlite3_index_info | WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_vtab_distinct: (indexInfo: sqlite3_index_info | WasmPointer) => Sqlite3Result;
 
   /**
    * Identify and handle `IN` constraints in `xBestIndex`.
@@ -6743,10 +6496,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/vtab_in_first.html
    */
-  sqlite3_vtab_in_first: (
-    sqlValue: WasmPointer,
-    ppOut: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_vtab_in_first: (sqlValue: WasmPointer, ppOut: WasmPointer) => Sqlite3Result;
 
   /**
    * Find all elements on the right-hand side of an IN constraint.
@@ -6764,10 +6514,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/vtab_in_first.html
    */
-  sqlite3_vtab_in_next: (
-    sqlValue: WasmPointer,
-    ppOut: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_vtab_in_next: (sqlValue: WasmPointer, ppOut: WasmPointer) => Sqlite3Result;
 
   /**
    * Constraint values in `xBestIndex()`
@@ -6846,11 +6593,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/preupdate_hook.html
    */
-  sqlite3_preupdate_old: (
-    db: DbPtr,
-    colIdx: number,
-    sqlValue: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_preupdate_old: (db: DbPtr, colIdx: number, sqlValue: WasmPointer) => Sqlite3Result;
 
   /**
    * Thin wrapper around `sqlite3_preupdate_old()` , which fetch the
@@ -6904,11 +6647,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/c3ref/preupdate_hook.html
    */
-  sqlite3_preupdate_new: (
-    db: DbPtr,
-    colIdx: number,
-    sqlValues: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3_preupdate_new: (db: DbPtr, colIdx: number, sqlValues: WasmPointer) => Sqlite3Result;
 
   /**
    * Thin wrapper around `sqlite3_preupdate_new()` , which fetch the
@@ -7019,11 +6758,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/session/sqlite3session_create.html
    */
-  sqlite3session_create: (
-    db: DbPtr,
-    dbName: string,
-    ppSession: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3session_create: (db: DbPtr, dbName: string, ppSession: WasmPointer) => Sqlite3Result;
 
   /**
    * Delete a session object previously allocated using
@@ -7050,10 +6785,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/session/sqlite3session_object_config.html
    */
-  sqlite3session_object_config: (
-    pSession: WasmPointer,
-    op: number,
-  ) => Sqlite3Result;
+  sqlite3session_object_config: (pSession: WasmPointer, op: number) => Sqlite3Result;
 
   /**
    * Enable or disable the recording of changes by a session object. When
@@ -7066,10 +6798,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/session/sqlite3session_enable.html
    */
-  sqlite3session_enable: (
-    pSession: WasmPointer,
-    bEnable: number,
-  ) => Sqlite3Result;
+  sqlite3session_enable: (pSession: WasmPointer, bEnable: number) => Sqlite3Result;
 
   /**
    * Set Or Clear the Indirect Change Flag
@@ -7098,10 +6827,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/session/sqlite3session_indirect.html
    */
-  sqlite3session_indirect: (
-    pSession: WasmPointer,
-    bIndirect: number,
-  ) => Sqlite3Result;
+  sqlite3session_indirect: (pSession: WasmPointer, bIndirect: number) => Sqlite3Result;
 
   /**
    * Attach A Table To A Session Object
@@ -7121,10 +6847,7 @@ export type CAPI = {
    *
    * See https://www.sqlite.org/session/sqlite3session_attach.html
    */
-  sqlite3session_attach: (
-    pSession: WasmPointer,
-    tableName: string | NullPointer,
-  ) => Sqlite3Result;
+  sqlite3session_attach: (pSession: WasmPointer, tableName: string | NullPointer) => Sqlite3Result;
 
   /**
    * Set a table filter on a Session Object.
@@ -7429,11 +7152,7 @@ export type CAPI = {
    * @param colNum Column number
    * @param ppValue OUT: Old value (or NULL pointer)
    */
-  sqlite3changeset_old: (
-    pIter: WasmPointer,
-    colNum: number,
-    ppValue: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3changeset_old: (pIter: WasmPointer, colNum: number, ppValue: WasmPointer) => Sqlite3Result;
 
   /**
    * Thin wrapper around `sqlite3changeset_old()`, which fetches the
@@ -7443,10 +7162,7 @@ export type CAPI = {
    *
    * See https://sqlite.org/wasm/doc/trunk/api-c-style.md#session-api-ext
    */
-  sqlite3changeset_old_js: (
-    pChangeSetIter: WasmPointer,
-    colIdx: number,
-  ) => SqlValue;
+  sqlite3changeset_old_js: (pChangeSetIter: WasmPointer, colIdx: number) => SqlValue;
 
   /**
    * Obtain new.* Values From A Changeset Iterator
@@ -7465,11 +7181,7 @@ export type CAPI = {
    * @param colNum Column number
    * @param ppValue OUT: New value (or NULL pointer)
    */
-  sqlite3changeset_new: (
-    pIter: WasmPointer,
-    colNum: number,
-    ppValue: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3changeset_new: (pIter: WasmPointer, colNum: number, ppValue: WasmPointer) => Sqlite3Result;
 
   /**
    * Thin wrapper around `sqlite3changeset_new()`, which fetches the
@@ -7482,10 +7194,7 @@ export type CAPI = {
    *
    * See https://sqlite.org/wasm/doc/trunk/api-c-style.md#session-api-ext
    */
-  sqlite3changeset_new_js: (
-    pChangeSetIter: WasmPointer,
-    colIdx: number,
-  ) => SqlValue | undefined;
+  sqlite3changeset_new_js: (pChangeSetIter: WasmPointer, colIdx: number) => SqlValue | undefined;
 
   /**
    * Obtain Conflicting Row Values From A Changeset Iterator
@@ -7525,10 +7234,7 @@ export type CAPI = {
    * @param pIter Changeset iterator
    * @param pnOut OUT: Number of FK constraint violations
    */
-  sqlite3changeset_fk_conflicts: (
-    pIter: WasmPointer,
-    pnOut: WasmPointer,
-  ) => Sqlite3Result;
+  sqlite3changeset_fk_conflicts: (pIter: WasmPointer, pnOut: WasmPointer) => Sqlite3Result;
 
   /**
    * This function is used to finalize an iterator allocated with
@@ -7878,9 +7584,7 @@ export type CAPI = {
    */
   sqlite3changeset_apply_strm: (
     db: DbPtr,
-    xInput:
-      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
-      | WasmPointer,
+    xInput: ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number) | WasmPointer,
     pIn: WasmPointer,
     xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
     xConflict:
@@ -7928,9 +7632,7 @@ export type CAPI = {
    */
   sqlite3changeset_apply_v2_strm: (
     db: DbPtr,
-    xInput:
-      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
-      | WasmPointer,
+    xInput: ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number) | WasmPointer,
     pIn: WasmPointer,
     xFilter: ((pCtx: WasmPointer, tableName: string) => number) | WasmPointer,
     xConflict:
@@ -7970,9 +7672,7 @@ export type CAPI = {
    */
   sqlite3changeset_apply_v3_strm: (
     db: DbPtr,
-    xInput:
-      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
-      | WasmPointer,
+    xInput: ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number) | WasmPointer,
     pIn: WasmPointer,
     xFilter: ((pCtx: WasmPointer, pIter: WasmPointer) => number) | WasmPointer,
     xConflict:
@@ -8009,17 +7709,11 @@ export type CAPI = {
    * See https://www.sqlite.org/session/sqlite3changegroup_add_strm.html
    */
   sqlite3changeset_concat_strm: (
-    xInputA:
-      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
-      | WasmPointer,
+    xInputA: ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number) | WasmPointer,
     pInA: WasmPointer,
-    xInputB:
-      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
-      | WasmPointer,
+    xInputB: ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number) | WasmPointer,
     pInB: WasmPointer,
-    xOutput:
-      | ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number)
-      | WasmPointer,
+    xOutput: ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number) | WasmPointer,
     pOut: WasmPointer,
   ) => Sqlite3Result;
 
@@ -8038,13 +7732,9 @@ export type CAPI = {
    * See https://www.sqlite.org/session/sqlite3changegroup_add_strm.html
    */
   sqlite3changeset_invert_strm: (
-    xInput:
-      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
-      | WasmPointer,
+    xInput: ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number) | WasmPointer,
     pIn: WasmPointer,
-    xOutput:
-      | ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number)
-      | WasmPointer,
+    xOutput: ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number) | WasmPointer,
     pOut: WasmPointer,
   ) => Sqlite3Result;
 
@@ -8063,9 +7753,7 @@ export type CAPI = {
    */
   sqlite3changeset_start_strm: (
     ppIter: WasmPointer,
-    xInput:
-      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
-      | WasmPointer,
+    xInput: ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number) | WasmPointer,
     pIn: WasmPointer,
   ) => Sqlite3Result;
 
@@ -8085,9 +7773,7 @@ export type CAPI = {
    */
   sqlite3changeset_start_v2_strm: (
     ppIter: WasmPointer,
-    xInput:
-      | ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number)
-      | WasmPointer,
+    xInput: ((pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number) | WasmPointer,
     pIn: WasmPointer,
     flags: number,
   ) => Sqlite3Result;
@@ -8107,9 +7793,7 @@ export type CAPI = {
    */
   sqlite3session_changeset_strm: (
     pSession: WasmPointer,
-    xOutput:
-      | ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number)
-      | WasmPointer,
+    xOutput: ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number) | WasmPointer,
     pOut: WasmPointer,
   ) => Sqlite3Result;
 
@@ -8128,9 +7812,7 @@ export type CAPI = {
    */
   sqlite3session_patchset_strm: (
     pSession: WasmPointer,
-    xOutput:
-      | ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number)
-      | WasmPointer,
+    xOutput: ((pOut: WasmPointer, pData: WasmPointer, nData: number) => number) | WasmPointer,
     pOut: WasmPointer,
   ) => Sqlite3Result;
 
@@ -8149,11 +7831,7 @@ export type CAPI = {
    */
   sqlite3changegroup_add_strm: (
     changeGrp: WasmPointer,
-    xInput: (
-      pIn: WasmPointer,
-      pData: WasmPointer,
-      pnData: WasmPointer,
-    ) => number,
+    xInput: (pIn: WasmPointer, pData: WasmPointer, pnData: WasmPointer) => number,
     pIn: WasmPointer,
   ) => Sqlite3Result;
 
@@ -8224,11 +7902,7 @@ export type CAPI = {
    *
    * See https://sqlite.org/wasm/doc/trunk/api-c-style.md#sqlite3_js_db_uses_vfs
    */
-  sqlite3_js_db_uses_vfs: (
-    db: DbPtr,
-    vfsName: string,
-    dbName: string,
-  ) => boolean;
+  sqlite3_js_db_uses_vfs: (db: DbPtr, vfsName: string, dbName: string) => boolean;
 
   /** Returns an array of the names of all currently-registered sqlite3 VFSes. */
   sqlite3_js_vfs_list: () => string[];
@@ -8245,10 +7919,7 @@ export type CAPI = {
    *   returned.
    * @throws A description of the problem.
    */
-  sqlite3_js_db_export: (
-    db: DbPtr,
-    schema?: string | WasmPointer,
-  ) => Uint8Array<ArrayBuffer>;
+  sqlite3_js_db_export: (db: DbPtr, schema?: string | WasmPointer) => Uint8Array<ArrayBuffer>;
 
   /**
    * Given a `sqlite3*` and a database name (JS string or WASM C-string pointer,
@@ -8321,14 +7992,8 @@ export type CAPI = {
    * results in the undefined value. It always throws a WasmAllocError if
    * allocating memory for a conversion fails.
    */
-  sqlite3_value_to_js(
-    sqliteValue: WasmPointer,
-    throwIfCannotConvert?: true,
-  ): SqlValue;
-  sqlite3_value_to_js(
-    sqliteValue: WasmPointer,
-    throwIfCannotConvert: false,
-  ): SqlValue | undefined;
+  sqlite3_value_to_js(sqliteValue: WasmPointer, throwIfCannotConvert?: true): SqlValue;
+  sqlite3_value_to_js(sqliteValue: WasmPointer, throwIfCannotConvert: false): SqlValue | undefined;
 
   /**
    * Requires a C-style array of `sqlite3_value*` objects and the number of

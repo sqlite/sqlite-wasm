@@ -21,11 +21,7 @@ self.onmessage = async () => {
         callback: (row) => rows.push(row),
       });
 
-      if (
-        rows.length !== 2 ||
-        rows[0].name !== 'Alice' ||
-        rows[1].name !== 'Bob'
-      ) {
+      if (rows.length !== 2 || rows[0].name !== 'Alice' || rows[1].name !== 'Bob') {
         throw new Error('CRUD check failed');
       }
 
@@ -39,12 +35,8 @@ self.onmessage = async () => {
       }
 
       // 2. Joins
-      db.exec(
-        'CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product TEXT)',
-      );
-      db.exec(
-        "INSERT INTO orders (user_id, product) VALUES (2, 'Laptop'), (2, 'Mouse')",
-      );
+      db.exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product TEXT)');
+      db.exec("INSERT INTO orders (user_id, product) VALUES (2, 'Laptop'), (2, 'Mouse')");
       const joinedRows = [];
       db.exec({
         sql: 'SELECT test.name, orders.product FROM test INNER JOIN orders ON test.id = orders.user_id',
@@ -66,9 +58,7 @@ self.onmessage = async () => {
       // 4. FTS5
       db.exec('CREATE VIRTUAL TABLE docs USING fts5(content)');
       db.exec("INSERT INTO docs (content) VALUES ('sqlite is great')");
-      const ftsResult = db.selectValue(
-        "SELECT content FROM docs WHERE docs MATCH 'sqlite'",
-      );
+      const ftsResult = db.selectValue("SELECT content FROM docs WHERE docs MATCH 'sqlite'");
       if (ftsResult !== 'sqlite is great') {
         throw new Error('FTS5 check failed');
       }
@@ -121,9 +111,7 @@ self.onmessage = async () => {
         throw new Error('pauseVfs should have failed with open DB handles');
       } catch (e) {
         if (!e.message.includes('Cannot pause VFS')) {
-          throw new Error(
-            'pauseVfs failed with unexpected error: ' + e.message,
-          );
+          throw new Error('pauseVfs failed with unexpected error: ' + e.message);
         }
       }
       db.close();
