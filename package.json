@@ -41,6 +41,9 @@
     "./package.json": "./package.json",
     "./sqlite3.wasm": "./dist/sqlite3.wasm"
   },
+  "workspaces": [
+    "demos/*"
+  ],
   "files": [
     "dist",
     "README.md"
@@ -52,11 +55,15 @@
     "publint": "npx publint",
     "check-types": "tsgo",
     "build": "tsdown",
+    "dev:sahpool": "npm run dev -w demos/sahpool-demo",
+    "dev:main-thread": "npm run dev -w demos/main-thread-demo",
+    "dev:in-worker": "npm run dev -w demos/in-worker-demo",
     "start": "npx http-server --coop",
     "start:node": "cd demo && node node.mjs",
-    "fix": "npx prettier . --write",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "prepare": "lefthook install",
-    "prepublishOnly": "npm run build && npm run fix && npm run publint && npm run check-types",
+    "prepublishOnly": "npm run build && npm run format && npm run publint && npm run check-types",
     "deploy": "npm run prepublishOnly && git add . && git commit -am 'New release' && git push && npm publish --tag=latest"
   },
   "engines": {
@@ -70,9 +77,8 @@
     "happy-dom": "20.9.0",
     "http-server": "^14.1.1",
     "lefthook": "2.1.5",
+    "oxfmt": "^0.45.0",
     "playwright": "^1.59.1",
-    "prettier": "^3.8.2",
-    "prettier-plugin-jsdoc": "^1.8.0",
     "publint": "^0.3.18",
     "tsdown": "^0.21.8",
     "typescript": "^6.0.2",

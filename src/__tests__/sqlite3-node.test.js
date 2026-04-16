@@ -38,12 +38,8 @@ test('Node.js build sanity check', async () => {
     expect(rowsAfterDelete[0][0]).toBe(1);
 
     // 6. Joins
-    db.exec(
-      'CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product TEXT)',
-    );
-    db.exec(
-      "INSERT INTO orders (user_id, product) VALUES (2, 'Laptop'), (2, 'Mouse')",
-    );
+    db.exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product TEXT)');
+    db.exec("INSERT INTO orders (user_id, product) VALUES (2, 'Laptop'), (2, 'Mouse')");
 
     const joinedRows = [];
     db.exec({
@@ -78,9 +74,7 @@ test('Node.js build sanity check', async () => {
     db.exec(
       "INSERT INTO documents (content) VALUES ('The quick brown fox'), ('Jumped over the lazy dog')",
     );
-    const ftsRows = db.selectArrays(
-      "SELECT content FROM documents WHERE documents MATCH 'fox'",
-    );
+    const ftsRows = db.selectArrays("SELECT content FROM documents WHERE documents MATCH 'fox'");
     expect(ftsRows).toHaveLength(1);
     expect(ftsRows[0][0]).toBe('The quick brown fox');
 
@@ -88,13 +82,9 @@ test('Node.js build sanity check', async () => {
     db.transaction(() => {
       db.exec("INSERT INTO test (name) VALUES ('Charlie')");
       // Verify inside transaction
-      expect(
-        db.selectValue("SELECT count(*) FROM test WHERE name = 'Charlie'"),
-      ).toBe(1);
+      expect(db.selectValue("SELECT count(*) FROM test WHERE name = 'Charlie'")).toBe(1);
     });
-    expect(
-      db.selectValue("SELECT count(*) FROM test WHERE name = 'Charlie'"),
-    ).toBe(1);
+    expect(db.selectValue("SELECT count(*) FROM test WHERE name = 'Charlie'")).toBe(1);
 
     // 10. Subqueries
     const subqueryResult = db.selectValue(`
@@ -108,12 +98,8 @@ test('Node.js build sanity check', async () => {
     expect(db.selectValue('SELECT log2(8)')).toBe(3);
 
     // Percentile
-    db.exec(
-      'CREATE TABLE p_percentile(x); INSERT INTO p_percentile VALUES (1),(2),(3),(4),(5);',
-    );
-    expect(db.selectValue('SELECT percentile(x, 50) FROM p_percentile')).toBe(
-      3,
-    );
+    db.exec('CREATE TABLE p_percentile(x); INSERT INTO p_percentile VALUES (1),(2),(3),(4),(5);');
+    expect(db.selectValue('SELECT percentile(x, 50) FROM p_percentile')).toBe(3);
 
     // DQS=0
     expect(() => {
@@ -121,20 +107,14 @@ test('Node.js build sanity check', async () => {
     }).toThrow(/no such column/);
 
     // Virtual Tables and special functions
-    expect(
-      db.selectArrays('SELECT * FROM sqlite_dbpage LIMIT 1').length,
-    ).toBeGreaterThanOrEqual(0);
+    expect(db.selectArrays('SELECT * FROM sqlite_dbpage LIMIT 1').length).toBeGreaterThanOrEqual(0);
 
-    db.exec(
-      'CREATE VIRTUAL TABLE rtree_test USING rtree(id, minX, maxX, minY, maxY)',
-    );
+    db.exec('CREATE VIRTUAL TABLE rtree_test USING rtree(id, minX, maxX, minY, maxY)');
     db.exec('INSERT INTO rtree_test VALUES (1, 0, 10, 0, 10)');
     expect(db.selectValue('SELECT id FROM rtree_test')).toBe(1);
 
     db.exec('CREATE TABLE off_test(id); INSERT INTO off_test VALUES (1);');
-    expect(
-      typeof db.selectValue('SELECT sqlite_offset(id) FROM off_test'),
-    ).toBe('number');
+    expect(typeof db.selectValue('SELECT sqlite_offset(id) FROM off_test')).toBe('number');
 
     // 13. Blobs
     const blobData = new Uint8Array([0x00, 0xff, 0xaa, 0x55]);
