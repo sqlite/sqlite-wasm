@@ -12,20 +12,17 @@ npm install @sqlite.org/sqlite-wasm
 
 > [!Warning]
 >
-> This project wraps the code of
-> [SQLite Wasm](https://sqlite.org/wasm/doc/trunk/index.md) with _no_ changes,
-> apart from added TypeScript types. Please do _not_ file issues or feature
-> requests regarding the underlying SQLite Wasm code here. Instead, please
-> follow the
-> [SQLite bug filing instructions](https://www.sqlite.org/src/wiki?name=Bug+Reports).
-> Filing TypeScript type related issues and feature requests is fine.
+> This project wraps the code of [SQLite Wasm](https://sqlite.org/wasm/doc/trunk/index.md) with _no_
+> changes, apart from added TypeScript types. Please do _not_ file issues or feature requests
+> regarding the underlying SQLite Wasm code here. Instead, please follow the
+> [SQLite bug filing instructions](https://www.sqlite.org/src/wiki?name=Bug+Reports). Filing
+> TypeScript type related issues and feature requests is fine.
 
 ## Node.js support
 
 > [!Warning]
 >
-> Node.js is currently only supported for in-memory databases without
-> persistence.
+> Node.js is currently only supported for in-memory databases without persistence.
 
 ## Usage
 
@@ -34,8 +31,7 @@ There are two ways to use SQLite Wasm:
 - [in a worker](#in-a-worker-with-opfs-if-available)
 - [in the main thread](#in-the-main-thread-without-opfs)
 
-Only the worker versions allow you to use the origin private file system (OPFS)
-storage back-end.
+Only the worker versions allow you to use the origin private file system (OPFS) storage back-end.
 
 ### In a worker (with OPFS if available):
 
@@ -116,8 +112,8 @@ The `db` object above implements the
 
 ## Usage with vite
 
-If you are using [vite](https://vitejs.dev/), you need to add the following
-config option in `vite.config.js`:
+If you are using [vite](https://vitejs.dev/), you need to add the following config option in
+`vite.config.js`:
 
 ```js
 import { defineConfig } from 'vite';
@@ -135,38 +131,33 @@ export default defineConfig({
 });
 ```
 
-Check out a
-[sample project](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=main.js)
-that shows this in action.
+Check out a [sample project](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=main.js) that shows
+this in action.
 
 ## Demo
 
-See the [demo](https://github.com/sqlite/sqlite-wasm/tree/main/demo) folder for
-examples of how to use this in the main thread and in a worker. (Note that the
-worker variant requires special HTTP headers, so it can't be hosted on GitHub
-Pages.) An example that shows how to use this with vite is available on
-[StackBlitz](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=main.js).
+See the [demo](https://github.com/sqlite/sqlite-wasm/tree/main/demo) folder for examples of how to
+use this in the main thread and in a worker. (Note that the worker variant requires special HTTP
+headers, so it can't be hosted on GitHub Pages.) An example that shows how to use this with vite is
+available on [StackBlitz](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=main.js).
 
 ## Projects using this package
 
-See the list of
-[npm dependents](https://www.npmjs.com/browse/depended/@sqlite.org/sqlite-wasm)
-for this package.
+See the list of [npm dependents](https://www.npmjs.com/browse/depended/@sqlite.org/sqlite-wasm) for
+this package.
 
 ## Deploying a new version
 
 (These steps can only be executed by maintainers.)
 
-1. Manually trigger the
-   [GitHub Actions workflow](../../actions/workflows/build-wasm.yml). By
-   default, it uses the latest SQLite tag. This pull request will contain the
-   latest `sqlite3.wasm` and related bindings.
+1. Manually trigger the [GitHub Actions workflow](../../actions/workflows/build-wasm.yml). By
+   default, it uses the latest SQLite tag. This pull request will contain the latest `sqlite3.wasm`
+   and related bindings.
 
-2. Once the above pull request is validated and merged, update the version
-   number in `package.json`, reflecting the current
-   [SQLite version number](https://sqlite.org/download.html) and add a build
-   identifier suffix like `-build1`. The complete version number should read
-   something like `3.41.2-build1`.
+2. Once the above pull request is validated and merged, update the version number in `package.json`,
+   reflecting the current [SQLite version number](https://sqlite.org/download.html) and add a build
+   identifier suffix like `-build1`. The complete version number should read something like
+   `3.41.2-build1`.
 
 ## Building the SQLite Wasm locally
 
@@ -210,9 +201,9 @@ for this package.
 
 ## Running tests
 
-The test suite consists of Node.js tests and browser-based tests (using Vitest
-Browser Mode). Tests aim to sanity-check the exported scripts. We test for
-correct exports and **very** basic functionality.
+The test suite consists of Node.js tests and browser-based tests (using Vitest Browser Mode). Tests
+aim to sanity-check the exported scripts. We test for correct exports and **very** basic
+functionality.
 
 1. Install dependencies:
 
@@ -234,11 +225,10 @@ correct exports and **very** basic functionality.
 
 ## Deprecations
 
-The Worker1 and Promiser1 APIs are, as of 2026-04-15, deprecated. They _will not
-be removed_, but they also will not be extended further. It is their author's
-considered opinion that they are too fragile, too imperformant, and too limited
-for any non-toy software, and their use is _actively discouraged_. The "correct"
-way to use this library is documented in [Usage](#usage) section above.
+The Worker1 and Promiser1 APIs are, as of 2026-04-15, deprecated. They _will not be removed_, but
+they also will not be extended further. It is their author's considered opinion that they are too
+fragile, too imperformant, and too limited for any non-toy software, and their use is _actively
+discouraged_. The "correct" way to use this library is documented in [Usage](#usage) section above.
 
 ## License
 
@@ -246,6 +236,6 @@ Apache 2.0.
 
 ## Acknowledgements
 
-This project is based on [SQLite Wasm](https://sqlite.org/wasm), which it
-conveniently wraps as an ES Module and publishes to npm as
+This project is based on [SQLite Wasm](https://sqlite.org/wasm), which it conveniently wraps as an
+ES Module and publishes to npm as
 [`@sqlite.org/sqlite-wasm`](https://www.npmjs.com/package/@sqlite.org/sqlite-wasm).

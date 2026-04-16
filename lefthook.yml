@@ -4,6 +4,6 @@ output: false
 
 pre-commit:
   commands:
-    prettier:
+    oxfmt:
       stage_fixed: true
-      run: npx prettier . --write
+      run: npx oxfmt .

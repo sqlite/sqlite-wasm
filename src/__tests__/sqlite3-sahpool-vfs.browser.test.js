@@ -1,12 +1,9 @@
 import { expect, test } from 'vitest';
 
 test('OpfsSAHPoolVfs sanity check in Worker (browser)', async () => {
-  const worker = new Worker(
-    new URL('./workers/sqlite3-sahpool.worker.js', import.meta.url),
-    {
-      type: 'module',
-    },
-  );
+  const worker = new Worker(new URL('./workers/sqlite3-sahpool.worker.js', import.meta.url), {
+    type: 'module',
+  });
 
   const result = await new Promise((resolve, reject) => {
     worker.onmessage = (e) => {
