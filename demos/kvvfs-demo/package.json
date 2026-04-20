@@ -1,5 +1,5 @@
 {
-  "name": "@sqlite.org/main-thread-demo",
+  "name": "@sqlite.org/kvvfs-demo",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1262,6 +1262,20 @@ export class JsStorageDb extends Database {
   clearStorage(): Sqlite3Result;
 }
 
+export type KvvfsNamespace = {
+  /** Clears all kvvfs-owned state for the given database. */
+  clear: (which?: string) => void;
+
+  /** Returns whether the kvvfs has storage for the given database. */
+  exists: (which: string) => boolean;
+
+  /** Returns an estimate of how many bytes of storage are used by kvvfs. */
+  estimateSize: (which?: string) => Sqlite3Result;
+
+  /** Removes the given kvvfs-backed database. */
+  unlink: (which: string) => void;
+};
+
 /**
  * SQLite3 database backed by the Origin Private File System API.
  *
@@ -2169,6 +2183,9 @@ export type Sqlite3Static = {
   /** The namespace for the C-style APIs. */
   capi: CAPI;
 
+  /** Convenience helpers for interacting with the kvvfs. */
+  kvvfs: KvvfsNamespace;
+
   /**
    * WASM-specific utilities, abstracted to be independent of, and configurable
    * for use with, arbitrary WASM runtime environments.
@@ -2178,6 +2195,7 @@ export type Sqlite3Static = {
   /** The OO API #1. */
   oo1: {
     OpfsDb: typeof OpfsDatabase;
+    OpfsWlDb: typeof OpfsDatabase;
     JsStorageDb: typeof JsStorageDb;
     DB: typeof Database;
   };

@@ -1,20 +1,24 @@
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 
+const browserIsolationHeaders = {
+  'Cross-Origin-Embedder-Policy': 'require-corp',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+};
+
 const vitestConfig: ViteUserConfig = defineConfig({
   server: {
-    headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-    },
+    headers: browserIsolationHeaders,
   },
   plugins: [
     {
       name: 'configure-response-headers',
       configureServer: (server) => {
         server.middlewares.use((_req, res, next) => {
-          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+          for (const [headerName, headerValue] of Object.entries(browserIsolationHeaders)) {
+            res.setHeader(headerName, headerValue);
+          }
+
           next();
         });
       },
@@ -40,14 +44,29 @@ const vitestConfig: ViteUserConfig = defineConfig({
             enabled: true,
             headless: true,
             screenshotFailures: false,
-            provider: playwright({
-              launchOptions: {
-                args: ['--enable-features=SharedArrayBuffer'],
-              },
-            }),
+            provider: playwright(),
             instances: [
               {
                 browser: 'chromium',
+                provider: playwright({
+                  launchOptions: {
+                    args: ['--enable-features=SharedArrayBuffer'],
+                  },
+                }),
+              },
+              {
+                browser: 'firefox',
+                provider: playwright({
+                  launchOptions: {
+                    firefoxUserPrefs: {
+                      'javascript.options.shared_memory': true,
+                    },
+                  },
+                }),
+              },
+              {
+                browser: 'webkit',
+                provider: playwright(),
               },
             ],
           },

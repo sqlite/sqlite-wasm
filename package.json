@@ -55,6 +55,9 @@
     "publint": "npx publint",
     "check-types": "tsgo",
     "build": "tsdown",
+    "dev:kvvfs": "npm run dev -w demos/kvvfs-demo",
+    "dev:opfs": "npm run dev -w demos/opfs-demo",
+    "dev:opfs-wl": "npm run dev -w demos/opfs-wl-demo",
     "dev:sahpool": "npm run dev -w demos/sahpool-demo",
     "dev:main-thread": "npm run dev -w demos/main-thread-demo",
     "dev:in-worker": "npm run dev -w demos/in-worker-demo",
@@ -71,7 +74,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260416.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260420.1",
     "@vitest/browser": "^4.1.4",
     "@vitest/browser-playwright": "^4.1.4",
     "happy-dom": "20.9.0",
@@ -80,7 +83,7 @@
     "playwright": "^1.59.1",
     "publint": "^0.3.18",
     "tsdown": "^0.21.8",
-    "typescript": "^6.0.2",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.4"
   }
 }
