@@ -7,9 +7,6 @@ const browserIsolationHeaders = {
 };
 
 const vitestConfig: ViteUserConfig = defineConfig({
-  server: {
-    headers: browserIsolationHeaders,
-  },
   plugins: [
     {
       name: 'configure-response-headers',
