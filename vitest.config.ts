@@ -64,10 +64,6 @@ const vitestConfig: ViteUserConfig = defineConfig({
                   },
                 }),
               },
-              {
-                browser: 'webkit',
-                provider: playwright(),
-              },
             ],
           },
         },
