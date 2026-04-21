@@ -51,16 +51,6 @@ const vitestConfig: ViteUserConfig = defineConfig({
                   },
                 }),
               },
-              {
-                browser: 'firefox',
-                provider: playwright({
-                  launchOptions: {
-                    firefoxUserPrefs: {
-                      'javascript.options.shared_memory': true,
-                    },
-                  },
-                }),
-              },
             ],
           },
         },
