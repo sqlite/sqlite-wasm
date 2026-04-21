@@ -1,0 +1,16 @@
+{
+  "name": "@sqlite.org/sahpool-parcel-demo",
+  "type": "module",
+  "scripts": {
+    "dev": "parcel serve index.html --port 5174 --dist-dir dist",
+    "build": "parcel build index.html --dist-dir dist"
+  },
+  "targets": {
+    "default": {
+      "outputFormat": "esmodule"
+    }
+  },
+  "devDependencies": {
+    "parcel": "^2.16.1"
+  }
+}

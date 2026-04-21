@@ -23,5 +23,5 @@
     "skipLibCheck": true,
     "module": "NodeNext"
   },
-  "include": ["tsdown.config.ts", "src"]
+  "include": ["tsdown.config.ts", "oxfmt.config.ts", "src"]
 }

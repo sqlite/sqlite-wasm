@@ -3,19 +3,23 @@ const worker = new Worker(new URL('./workers/worker.ts', import.meta.url), {
 });
 
 worker.onmessage = (e) => {
-  console.log(e);
   if (e.data.type === 'success') {
-    const rows = e.data.rows;
     const app = document.getElementById('app');
     if (app) {
+      const file = document.createElement('p');
+      file.textContent = `Stored in OPFS Web Locks file ${e.data.filename}`;
+      app.appendChild(file);
+
       const ul = document.createElement('ul');
-      rows.forEach((row: any) => {
+      e.data.rows.forEach((row: any) => {
         const li = document.createElement('li');
         li.textContent = `${row.id}: ${row.name}`;
         ul.appendChild(li);
       });
       app.appendChild(ul);
     }
+  } else if (e.data.type === 'error') {
+    console.error(e.data.message);
   }
 };
 
