@@ -1,0 +1,11 @@
+{
+  "name": "@sqlite.org/sahpool-rsbuild-demo",
+  "type": "module",
+  "scripts": {
+    "dev": "rsbuild dev --port 5175",
+    "build": "rsbuild build"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^1.5.13"
+  }
+}
