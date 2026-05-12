@@ -1,0 +1,38 @@
+name: Publish package
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  publish-npm:
+    name: Publish to npm (OIDC)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup environment (node + install)
+        uses: ./.github/actions/node-setup
+        with:
+          node-version: 24
+
+      - name: Build and validate package
+        run: npm run prepublishOnly
+
+      - name: Configure npm for OIDC trusted publishing
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public

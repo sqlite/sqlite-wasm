@@ -4,17 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       sqlite_ref:
-        description: 'SQLite reference (tag, branch, or commit, or "latest")'
+        description: 'Full commit SHA from SQLite repository'
         required: true
-        default: 'master'
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -25,23 +25,15 @@ jobs:
         id: resolve-ref
         run: |
           SQLITE_REF="${{ github.event.inputs.sqlite_ref }}"
-          if [ "$SQLITE_REF" = "latest" ]; then
-            echo "Fetching latest tag..."
-            LATEST_TAG=$(git ls-remote --tags --sort="v:refname" https://github.com/sqlite/sqlite.git "refs/tags/version-*" | tail -n 1 | cut -f 2 | sed 's/refs\/tags\///')
-            echo "Latest tag found: $LATEST_TAG"
-            SQLITE_REF="$LATEST_TAG"
+          if ! [[ "$SQLITE_REF" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "Expected a full 40-character commit SHA, got: '$SQLITE_REF'"
+            exit 1
           fi
 
-          # Get the full commit SHA
           SQLITE_SHA=$(git ls-remote https://github.com/sqlite/sqlite.git "$SQLITE_REF" | head -n 1 | cut -f 1)
-          if [ -z "$SQLITE_SHA" ]; then
-            # If not found, maybe it's a tag that needs refs/tags/ prefix or it's already a SHA
-            SQLITE_SHA=$(git ls-remote https://github.com/sqlite/sqlite.git "refs/tags/$SQLITE_REF" | head -n 1 | cut -f 1)
-          fi
-
-          if [ -z "$SQLITE_SHA" ]; then
-            # Fallback: assume it's a SHA if ls-remote didn't find it as a ref
-            SQLITE_SHA="$SQLITE_REF"
+          if [ -z "$SQLITE_SHA" ] || [ "$SQLITE_SHA" != "$SQLITE_REF" ]; then
+            echo "Commit SHA '$SQLITE_REF' was not found in https://github.com/sqlite/sqlite.git"
+            exit 1
           fi
 
           echo "sqlite_ref=$SQLITE_REF" >> $GITHUB_OUTPUT
@@ -70,8 +62,6 @@ jobs:
           context: .
           load: true
           tags: sqlite-wasm-builder:env
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Run build
         if: steps.check-branch.outputs.skip != 'true'
