@@ -51,6 +51,20 @@ jobs:
       - name: Run format check
         run: npx oxfmt . --check
 
+  zizmor:
+    name: Zizmor GitHub Actions check
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@v0.5.3
+
   test-browser:
     name: Run browser tests
     runs-on: ubuntu-latest
