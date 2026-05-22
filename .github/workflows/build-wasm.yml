@@ -92,18 +92,28 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check-branch.outputs.skip != 'true' && steps.git-check.outputs.changes == 'true'
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message:
-            'chore: update SQLite Wasm binaries from ${{ steps.resolve-ref.outputs.sqlite_ref }}
-            (${{ steps.resolve-ref.outputs.sqlite_sha }})'
-          title:
-            'chore: update SQLite Wasm binaries from ${{ steps.resolve-ref.outputs.sqlite_ref }}'
-          body: |
-            This PR updates the SQLite Wasm binaries in `src/bin` by building them from SQLite reference `${{ steps.resolve-ref.outputs.sqlite_ref }}` (commit `${{ steps.resolve-ref.outputs.sqlite_sha }}`).
+        env:
+          BRANCH_NAME: ${{ steps.resolve-ref.outputs.branch_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SQLITE_REF: ${{ steps.resolve-ref.outputs.sqlite_ref }}
+          SQLITE_SHA: ${{ steps.resolve-ref.outputs.sqlite_sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            Triggered by manual workflow dispatch.
-          branch: ${{ steps.resolve-ref.outputs.branch_name }}
-          base: main
-          delete-branch: true
+          git switch -c "$BRANCH_NAME"
+          git commit -m "chore: update SQLite Wasm binaries from ${SQLITE_REF} (${SQLITE_SHA})"
+          gh auth setup-git
+          git push origin "HEAD:${BRANCH_NAME}"
+
+          cat > pr-body.md <<EOF
+          This PR updates the SQLite Wasm binaries in \`src/bin\` by building them from SQLite reference \`${SQLITE_REF}\` (commit \`${SQLITE_SHA}\`).
+
+          Triggered by manual workflow dispatch.
+          EOF
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "chore: update SQLite Wasm binaries from ${SQLITE_REF}" \
+            --body-file pr-body.md

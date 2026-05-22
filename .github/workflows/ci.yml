@@ -55,6 +55,7 @@ jobs:
     name: Zizmor GitHub Actions check
     runs-on: ubuntu-latest
     permissions:
+      # Needed by zizmor online audits to inspect workflow/action metadata.
       actions: read
       contents: read
       security-events: write
