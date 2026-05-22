@@ -55,6 +55,8 @@ jobs:
     name: Zizmor GitHub Actions check
     runs-on: ubuntu-latest
     permissions:
+      actions: read
+      contents: read
       security-events: write
     steps:
       - name: Checkout repository
@@ -64,6 +66,11 @@ jobs:
 
       - name: Run zizmor
         uses: zizmorcore/zizmor-action@5f14fd08f7cf1cb1609c1e344975f152c7ee938d # v0.5.6
+        with:
+          online-audits: true
+          persona: auditor
+          min-severity: informational
+          min-confidence: low
 
   test-browser:
     name: Run browser tests
