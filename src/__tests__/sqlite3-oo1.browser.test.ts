@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import sqlite3InitModule from '../index';
+import sqlite3InitModule from '../browser';
 import type { SqlValue } from '../index';
 
 test('Bundler-friendly OO1 API sanity check (browser)', async () => {

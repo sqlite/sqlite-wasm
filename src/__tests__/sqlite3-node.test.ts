@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import sqlite3InitModule from '../index';
+import sqlite3InitModule from '../node';
 import type { SqlValue } from '../index';
 
 test('Node.js build sanity check', async () => {

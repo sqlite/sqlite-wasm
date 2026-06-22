@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import sqlite3InitModule from '../index';
+import sqlite3InitModule from '../browser';
 
 describe('kvvfs', () => {
   test('kvvfs basic sanity check (browser)', async () => {
