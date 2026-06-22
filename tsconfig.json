@@ -17,11 +17,12 @@
     "strictPropertyInitialization": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "bundler",
     "noEmit": true,
     "strict": true,
     "skipLibCheck": true,
-    "module": "NodeNext"
+    "allowImportingTsExtensions": true,
+    "module": "esnext"
   },
   "include": ["tsdown.config.ts", "oxfmt.config.ts", "src"]
 }

@@ -6,6 +6,9 @@
     "build": "vite build",
     "preview": "vite preview"
   },
+  "dependencies": {
+    "@sqlite.org/sqlite-wasm": "file:../.."
+  },
   "devDependencies": {
     "vite": "^8.0.9"
   }

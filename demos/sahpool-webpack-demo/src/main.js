@@ -1,4 +1,4 @@
-const worker = new Worker(new URL('./workers/worker.js', import.meta.url), {
+const worker = new Worker(new URL('./workers/worker.ts', import.meta.url), {
   type: 'module',
 });
 

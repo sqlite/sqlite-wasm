@@ -1,4 +1,4 @@
-import sqlite3InitModule from '../../../src/index.js';
+import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
 const runDemo = async () => {
   const sqlite3 = await sqlite3InitModule();

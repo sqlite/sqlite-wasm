@@ -4,7 +4,12 @@ import { copyFileSync, rmSync } from 'node:fs';
 const tsdownConfig: UserConfig[] = [
   defineConfig({
     target: 'es2023',
-    entry: ['src/index.js', 'src/node.js', 'src/index.d.ts', 'src/bin/sqlite3-worker1.mjs'],
+    entry: {
+      index: 'src/browser.ts',
+      node: 'src/node.ts',
+      'index.d': 'src/index.d.ts',
+      'bin/sqlite3-worker1': 'src/bin/sqlite3-worker1.mjs',
+    },
     format: ['esm'],
     minify: 'dce-only',
     outputOptions: {

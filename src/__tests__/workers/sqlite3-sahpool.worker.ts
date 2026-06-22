@@ -1,9 +1,15 @@
-import sqlite3InitModule from '../../bin/sqlite3-bundler-friendly.mjs';
+import sqlite3InitModule from '../../browser';
+import type { SqlValue } from '../../index';
+
+const getErrorMessage = (err: unknown): string =>
+  err instanceof Error ? err.message : String(err);
+const getErrorStack = (err: unknown): string | undefined =>
+  err instanceof Error ? err.stack : undefined;
 
 self.onmessage = async () => {
   try {
     const sqlite3 = await sqlite3InitModule();
-    const opfsSahPool = await sqlite3.installOpfsSAHPoolVfs();
+    const opfsSahPool = await sqlite3.installOpfsSAHPoolVfs({});
     let db = new opfsSahPool.OpfsSAHPoolDb('/test-sahpool-worker.sqlite3');
 
     try {
@@ -14,11 +20,13 @@ self.onmessage = async () => {
         bind: ['Alice', 'Bob'],
       });
 
-      const rows = [];
+      const rows: Record<string, SqlValue>[] = [];
       db.exec({
         sql: 'SELECT * FROM test ORDER BY id',
         rowMode: 'object',
-        callback: (row) => rows.push(row),
+        callback: (row: Record<string, SqlValue>) => {
+          rows.push(row);
+        },
       });
 
       if (rows.length !== 2 || rows[0].name !== 'Alice' || rows[1].name !== 'Bob') {
@@ -37,11 +45,13 @@ self.onmessage = async () => {
       // 2. Joins
       db.exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product TEXT)');
       db.exec("INSERT INTO orders (user_id, product) VALUES (2, 'Laptop'), (2, 'Mouse')");
-      const joinedRows = [];
+      const joinedRows: Record<string, SqlValue>[] = [];
       db.exec({
         sql: 'SELECT test.name, orders.product FROM test INNER JOIN orders ON test.id = orders.user_id',
         rowMode: 'object',
-        callback: (row) => joinedRows.push(row),
+        callback: (row: Record<string, SqlValue>) => {
+          joinedRows.push(row);
+        },
       });
       if (joinedRows.length !== 2) {
         throw new Error('Join check failed');
@@ -95,7 +105,7 @@ self.onmessage = async () => {
       try {
         new opfsSahPool.OpfsSAHPoolDb('/test-sahpool-worker.sqlite3');
         throw new Error('Opening DB should have failed while VFS is paused');
-      } catch (e) {
+      } catch {
         // Expected error
       }
 
@@ -110,8 +120,8 @@ self.onmessage = async () => {
         opfsSahPool.pauseVfs();
         throw new Error('pauseVfs should have failed with open DB handles');
       } catch (e) {
-        if (!e.message.includes('Cannot pause VFS')) {
-          throw new Error('pauseVfs failed with unexpected error: ' + e.message);
+        if (!(e instanceof Error) || !e.message.includes('Cannot pause VFS')) {
+          throw new Error('pauseVfs failed with unexpected error: ' + getErrorMessage(e));
         }
       }
       db.close();
@@ -128,6 +138,6 @@ self.onmessage = async () => {
       db.close();
     }
   } catch (err) {
-    self.postMessage({ type: 'error', message: err.message, stack: err.stack });
+    self.postMessage({ type: 'error', message: getErrorMessage(err), stack: getErrorStack(err) });
   }
 };

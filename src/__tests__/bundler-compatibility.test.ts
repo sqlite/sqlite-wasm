@@ -2,10 +2,11 @@ import { describe, test, expect } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 describe('Vite bundler compatibility', () => {
   test('should rename sqlite3.wasm with a hash and update the import URL', () => {
-    const testDir = path.resolve(__dirname, 'vite-repro');
+    const testDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'vite-repro');
     const distDir = path.resolve(testDir, 'dist');
 
     // Clean up previous build
@@ -25,12 +26,18 @@ describe('Vite bundler compatibility', () => {
     const wasmFile = files.find((f) => f.startsWith('sqlite3-') && f.endsWith('.wasm'));
 
     expect(wasmFile).toBeDefined();
+    if (wasmFile === undefined) {
+      throw new Error('SQLite WASM asset was not generated');
+    }
 
     // 2. Check if the JS bundle contains the hashed WASM filename
     const assetsDirJs = path.resolve(distDir, 'assets');
     const jsFiles = fs.readdirSync(assetsDirJs).filter((f) => f.endsWith('.js'));
     const mainBundle = jsFiles.find((f) => f.startsWith('index-'));
     expect(mainBundle).toBeDefined();
+    if (mainBundle === undefined) {
+      throw new Error('Vite index bundle was not generated');
+    }
 
     const bundleContent = fs.readFileSync(path.resolve(assetsDirJs, mainBundle), 'utf8');
 
