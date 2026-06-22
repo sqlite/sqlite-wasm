@@ -7,10 +7,10 @@ const tsdownConfig: UserConfig[] = [
     entry: {
       index: 'src/browser.ts',
       node: 'src/node.ts',
-      'index.d': 'src/index.d.ts',
       'bin/sqlite3-worker1': 'src/bin/sqlite3-worker1.mjs',
     },
     format: ['esm'],
+    dts: false,
     minify: 'dce-only',
     outputOptions: {
       comments: {
@@ -24,8 +24,17 @@ const tsdownConfig: UserConfig[] = [
   }),
   defineConfig({
     target: 'es2023',
+    entry: {
+      'index.d': 'src/index.d.ts',
+    },
+    format: ['esm'],
+    dts: true,
+  }),
+  defineConfig({
+    target: 'es2023',
     entry: ['src/bin/sqlite3-opfs-async-proxy.js'],
     format: ['iife'],
+    dts: false,
     minify: 'dce-only',
     outputOptions: {
       comments: {
