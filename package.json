@@ -88,5 +88,14 @@
     "tsdown": "^0.22.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
+  },
+  "packageManager": "npm@11.16.0",
+  "allowScripts": {
+    "@parcel/watcher": false,
+    "@swc/core": true,
+    "core-js": false,
+    "lefthook": false,
+    "lmdb": false,
+    "msgpackr-extract": false
   }
 }
