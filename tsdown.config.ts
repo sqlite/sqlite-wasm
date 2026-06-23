@@ -4,8 +4,13 @@ import { copyFileSync, rmSync } from 'node:fs';
 const tsdownConfig: UserConfig[] = [
   defineConfig({
     target: 'es2023',
-    entry: ['src/index.js', 'src/node.js', 'src/index.d.ts', 'src/bin/sqlite3-worker1.mjs'],
+    entry: {
+      index: 'src/browser.ts',
+      node: 'src/node.ts',
+      'bin/sqlite3-worker1': 'src/bin/sqlite3-worker1.mjs',
+    },
     format: ['esm'],
+    dts: false,
     minify: 'dce-only',
     outputOptions: {
       comments: {
@@ -19,8 +24,17 @@ const tsdownConfig: UserConfig[] = [
   }),
   defineConfig({
     target: 'es2023',
+    entry: {
+      'index.d': 'src/index.d.ts',
+    },
+    format: ['esm'],
+    dts: true,
+  }),
+  defineConfig({
+    target: 'es2023',
     entry: ['src/bin/sqlite3-opfs-async-proxy.js'],
     format: ['iife'],
+    dts: false,
     minify: 'dce-only',
     outputOptions: {
       comments: {

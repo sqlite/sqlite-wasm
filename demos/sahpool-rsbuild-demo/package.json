@@ -5,6 +5,9 @@
     "dev": "rsbuild dev --port 5175",
     "build": "rsbuild build"
   },
+  "dependencies": {
+    "@sqlite.org/sqlite-wasm": "file:../.."
+  },
   "devDependencies": {
     "@rsbuild/core": "^1.5.13"
   }

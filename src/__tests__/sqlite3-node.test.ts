@@ -1,7 +1,8 @@
 import { expect, test } from 'vitest';
-import sqlite3InitModule from '../bin/sqlite3-bundler-friendly.mjs';
+import sqlite3InitModule from '../node';
+import type { SqlValue } from '../index';
 
-test('Bundler-friendly OO1 API sanity check (browser)', async () => {
+test('Node.js build sanity check', async () => {
   const sqlite3 = await sqlite3InitModule();
 
   // 1. Create a database
@@ -19,11 +20,11 @@ test('Bundler-friendly OO1 API sanity check (browser)', async () => {
     });
 
     // 4. Query data
-    const rows = [];
+    const rows: Record<string, SqlValue>[] = [];
     db.exec({
       sql: 'SELECT * FROM test ORDER BY id',
       rowMode: 'object',
-      callback: (row) => {
+      callback: (row: Record<string, SqlValue>) => {
         rows.push(row);
       },
     });
@@ -41,16 +42,18 @@ test('Bundler-friendly OO1 API sanity check (browser)', async () => {
     db.exec('CREATE TABLE orders (id INTEGER PRIMARY KEY, user_id INTEGER, product TEXT)');
     db.exec("INSERT INTO orders (user_id, product) VALUES (2, 'Laptop'), (2, 'Mouse')");
 
-    const joinedRows = [];
+    const joinedRows: Record<string, SqlValue>[] = [];
     db.exec({
       sql: `
         SELECT test.name, orders.product
         FROM test
-               INNER JOIN orders ON test.id = orders.user_id
+        INNER JOIN orders ON test.id = orders.user_id
         ORDER BY orders.product
       `,
       rowMode: 'object',
-      callback: (row) => joinedRows.push(row),
+      callback: (row: Record<string, SqlValue>) => {
+        joinedRows.push(row);
+      },
     });
     expect(joinedRows).toHaveLength(2);
     expect(joinedRows[0]).toEqual({ name: 'Bob', product: 'Laptop' });
@@ -62,7 +65,7 @@ test('Bundler-friendly OO1 API sanity check (browser)', async () => {
         SELECT 1
         UNION ALL
         SELECT x+1 FROM cnt LIMIT 5
-        )
+      )
       SELECT x FROM cnt
     `);
     expect(cteRows).toHaveLength(5);
@@ -140,6 +143,7 @@ test('Bundler-friendly OO1 API sanity check (browser)', async () => {
       db.exec('INSERT INTO unique_test VALUES (1)');
     }).toThrow(/UNIQUE constraint failed/);
   } finally {
+    // 11. Close the database
     db.close();
     expect(db.isOpen()).toBe(false);
   }

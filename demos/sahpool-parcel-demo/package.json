@@ -7,8 +7,12 @@
   },
   "targets": {
     "default": {
-      "outputFormat": "esmodule"
+      "outputFormat": "esmodule",
+      "optimize": false
     }
+  },
+  "dependencies": {
+    "@sqlite.org/sqlite-wasm": "file:../.."
   },
   "devDependencies": {
     "parcel": "^2.16.1"

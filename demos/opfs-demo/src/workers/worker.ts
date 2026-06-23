@@ -1,4 +1,4 @@
-import sqlite3InitModule from '../../../../src/index.js';
+import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
 self.onmessage = async (e) => {
   if (e.data.type === 'start') {

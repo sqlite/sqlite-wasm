@@ -1,15 +1,22 @@
 import { describe, expect, test } from 'vitest';
+import type { SqlValue } from '../index';
 
-const createWorker = (workerUrl) =>
+type WorkerSuccessMessage = {
+  type: 'success';
+  rows: Record<string, SqlValue>[];
+  persistedCount: SqlValue | undefined;
+};
+
+const createWorker = (workerUrl: URL): Worker =>
   new Worker(workerUrl, {
     type: 'module',
   });
 
-const runWorker = async (workerUrl) => {
+const runWorker = async (workerUrl: URL): Promise<void> => {
   const worker = createWorker(workerUrl);
 
   try {
-    const result = await new Promise((resolve, reject) => {
+    const result = await new Promise<WorkerSuccessMessage>((resolve, reject) => {
       worker.onmessage = (e) => {
         if (e.data.type === 'success') {
           resolve(e.data);
@@ -36,10 +43,10 @@ const runWorker = async (workerUrl) => {
 
 describe('opfs persistence APIs', () => {
   test('OpfsDb sanity check in Worker (browser)', async () => {
-    await runWorker(new URL('./workers/sqlite3-opfs.worker.js', import.meta.url));
+    await runWorker(new URL('./workers/sqlite3-opfs.worker.ts', import.meta.url));
   });
 
   test('OpfsWlDb sanity check in Worker (browser)', async () => {
-    await runWorker(new URL('./workers/sqlite3-opfs-wl.worker.js', import.meta.url));
+    await runWorker(new URL('./workers/sqlite3-opfs-wl.worker.ts', import.meta.url));
   });
 });

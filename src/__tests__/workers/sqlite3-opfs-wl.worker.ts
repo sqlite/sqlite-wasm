@@ -1,6 +1,11 @@
-import sqlite3InitModule from '../../bin/sqlite3-bundler-friendly.mjs';
+import sqlite3InitModule from '../../browser';
 
-const cleanupOpfsFile = async (filename) => {
+const getErrorMessage = (err: unknown): string =>
+  err instanceof Error ? err.message : String(err);
+const getErrorStack = (err: unknown): string | undefined =>
+  err instanceof Error ? err.stack : undefined;
+
+const cleanupOpfsFile = async (filename: string): Promise<void> => {
   const entryName = filename.replace(/^\//, '');
 
   try {
@@ -18,7 +23,10 @@ self.onmessage = async () => {
     await cleanupOpfsFile(filename);
 
     const sqlite3 = await sqlite3InitModule();
-    let db = new sqlite3.oo1.OpfsWlDb(filename, 'ct');
+    let db: InstanceType<typeof sqlite3.oo1.OpfsWlDb> | undefined = new sqlite3.oo1.OpfsWlDb(
+      filename,
+      'ct',
+    );
 
     try {
       db.exec('CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT)');
@@ -29,7 +37,7 @@ self.onmessage = async () => {
 
       const rows = db.selectObjects('SELECT * FROM test ORDER BY id');
       db.close();
-      db = null;
+      db = undefined;
 
       db = new sqlite3.oo1.OpfsWlDb(filename, 'w');
       const persistedCount = db.selectValue('SELECT count(*) FROM test');
@@ -44,6 +52,6 @@ self.onmessage = async () => {
       await cleanupOpfsFile(filename);
     }
   } catch (err) {
-    self.postMessage({ type: 'error', message: err.message, stack: err.stack });
+    self.postMessage({ type: 'error', message: getErrorMessage(err), stack: getErrorStack(err) });
   }
 };
