@@ -1,8 +1,14 @@
 import type sqlite3InitModuleDeclaration from './';
 import type { sqlite3Worker1Promiser as sqlite3Worker1PromiserDeclaration } from './';
+import './vfs/kvvfs';
+import './vfs/opfs';
+import './vfs/opfs-sahpool';
+import './vfs/opfs-wl';
+import './bin/sqlite3-worker1-api.mjs';
+import './vtab';
 
 // @ts-expect-error Generated runtime bundle has no declaration file.
-import sqlite3InitModuleRuntime from './bin/sqlite3-bundler-friendly.mjs';
+import sqlite3InitModuleRuntime from './bin/sqlite3-bundler-friendly.core.mjs';
 // @ts-expect-error Generated runtime bundle has no declaration file.
 import sqlite3Worker1PromiserRuntime from './bin/sqlite3-worker1-promiser.mjs';
 

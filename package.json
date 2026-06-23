@@ -24,6 +24,13 @@
     "opfs",
     "origin-private-file-system"
   ],
+  "sideEffects": [
+    "./dist/index.mjs",
+    "./dist/vtab.mjs",
+    "./dist/vfs/*.mjs",
+    "./dist/sqlite3-vfs-*.mjs",
+    "./dist/sqlite3-worker1-api-*.mjs"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -38,6 +45,36 @@
       "main": "./dist/index.mjs",
       "browser": "./dist/index.mjs"
     },
+    "./core": {
+      "types": "./dist/core.d.mts",
+      "import": "./dist/core.mjs",
+      "browser": "./dist/core.mjs"
+    },
+    "./vtab": {
+      "types": "./dist/vtab.d.mts",
+      "import": "./dist/vtab.mjs",
+      "browser": "./dist/vtab.mjs"
+    },
+    "./vfs/kvvfs": {
+      "types": "./dist/vfs/kvvfs.d.mts",
+      "import": "./dist/vfs/kvvfs.mjs",
+      "browser": "./dist/vfs/kvvfs.mjs"
+    },
+    "./vfs/opfs": {
+      "types": "./dist/vfs/opfs.d.mts",
+      "import": "./dist/vfs/opfs.mjs",
+      "browser": "./dist/vfs/opfs.mjs"
+    },
+    "./vfs/opfs-sahpool": {
+      "types": "./dist/vfs/opfs-sahpool.d.mts",
+      "import": "./dist/vfs/opfs-sahpool.mjs",
+      "browser": "./dist/vfs/opfs-sahpool.mjs"
+    },
+    "./vfs/opfs-wl": {
+      "types": "./dist/vfs/opfs-wl.d.mts",
+      "import": "./dist/vfs/opfs-wl.mjs",
+      "browser": "./dist/vfs/opfs-wl.mjs"
+    },
     "./package.json": "./package.json",
     "./sqlite3.wasm": "./dist/sqlite3.wasm"
   },
@@ -49,6 +86,8 @@
     "README.md"
   ],
   "scripts": {
+    "split:vfs": "node scripts/split-bundler-friendly-vfss.mjs",
+    "prebuild": "npm run split:vfs",
     "test": "vitest",
     "test:node": "vitest --project node",
     "test:browser": "vitest --project browser",

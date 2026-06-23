@@ -110,6 +110,27 @@ initializeSQLite();
 The `db` object above implements the
 [Object-Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
 
+### Importing only selected optional support:
+
+The default `@sqlite.org/sqlite-wasm` entry keeps backwards compatibility and includes all bundled
+VFS support, virtual table helpers, and Worker API #1. To let bundlers include only the optional
+code you need, import the core runtime and one or more optional modules before calling
+`sqlite3InitModule()`:
+
+```js
+import '@sqlite.org/sqlite-wasm/vfs/kvvfs';
+import sqlite3InitModule from '@sqlite.org/sqlite-wasm/core';
+
+const sqlite3 = await sqlite3InitModule();
+```
+
+Available optional modules are `@sqlite.org/sqlite-wasm/vfs/kvvfs`,
+`@sqlite.org/sqlite-wasm/vfs/opfs`, `@sqlite.org/sqlite-wasm/vfs/opfs-sahpool`,
+`@sqlite.org/sqlite-wasm/vfs/opfs-wl`, and `@sqlite.org/sqlite-wasm/vtab`.
+
+The core entry intentionally does not include Worker API #1. Use the default
+`@sqlite.org/sqlite-wasm` entry if you need `sqlite3.initWorker1API()` or `sqlite3Worker1Promiser`.
+
 ## Usage with vite
 
 If you are using [vite](https://vitejs.dev/), you need to add the following config option in

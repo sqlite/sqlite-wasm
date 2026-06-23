@@ -30,6 +30,8 @@ const vitestConfig: ViteUserConfig = defineConfig({
           include: [
             'src/__tests__/sqlite3-node.test.ts',
             'src/__tests__/bundler-compatibility.test.ts',
+            'src/__tests__/treeshakable-types.test.ts',
+            'src/__tests__/vfs-split-generated.test.ts',
           ],
         },
       },
