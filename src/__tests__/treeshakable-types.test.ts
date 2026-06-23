@@ -6,29 +6,42 @@ import path from 'node:path';
 const runTypeCheck = (source: string): void => {
   const dir = mkdtempSync(path.join(process.cwd(), '.tmp-treeshakable-types-'));
   const file = path.join(dir, 'fixture.ts');
+  const tsconfig = path.join(dir, 'tsconfig.json');
 
   try {
     writeFileSync(file, source);
-    execFileSync(
-      process.execPath,
-      [
-        'node_modules/typescript/bin/tsc',
-        '--ignoreConfig',
-        '--noEmit',
-        '--module',
-        'esnext',
-        '--target',
-        'es2023',
-        '--moduleResolution',
-        'bundler',
-        '--strict',
-        '--skipLibCheck',
-        '--lib',
-        'esnext,dom',
-        file,
-      ],
-      { cwd: process.cwd(), stdio: 'inherit' },
+    writeFileSync(
+      tsconfig,
+      JSON.stringify(
+        {
+          compilerOptions: {
+            noEmit: true,
+            module: 'esnext',
+            target: 'es2023',
+            moduleResolution: 'bundler',
+            strict: true,
+            skipLibCheck: true,
+            lib: ['esnext', 'dom'],
+            paths: {
+              '@sqlite.org/sqlite-wasm': ['../src/index.d.ts'],
+              '@sqlite.org/sqlite-wasm/core': ['../src/core.d.ts'],
+              '@sqlite.org/sqlite-wasm/vtab': ['../src/vtab.d.ts'],
+              '@sqlite.org/sqlite-wasm/vfs/kvvfs': ['../src/vfs/kvvfs.d.ts'],
+              '@sqlite.org/sqlite-wasm/vfs/opfs': ['../src/vfs/opfs.d.ts'],
+              '@sqlite.org/sqlite-wasm/vfs/opfs-sahpool': ['../src/vfs/opfs-sahpool.d.ts'],
+              '@sqlite.org/sqlite-wasm/vfs/opfs-wl': ['../src/vfs/opfs-wl.d.ts'],
+            },
+          },
+          include: [file],
+        },
+        null,
+        2,
+      ),
     );
+    execFileSync(process.execPath, ['node_modules/typescript/bin/tsc', '--project', tsconfig], {
+      cwd: process.cwd(),
+      stdio: 'inherit',
+    });
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
