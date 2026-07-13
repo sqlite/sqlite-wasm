@@ -520,10 +520,11 @@ export type ExecOptions = {
  * Derivate type of ExecOptions to be used as base mixin for method overloads on
  * `exec`
  */
-export type ExecBaseOptions = Omit<
-  ExecOptions,
-  'callback' | 'resultRows' | 'rowMode' | 'returnValue' | 'sql'
->;
+export type ExecBaseOptions = {
+  bind?: BindingSpec;
+  saveSql?: string[];
+  columnNames?: string[];
+};
 
 export type ExecReturnThisOptions = {
   returnValue?: 'this';

@@ -9,6 +9,6 @@
     "@sqlite.org/sqlite-wasm": "file:../.."
   },
   "devDependencies": {
-    "@rsbuild/core": "^1.5.13"
+    "@rsbuild/core": "^2.1.5"
   }
 }

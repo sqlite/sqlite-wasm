@@ -53,7 +53,7 @@
     "test:node": "vitest --project node",
     "test:browser": "vitest --project browser",
     "publint": "npx publint",
-    "check-types": "tsgo",
+    "check-types": "tsc --noEmit",
     "build": "tsdown",
     "dev:kvvfs": "npm run dev -w demos/kvvfs-demo",
     "dev:opfs": "npm run dev -w demos/opfs-demo",
@@ -68,7 +68,6 @@
     "start:node": "cd demo && node node.mjs",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "prepare": "lefthook install",
     "prepublishOnly": "npm run build && npm run format && npm run publint && npm run check-types",
     "deploy": "npm run prepublishOnly && git add . && git commit -am 'New release' && git push && npm publish --tag=latest"
   },
@@ -76,20 +75,19 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@types/node": "^26.0.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260622.1",
-    "@vitest/browser": "^4.1.9",
-    "@vitest/browser-playwright": "^4.1.9",
+    "@types/node": "^26.1.1",
+    "@vitest/browser": "^4.1.10",
+    "@vitest/browser-playwright": "^4.1.10",
     "happy-dom": "20.10.6",
-    "lefthook": "2.1.9",
-    "oxfmt": "^0.56.0",
-    "playwright": "^1.61.0",
+    "lefthook": "2.1.10",
+    "oxfmt": "^0.58.0",
+    "playwright": "^1.61.1",
     "publint": "^0.3.21",
-    "tsdown": "^0.22.3",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "tsdown": "^0.22.7",
+    "typescript": "7.0.2",
+    "vitest": "^4.1.10"
   },
-  "packageManager": "npm@11.16.0",
+  "packageManager": "npm@12.0.1",
   "allowScripts": {
     "@parcel/watcher": false,
     "@swc/core": true,
