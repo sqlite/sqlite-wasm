@@ -68,7 +68,6 @@
     "start:node": "cd demo && node node.mjs",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "prepare": "lefthook install",
     "prepublishOnly": "npm run build && npm run format && npm run publint && npm run check-types",
     "deploy": "npm run prepublishOnly && git add . && git commit -am 'New release' && git push && npm publish --tag=latest"
   },
