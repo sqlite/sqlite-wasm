@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-FROM emscripten/emsdk:latest
+ARG EMSDK_VERSION=5.0.5
+FROM emscripten/emsdk:${EMSDK_VERSION}
 
 ARG DEBIAN_FRONTEND=noninteractive
 

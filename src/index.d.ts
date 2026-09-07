@@ -2350,9 +2350,9 @@ export type Sqlite3Static = {
       io?: {
         struct: sqlite3_io_methods;
         methods: {
-          [K in keyof sqlite3_io_methods as K extends `x${string}`
-            ? K
-            : never]?: sqlite3_io_methods[K];
+          [
+            K in keyof sqlite3_io_methods as K extends `x${string}` ? K : never
+          ]?: sqlite3_io_methods[K];
         };
         applyArgcCheck?: boolean;
       };
