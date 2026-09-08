@@ -10,7 +10,9 @@ jobs:
     name: Publish release to npm (OIDC)
     runs-on: ubuntu-latest
     permissions:
+      # Needed to create the GitHub release and its package-version tag.
       contents: write
+      # Needed by npm trusted publishing to mint an OIDC token.
       id-token: write
     steps:
       - name: Checkout repo
