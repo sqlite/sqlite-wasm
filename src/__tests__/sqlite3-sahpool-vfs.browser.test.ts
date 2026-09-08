@@ -4,10 +4,11 @@ type WorkerSuccessMessage = {
   type: 'success';
 };
 
-test('OpfsSAHPoolVfs sanity check in Worker (browser)', async () => {
-  const worker = new Worker(new URL('./workers/sqlite3-sahpool.worker.ts', import.meta.url), {
-    type: 'module',
-  });
+test.each([
+  ['default entry', './workers/sqlite3-sahpool.worker.ts'],
+  ['treeshakable entry', './workers/sqlite3-sahpool-treeshakable.worker.ts'],
+])('OpfsSAHPoolVfs sanity check in Worker (browser, %s)', async (_label, workerPath) => {
+  const worker = new Worker(new URL(workerPath, import.meta.url), { type: 'module' });
 
   try {
     const result = await new Promise<WorkerSuccessMessage>((resolve, reject) => {

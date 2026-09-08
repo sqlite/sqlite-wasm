@@ -5,6 +5,9 @@ import type { SqlValue } from '../index';
 test('Bundler-friendly OO1 API sanity check (browser)', async () => {
   const sqlite3 = await sqlite3InitModule();
 
+  expect(sqlite3.initWorker1API).toBeTypeOf('function');
+  expect(sqlite3.vtab).toBeDefined();
+
   // 1. Create a database
   const db = new sqlite3.oo1.DB(':memory:');
   expect(db.isOpen()).toBe(true);

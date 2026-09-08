@@ -42,11 +42,17 @@ const runWorker = async (workerUrl: URL): Promise<void> => {
 };
 
 describe('opfs persistence APIs', () => {
-  test('OpfsDb sanity check in Worker (browser)', async () => {
-    await runWorker(new URL('./workers/sqlite3-opfs.worker.ts', import.meta.url));
+  test.each([
+    ['default entry', './workers/sqlite3-opfs.worker.ts'],
+    ['treeshakable entry', './workers/sqlite3-opfs-treeshakable.worker.ts'],
+  ])('OpfsDb sanity check in Worker (browser, %s)', async (_label, workerPath) => {
+    await runWorker(new URL(workerPath, import.meta.url));
   });
 
-  test('OpfsWlDb sanity check in Worker (browser)', async () => {
-    await runWorker(new URL('./workers/sqlite3-opfs-wl.worker.ts', import.meta.url));
+  test.each([
+    ['default entry', './workers/sqlite3-opfs-wl.worker.ts'],
+    ['treeshakable entry', './workers/sqlite3-opfs-wl-treeshakable.worker.ts'],
+  ])('OpfsWlDb sanity check in Worker (browser, %s)', async (_label, workerPath) => {
+    await runWorker(new URL(workerPath, import.meta.url));
   });
 });
