@@ -27,9 +27,9 @@
 /* @preserve
 ** This code was built from sqlite3 version...
 **
-** SQLITE_VERSION "3.53.0"
-** SQLITE_VERSION_NUMBER 3053000
-** SQLITE_SOURCE_ID "2026-04-09 11:41:38 4525003a53a7fc63ca75c59b22c79608659ca12f0131f52c18637f829977f20b"
+** SQLITE_VERSION "3.53.4"
+** SQLITE_VERSION_NUMBER 3053004
+** SQLITE_SOURCE_ID "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
 **
 ** Emscripten SDK: 5.0.5
 */
@@ -4822,9 +4822,9 @@ Module.runSQLite3PostLoadInit = async function(
 /* @preserve
 ** This code was built from sqlite3 version...
 **
-** SQLITE_VERSION "3.53.0"
-** SQLITE_VERSION_NUMBER 3053000
-** SQLITE_SOURCE_ID "2026-04-09 11:41:38 4525003a53a7fc63ca75c59b22c79608659ca12f0131f52c18637f829977f20b"
+** SQLITE_VERSION "3.53.4"
+** SQLITE_VERSION_NUMBER 3053004
+** SQLITE_SOURCE_ID "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
 **
 ** Emscripten SDK: 5.0.5
 */
@@ -6779,8 +6779,6 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
   }/*changeset/preupdate additions*/
 
   /**
-     EXPERIMENTAL. For tentative addition in 3.53.0.
-
      sqlite3_js_retry_busy(maxTimes,callback[,beforeRetry])
 
      Calls the given _synchronous_ callback function. If that function
@@ -6801,11 +6799,14 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
      (so it starts with 2, not 1). If it throws, the exception is
      handled as described above. Its result value is ignored.
 
-     To effectively retry "forever", pass a negative maxTimes value,
-     with the caveat that there is no recovery from that unless the
-     beforeRetry() can figure out when to throw.
+     To effectively retry "forever", pass a huge maxTimes value such
+     as Number.MAX_SAFE_INTEGER, with the caveat that there is no
+     recovery from that unless the beforeRetry() can figure out when
+     to throw.
 
-     TODO: an async variant of this.
+     Added in 3.53.0.
+
+     TODO?: an async variant of this.
   */
   capi.sqlite3_js_retry_busy = function(maxTimes, callback, beforeRetry){
     for(let n = 1; n <= maxTimes; ++n){
@@ -7068,7 +7069,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.53.0", "libVersionNumber": 3053000, "sourceId": "2026-04-09 11:41:38 4525003a53a7fc63ca75c59b22c79608659ca12f0131f52c18637f829977f20b","downloadVersion": 3530000,"scm":{ "sha3-256": "4525003a53a7fc63ca75c59b22c79608659ca12f0131f52c18637f829977f20b","branch": "trunk","tags": "release major-release version-3.53.0","datetime": "2026-04-09T11:41:38.498Z"}};
+  sqlite3.version = {"libVersion": "3.53.4", "libVersionNumber": 3053004, "sourceId": "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc","downloadVersion": 3530400,"scm":{ "sha3-256": "bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc","branch": "branch-3.53","tags": "release version-3.53.4","datetime": "2026-07-24T19:02:57.525Z"}};
 });
 /**
   2022-07-08
@@ -14054,18 +14055,18 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
        only argument. On success, returns the result of the
        callback. Throws on error.
 
-       Note that transactions may not be nested, so this will throw if
-       it is called recursively. For nested transactions, use the
+       Transactions may not be nested, so this will throw if it is
+       called recursively. For nested transactions, use the
        savepoint() method or manually manage SAVEPOINTs using exec().
 
        If called with 2 arguments, the first must be a keyword which
        is legal immediately after a BEGIN statement, e.g. one of
-       "DEFERRED", "IMMEDIATE", or "EXCLUSIVE". Though the exact list
+       "DEFERRED", "IMMEDIATE", or "EXCLUSIVE", though the exact list
        of supported keywords is not hard-coded here, in order to be
        future-compatible, if the argument does not look like a single
        keyword then an exception is triggered with a description of
        the problem.
-     */
+    */
     transaction: function(/* [beginQualifier,] */callback){
       let opener = 'BEGIN';
       if(arguments.length>1){
@@ -16885,10 +16886,6 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       xOpen: function(pProtoVfs,zName,pProtoFile,flags,pOutFlags){
         cache.popError();
         let zToFree /* alloc()'d memory for temp db name */;
-        if( 0 ){
-          /* tester1.js makes it a lot further if we do this. */
-          flags |= capi.SQLITE_OPEN_CREATE;
-        }
         try{
           if( !zName ){
             zToFree = wasm.allocCString(""+pProtoFile+"."
@@ -19263,7 +19260,7 @@ const initS11n = function(){
           return promiseResolve_(sqlite3);
         };
         const options = opfsUtil.options;
-        let proxyUri = options.proxyUri +(
+        const proxyUri = options.proxyUri +(
           (options.proxyUri.indexOf('?')<0) ? '?' : '&'
         )+'vfs='+vfsName;
         //sqlite3.config.error("proxyUri",options.proxyUri, (new Error()));

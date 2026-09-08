@@ -10,6 +10,6 @@
     "@sqlite.org/sqlite-wasm": "file:../.."
   },
   "devDependencies": {
-    "vite": "^8.1.4"
+    "vite": "^8.2.2"
   }
 }
