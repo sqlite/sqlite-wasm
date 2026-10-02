@@ -1398,7 +1398,7 @@ export type SAHPoolUtil = {
    * name-to-file mappings in a roundabout way in order to maintain its list of
    * SAHs.
    */
-  exportFile: (filename: string) => Promise<Uint8Array>;
+  exportFile: (filename: string) => Uint8Array;
 
   /**
    * Returns the number of files currently contained in the SAH pool.
