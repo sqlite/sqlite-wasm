@@ -39,20 +39,51 @@
       "browser": "./dist/index.mjs"
     },
     "./package.json": "./package.json",
-    "./sqlite3.wasm": "./dist/sqlite3.wasm"
+    "./sqlite3.wasm": "./dist/sqlite3.wasm",
+    "./bundler/core": {
+      "types": "./dist/bundler/core.d.mts",
+      "import": "./dist/sqlite3-core-bundler-friendly.mjs",
+      "default": "./dist/sqlite3-core-bundler-friendly.mjs"
+    },
+    "./bundler/vtab": {
+      "types": "./dist/bundler/vtab.d.mts",
+      "import": "./dist/sqlite3-core-vtab-bundler-friendly.mjs",
+      "default": "./dist/sqlite3-core-vtab-bundler-friendly.mjs"
+    },
+    "./bundler/kvvfs": {
+      "types": "./dist/bundler/kvvfs.d.mts",
+      "import": "./dist/sqlite3-core-kvvfs-bundler-friendly.mjs",
+      "default": "./dist/sqlite3-core-kvvfs-bundler-friendly.mjs"
+    },
+    "./bundler/opfs": {
+      "types": "./dist/bundler/opfs.d.mts",
+      "import": "./dist/sqlite3-core-opfs-bundler-friendly.mjs",
+      "default": "./dist/sqlite3-core-opfs-bundler-friendly.mjs"
+    },
+    "./bundler/opfs-wl": {
+      "types": "./dist/bundler/opfs-wl.d.mts",
+      "import": "./dist/sqlite3-core-opfs-wl-bundler-friendly.mjs",
+      "default": "./dist/sqlite3-core-opfs-wl-bundler-friendly.mjs"
+    },
+    "./bundler/sah-pool": {
+      "types": "./dist/bundler/sah-pool.d.mts",
+      "import": "./dist/sqlite3-core-opfs-sahpool-bundler-friendly.mjs",
+      "default": "./dist/sqlite3-core-opfs-sahpool-bundler-friendly.mjs"
+    }
   },
   "workspaces": [
     "demos/*"
   ],
   "files": [
     "dist",
+    "docs",
     "README.md"
   ],
   "scripts": {
     "test": "vitest",
     "test:node": "vitest --project node",
     "test:browser": "vitest --project browser",
-    "publint": "npx publint",
+    "publint": "publint",
     "check-types": "tsc --noEmit",
     "build": "tsdown",
     "dev:kvvfs": "npm run dev -w demos/kvvfs-demo",
@@ -68,24 +99,25 @@
     "start:node": "cd demo && node node.mjs",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "prepublishOnly": "npm run build && npm run format && npm run publint && npm run check-types",
+    "prepublishOnly": "npm run build && npm run format && npm run check-types",
     "deploy": "npm run prepublishOnly && git add . && git commit -am 'New release' && git push && npm publish --tag=latest"
   },
   "engines": {
     "node": ">=22"
   },
   "devDependencies": {
+    "@arethetypeswrong/core": "^0.18.5",
     "@types/node": "^26.5.0",
-    "@vitest/browser": "^5.0.0",
-    "@vitest/browser-playwright": "^5.0.0",
-    "happy-dom": "20.14.0",
-    "lefthook": "2.1.12",
-    "oxfmt": "^0.67.0",
+    "@vitest/browser": "^5.0.1",
+    "@vitest/browser-playwright": "^5.0.1",
+    "happy-dom": "20.14.5",
+    "lefthook": "2.1.14",
+    "oxfmt": "^0.68.0",
     "playwright": "^1.63.0",
     "publint": "^0.3.24",
     "tsdown": "^0.23.0",
     "typescript": "7.0.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   },
   "packageManager": "npm@12.0.1",
   "allowScripts": {

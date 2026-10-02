@@ -9,7 +9,7 @@
     "@sqlite.org/sqlite-wasm": "file:../.."
   },
   "devDependencies": {
-    "webpack": "^5.110.3",
+    "webpack": "^5.111.0",
     "webpack-cli": "^7.2.3",
     "webpack-dev-server": "^6.0.0"
   }

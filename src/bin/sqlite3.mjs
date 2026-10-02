@@ -29,7 +29,7 @@
 **
 ** SQLITE_VERSION "3.53.4"
 ** SQLITE_VERSION_NUMBER 3053004
-** SQLITE_SOURCE_ID "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
+** SQLITE_SOURCE_ID "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e0945alt1"
 **
 ** Emscripten SDK: 5.0.5
 */
@@ -4824,7 +4824,7 @@ Module.runSQLite3PostLoadInit = async function(
 **
 ** SQLITE_VERSION "3.53.4"
 ** SQLITE_VERSION_NUMBER 3053004
-** SQLITE_SOURCE_ID "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
+** SQLITE_SOURCE_ID "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e0945alt1"
 **
 ** Emscripten SDK: 5.0.5
 */
@@ -7069,7 +7069,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.53.4", "libVersionNumber": 3053004, "sourceId": "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc","downloadVersion": 3530400,"scm":{ "sha3-256": "bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc","branch": "branch-3.53","tags": "release version-3.53.4","datetime": "2026-07-24T19:02:57.525Z"}};
+  sqlite3.version = {"libVersion": "3.53.4", "libVersionNumber": 3053004, "sourceId": "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e0945alt1","downloadVersion": 3530400,"scm":{ "sha3-256": "bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e0945alt1","branch": "branch-3.53","tags": "release version-3.53.4","datetime": "2026-07-24T19:02:57.525Z"}};
 });
 /**
   2022-07-08
@@ -19652,6 +19652,9 @@ globalThis.sqlite3ApiBootstrap.initializersAsync.push(async (sqlite3)=>{
 
   - Also because of that, it does not require the SharedArrayBuffer,
   so can function without the COOP/COEP HTTP response headers.
+
+  - Also because of that, this one is much faster and the performance
+  gap increases as the job sizes increase.
 
   - It can hypothetically support Safari 16.4+, whereas the "opfs" VFS
   requires v17 due to a subworker/storage bug in 16.x which makes it

@@ -8,6 +8,18 @@ SQLite Wasm conveniently wrapped as an ES Module.
 npm install @sqlite.org/sqlite-wasm
 ```
 
+```bash
+yarn add @sqlite.org/sqlite-wasm
+```
+
+```bash
+pnpm add @sqlite.org/sqlite-wasm
+```
+
+```bash
+bun add @sqlite.org/sqlite-wasm
+```
+
 ## Bug reports
 
 > [!Warning]
@@ -26,88 +38,20 @@ npm install @sqlite.org/sqlite-wasm
 
 ## Usage
 
-There are two ways to use SQLite Wasm:
+See the implementation docs for the package entry point that matches your runtime and storage needs:
 
-- [in a worker](#in-a-worker-with-opfs-if-available)
-- [in the main thread](#in-the-main-thread-without-opfs)
+- [Main-thread browser usage](docs/main-thread.md)
+- [Worker usage with OPFS](docs/worker.md)
+- [Node.js usage](docs/node.md)
+- [Bundler core omit-api build](docs/bundler-core.md)
+- [Bundler vtab omit-api build](docs/bundler-vtab.md)
+- [Bundler kvvfs omit-api build](docs/bundler-kvvfs.md)
+- [Bundler OPFS omit-api build](docs/bundler-opfs.md)
+- [Bundler OPFS WebLocks omit-api build](docs/bundler-opfs-wl.md)
+- [Bundler OPFS SAH Pool omit-api build](docs/bundler-sah-pool.md)
 
-Only the worker versions allow you to use the origin private file system (OPFS) storage back-end.
-
-### In a worker (with OPFS if available):
-
-> [!Warning]
->
-> For this to work, you need to set the following headers on your server:
->
-> `Cross-Origin-Opener-Policy: same-origin`
->
-> `Cross-Origin-Embedder-Policy: require-corp`
-
-```js
-// In `main.js`.
-const worker = new Worker('worker.js', { type: 'module' });
-```
-
-```js
-// In `worker.js`.
-import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
-
-const start = (sqlite3) => {
-  console.log('Running SQLite3 version', sqlite3.version.libVersion);
-  const db =
-    'opfs' in sqlite3
-      ? new sqlite3.oo1.OpfsDb('/mydb.sqlite3')
-      : new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
-  console.log(
-    'opfs' in sqlite3
-      ? `OPFS is available, created persisted database at ${db.filename}`
-      : `OPFS is not available, created transient database ${db.filename}`,
-  );
-  // Your SQLite code here.
-};
-
-const initializeSQLite = async () => {
-  try {
-    console.log('Loading and initializing SQLite3 module...');
-    const sqlite3 = await sqlite3InitModule();
-    console.log('Done initializing. Running demo...');
-    start(sqlite3);
-  } catch (err) {
-    console.error('Initialization error:', err.name, err.message);
-  }
-};
-
-initializeSQLite();
-```
-
-The `db` object above implements the
-[Object-Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
-
-### In the main thread (without OPFS):
-
-```js
-import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
-
-const start = (sqlite3) => {
-  log('Running SQLite3 version', sqlite3.version.libVersion);
-  const db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
-  // Your SQLite code here.
-};
-const initializeSQLite = async () => {
-  try {
-    console.log('Loading and initializing SQLite3 module...');
-    const sqlite3 = await sqlite3InitModule();
-    console.log('Done initializing. Running demo...');
-    start(sqlite3);
-  } catch (err) {
-    console.error('Initialization error:', err.name, err.message);
-  }
-};
-
-initializeSQLite();
-```
-
-The `db` object above implements the
+Only the worker OPFS implementations allow you to use the origin private file system (OPFS) storage
+back-end. The `db` object in these examples implements the
 [Object-Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
 
 ## Usage with vite
@@ -146,19 +90,6 @@ available on [StackBlitz](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=ma
 See the list of [npm dependents](https://www.npmjs.com/browse/depended/@sqlite.org/sqlite-wasm) for
 this package.
 
-## Deploying a new version
-
-(These steps can only be executed by maintainers.)
-
-1. Manually trigger the [GitHub Actions workflow](../../actions/workflows/build-wasm.yml). By
-   default, it uses the latest SQLite tag. This pull request will contain the latest `sqlite3.wasm`
-   and related bindings.
-
-2. Once the above pull request is validated and merged, update the version number in `package.json`,
-   reflecting the current [SQLite version number](https://sqlite.org/download.html) and add a build
-   identifier suffix like `-build1`. The complete version number should read something like
-   `3.41.2-build1`.
-
 ## Building the SQLite Wasm locally
 
 1. Build the Docker image:
@@ -168,6 +99,34 @@ this package.
    ```
 
 2. Run the build:
+
+   By default, this builds the full upstream npm bundle plus these omit-API variants. All variants
+   omit the deprecated Worker1 API:
+
+   - `core`: `omit-api="kvvfs OPFS vtab worker1"`, exported as
+     `@sqlite.org/sqlite-wasm/bundler/core`
+   - `core-vtab`: `omit-api="kvvfs OPFS worker1"`, exported as
+     `@sqlite.org/sqlite-wasm/bundler/vtab`
+   - `core-kvvfs`: `omit-api="OPFS vtab worker1"`, exported as
+     `@sqlite.org/sqlite-wasm/bundler/kvvfs`
+   - `core-opfs`: `omit-api="kvvfs opfs-wl opfs-sahpool vtab worker1"`, exported as
+     `@sqlite.org/sqlite-wasm/bundler/opfs`
+   - `core-opfs-wl`: `omit-api="kvvfs opfs opfs-sahpool vtab worker1"`, exported as
+     `@sqlite.org/sqlite-wasm/bundler/opfs-wl`
+   - `core-opfs-sahpool`: `omit-api="kvvfs opfs opfs-wl vtab worker1"`, exported as
+     `@sqlite.org/sqlite-wasm/bundler/sah-pool`
+
+   To customize the generated variants, set `SQLITE_WASM_OMIT_API_BUILDS` to a semicolon-separated
+   list of `name=api api` entries. Set it to an empty string to build only the full bundle. Custom
+   variants are written to `src/bin`; add them to `tsdown.config.ts` and `package.json` if they
+   should be published as package subpaths.
+
+   Only bundler-friendly JavaScript artifacts are kept for generated variants. They are written to
+   `src/bin` with their variant name in the filename, for example
+   `sqlite3-core-bundler-friendly.mjs`, and load the default `sqlite3.wasm` from the full npm bundle
+   build. The package build emits optimized copies into `dist` and exports the fixed variants under
+   the `/bundler` package subpaths shown above. If the selected SQLite ref does not support
+   `omit-api`, set `SQLITE_WASM_OMIT_API_BUILDS` to an empty string to build only the full bundle.
 
    **Unix (Linux/macOS):**
 

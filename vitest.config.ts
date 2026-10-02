@@ -29,6 +29,7 @@ const vitestConfig: ViteUserConfig = defineConfig({
           environment: 'node',
           include: [
             'src/__tests__/sqlite3-node.test.ts',
+            'src/__tests__/sqlite3-omit-api.test.ts',
             'src/__tests__/bundler-compatibility.test.ts',
           ],
         },
