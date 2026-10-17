@@ -27,9 +27,9 @@
 /* @preserve
 ** This code was built from sqlite3 version...
 **
-** SQLITE_VERSION "3.53.4"
-** SQLITE_VERSION_NUMBER 3053004
-** SQLITE_SOURCE_ID "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
+** SQLITE_VERSION "3.54.1"
+** SQLITE_VERSION_NUMBER 3054001
+** SQLITE_SOURCE_ID "2026-10-16 14:45:20 555e07ef33f69a0957d24d8e555b702464a131d6f1607f4c3c1e4551e8e6ca76"
 **
 ** Emscripten SDK: 5.0.5
 */
@@ -92,7 +92,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 /**
    This file was preprocessed using:
 
-   ./c-pp -o ./bld/pre-js.bundler.js -Dtarget:es6-module -Dtarget:es6-bundler-friendly -DModule.instantiateWasm api/pre-js.c-pp.js
+   ./c-pp -o ./bld/pre-js.bundler.js -Dtarget:es6-module -Dtarget:es6-bundler-friendly -Dsqlite3.wasm.base64=./jswasm/sqlite3.wasm -DModule.instantiateWasm api/pre-js.c-pp.js
 */
 /* END FILE: api/pre-js.js. */
 // end include: ./bld/pre-js.bundler.js
@@ -4008,11 +4008,11 @@ var _sqlite3_status64,
   _sqlite3_db_status,
   _sqlite3_vfs_find,
   _sqlite3_initialize,
-  _sqlite3_malloc,
-  _sqlite3_free,
   _sqlite3_vfs_register,
   _sqlite3_vfs_unregister,
+  _sqlite3_malloc,
   _sqlite3_malloc64,
+  _sqlite3_free,
   _sqlite3_realloc,
   _sqlite3_realloc64,
   _sqlite3_value_text,
@@ -4035,6 +4035,11 @@ var _sqlite3_status64,
   _sqlite3_column_type,
   _sqlite3_errmsg,
   _sqlite3_deserialize,
+  _sqlite3_backup_init,
+  _sqlite3_backup_step,
+  _sqlite3_backup_finish,
+  _sqlite3_backup_remaining,
+  _sqlite3_backup_pagecount,
   _sqlite3_clear_bindings,
   _sqlite3_value_blob,
   _sqlite3_value_bytes,
@@ -4272,11 +4277,11 @@ function assignWasmExports(wasmExports) {
   _sqlite3_db_status = Module['_sqlite3_db_status'] = wasmExports['sqlite3_db_status'];
   _sqlite3_vfs_find = Module['_sqlite3_vfs_find'] = wasmExports['sqlite3_vfs_find'];
   _sqlite3_initialize = Module['_sqlite3_initialize'] = wasmExports['sqlite3_initialize'];
-  _sqlite3_malloc = Module['_sqlite3_malloc'] = wasmExports['sqlite3_malloc'];
-  _sqlite3_free = Module['_sqlite3_free'] = wasmExports['sqlite3_free'];
   _sqlite3_vfs_register = Module['_sqlite3_vfs_register'] = wasmExports['sqlite3_vfs_register'];
   _sqlite3_vfs_unregister = Module['_sqlite3_vfs_unregister'] = wasmExports['sqlite3_vfs_unregister'];
+  _sqlite3_malloc = Module['_sqlite3_malloc'] = wasmExports['sqlite3_malloc'];
   _sqlite3_malloc64 = Module['_sqlite3_malloc64'] = wasmExports['sqlite3_malloc64'];
+  _sqlite3_free = Module['_sqlite3_free'] = wasmExports['sqlite3_free'];
   _sqlite3_realloc = Module['_sqlite3_realloc'] = wasmExports['sqlite3_realloc'];
   _sqlite3_realloc64 = Module['_sqlite3_realloc64'] = wasmExports['sqlite3_realloc64'];
   _sqlite3_value_text = Module['_sqlite3_value_text'] = wasmExports['sqlite3_value_text'];
@@ -4299,6 +4304,11 @@ function assignWasmExports(wasmExports) {
   _sqlite3_column_type = Module['_sqlite3_column_type'] = wasmExports['sqlite3_column_type'];
   _sqlite3_errmsg = Module['_sqlite3_errmsg'] = wasmExports['sqlite3_errmsg'];
   _sqlite3_deserialize = Module['_sqlite3_deserialize'] = wasmExports['sqlite3_deserialize'];
+  _sqlite3_backup_init = Module['_sqlite3_backup_init'] = wasmExports['sqlite3_backup_init'];
+  _sqlite3_backup_step = Module['_sqlite3_backup_step'] = wasmExports['sqlite3_backup_step'];
+  _sqlite3_backup_finish = Module['_sqlite3_backup_finish'] = wasmExports['sqlite3_backup_finish'];
+  _sqlite3_backup_remaining = Module['_sqlite3_backup_remaining'] = wasmExports['sqlite3_backup_remaining'];
+  _sqlite3_backup_pagecount = Module['_sqlite3_backup_pagecount'] = wasmExports['sqlite3_backup_pagecount'];
   _sqlite3_clear_bindings = Module['_sqlite3_clear_bindings'] = wasmExports['sqlite3_clear_bindings'];
   _sqlite3_value_blob = Module['_sqlite3_value_blob'] = wasmExports['sqlite3_value_blob'];
   _sqlite3_value_bytes = Module['_sqlite3_value_bytes'] = wasmExports['sqlite3_value_bytes'];
@@ -4731,9 +4741,9 @@ Module.runSQLite3PostLoadInit = async function(
 /* @preserve
 ** This code was built from sqlite3 version...
 **
-** SQLITE_VERSION "3.53.4"
-** SQLITE_VERSION_NUMBER 3053004
-** SQLITE_SOURCE_ID "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
+** SQLITE_VERSION "3.54.1"
+** SQLITE_VERSION_NUMBER 3054001
+** SQLITE_SOURCE_ID "2026-10-16 14:45:20 555e07ef33f69a0957d24d8e555b702464a131d6f1607f4c3c1e4551e8e6ca76"
 **
 ** Emscripten SDK: 5.0.5
 */
@@ -5510,7 +5520,11 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
        lead bytes of that buffer do not hold a SQLite3 database header,
        else it returns without side effects.
 
-       Added in 3.44.
+       Added in 3.44. As of 3.54 in SEE builds it performs only a
+       rudimentary length check and does not fail for invalid header
+       bytes, under the assumption that the input may be an encrypted
+       db. We cannot unambiguously distinguish an encrypted db from
+       garbage bytes.
     */
     affirmDbHeader: function(bytes){
       if(bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
@@ -5530,7 +5544,8 @@ globalThis.sqlite3ApiBootstrap = async function sqlite3ApiBootstrap(
        database. It only examines the size and header, but further
        checks may be added in the future.
 
-       Added in 3.44.
+       Added in 3.44. See notes in affirmDbHeader() regarding SEE
+       builds.
     */
     affirmIsDb: function(bytes){
       if(bytes instanceof ArrayBuffer) bytes = new Uint8Array(bytes);
@@ -6978,7 +6993,7 @@ globalThis.sqlite3ApiBootstrap.defaultConfig = Object.create(null);
 */
 globalThis.sqlite3ApiBootstrap.sqlite3 = undefined;
 globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-  sqlite3.version = {"libVersion": "3.53.4", "libVersionNumber": 3053004, "sourceId": "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc","downloadVersion": 3530400,"scm":{ "sha3-256": "bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc","branch": "branch-3.53","tags": "release version-3.53.4","datetime": "2026-07-24T19:02:57.525Z"}};
+  sqlite3.version = {"libVersion": "3.54.1", "libVersionNumber": 3054001, "sourceId": "2026-10-16 14:45:20 555e07ef33f69a0957d24d8e555b702464a131d6f1607f4c3c1e4551e8e6ca76","downloadVersion": 3540100,"scm":{ "sha3-256": "555e07ef33f69a0957d24d8e555b702464a131d6f1607f4c3c1e4551e8e6ca76","branch": "branch-3.54","tags": "release version-3.54.1","datetime": "2026-10-16T14:45:20.546Z"}};
 });
 /**
   2022-07-08
@@ -9550,7 +9565,7 @@ globalThis.WhWasmUtilInstaller
 
   ./c-pp -o js/jaccwabyt.js -@policy=error jaccwabyt/jaccwabyt.c-pp.js
 
-  by libcmpp 2.x 2fc4afc31f6505c27b9c34988973a2bd9b157d559247cdd26868ae75632c3a5e @ 2025-11-16 23:03:27.352 UTC
+  by libcmpp 2.0.x 4539e17f451054d2aeb6a5ffe3891af087fd8fa6cfae4e31d02e1fddfec69d46 @ 2026-09-30 09:12:44.230 UTC
 */
 'use strict';
 globalThis.Jaccwabyt =
@@ -9862,8 +9877,8 @@ function StructBinderFactory(config){
       and unmaps obj from its native resources. */
   const __freeStruct = function(ctor, obj, m){
     const ii = getInstanceHandle(obj, false);
-    if( !ii ) return;
-    rmInstanceHandle(obj);
+    if( !ii || ii.isDisposing ) return;
+    ii.isDisposing = true;
     if( !m && !(m = ii.p) ){
       console.warn("Cannot(?) happen: __freeStruct() found no instanceInfo");
       return;
@@ -9890,6 +9905,7 @@ function StructBinderFactory(config){
                      m,'threw. NOT propagating it.',e);
       }
     }
+    rmInstanceHandle(obj);
     delete obj.ondispose;
     if(ctor.debugFlags.__flags.dealloc){
       log("debug.dealloc:",(ii.ownsPointer?"":"EXTERNAL"),
@@ -10815,6 +10831,11 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       // Please keep these sorted by function name!
       ["sqlite3_aggregate_context","void*", "sqlite3_context*", "int"],
       /* sqlite3_auto_extension() has a hand-written binding. */
+      ["sqlite3_backup_init", "sqlite3_backup*", "sqlite3*", "string", "sqlite3*", "string"],
+      ["sqlite3_backup_step", "int", "sqlite3_backup*", "int"],
+      ["sqlite3_backup_finish", "int", "sqlite3_backup*"],
+      ["sqlite3_backup_remaining", "int", "sqlite3_backup*"],
+      ["sqlite3_backup_pagecount", "int", "sqlite3_backup*"],
       /* sqlite3_bind_blob() and sqlite3_bind_text() have hand-written
          bindings to permit more flexible inputs. */
       ["sqlite3_bind_double","int", "sqlite3_stmt*", "int", "f64"],
@@ -11522,6 +11543,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       /*a class which no value can ever be an instance of*/
     };
     wasm.xWrap.argAdapter('sqlite3_filename', __xArgPtr)
+    ('sqlite3_backup*', __xArgPtr)
     ('sqlite3_context*', __xArgPtr)
     ('sqlite3_value*', __xArgPtr)
     ('void*', __xArgPtr)
@@ -11573,6 +11595,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     */
     const __xRcPtr = wasm.xWrap.resultAdapter('*');
     wasm.xWrap.resultAdapter('sqlite3*', __xRcPtr)
+    ('sqlite3_backup*', __xRcPtr)
     ('sqlite3_context*', __xRcPtr)
     ('sqlite3_stmt*', __xRcPtr)
     ('sqlite3_value*', __xRcPtr)
@@ -12726,8 +12749,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
   */
   const __doesNotOwnHandle = new Set();
   /**
-     Map of DB instances to objects, each object being a map of Stmt
-     wasm pointers to Stmt objects.
+     Map of DB instances to objects, each object being a map of
+     sqlite3_stmt wasm pointers to Stmt objects.
   */
   const __stmtMap = new WeakMap();
 
@@ -13209,7 +13232,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     const stmt = db.prepare(sql);
     try {
       const rc = stmt.bind(bind).step() ? stmt.get(...getArgs) : undefined;
-      stmt.reset(/*for INSERT...RETURNING locking case*/);
+      stmt.reset(/*for INSERT...RETURNING locking case
+                   https://sqlite.org/forum/forumpost/c411b3a9143d02dce */);
       return rc;
     }finally{
       stmt.finalize();
@@ -13224,6 +13248,57 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
         (db, sql, bind, rowMode)=>db.exec({
           sql, bind, rowMode, returnValue: 'resultRows'
         });
+
+  /**
+     Internal impl of DB.Stmt APIs which fetch a column. The caller is
+     required to have validated the ndx value before calling this (see
+     affirmColIndex()). The purpose of this impl is to speed up such
+     operations which loop, to avoid having to validate the index on
+     each iteration. The arguments are as documented for Stmt.get()
+     with the exception that ndx must be an in-range interger (that
+     function handles the other cases and proxies them to this one).
+  */
+  const __stmtGetColumn = (stmt, ndx, asType)=>{
+    switch(undefined===asType
+           ? capi.sqlite3_column_type(stmt.pointer, ndx)
+           : asType){
+        case capi.SQLITE_NULL: return null;
+        case capi.SQLITE_INTEGER:{
+          if(wasm.bigIntEnabled){
+            const rc = capi.sqlite3_column_int64(stmt.pointer, ndx);
+            if(rc>=Number.MIN_SAFE_INTEGER && rc<=Number.MAX_SAFE_INTEGER){
+              return Number(rc).valueOf();
+            }
+            return rc;
+          }else{
+            const rc = capi.sqlite3_column_double(stmt.pointer, ndx);
+            if(rc>Number.MAX_SAFE_INTEGER || rc<Number.MIN_SAFE_INTEGER){
+              toss3("Integer is out of range for JS integer range: "+rc);
+            }
+            return util.isInt32(rc) ? (rc | 0) : rc;
+          }
+        }
+        case capi.SQLITE_FLOAT:
+          return capi.sqlite3_column_double(stmt.pointer, ndx);
+        case capi.SQLITE_TEXT:
+          return capi.sqlite3_column_text(stmt.pointer, ndx);
+        case capi.SQLITE_BLOB: {
+          const n = capi.sqlite3_column_bytes(stmt.pointer, ndx),
+                ptr = capi.sqlite3_column_blob(stmt.pointer, ndx),
+                rc = new Uint8Array(n);
+          if(n){
+            rc.set(wasm.heap8u().slice(Number(ptr), Number(ptr)+n), 0);
+            if(stmt.db._blobXfer instanceof Array){
+              stmt.db._blobXfer.push(rc.buffer);
+            }
+          }
+          return rc;
+        }
+        default: toss3("Don't know how to translate",
+                       "type of result column #"+ndx+".");
+    }
+    toss3("Not reached.");
+  };
 
   /**
      Expects to be given a DB instance or an `sqlite3*` pointer (may
@@ -13285,22 +13360,22 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     close: function(){
       const pDb = this.pointer;
       if(pDb){
-        if(this.onclose && (this.onclose.before instanceof Function)){
+        if(this.onclose?.before instanceof Function){
           try{this.onclose.before(this)}
           catch(e){/*ignore*/}
         }
-        Object.keys(__stmtMap.get(this)).forEach((k,s)=>{
-          if(s && s.pointer){
+        for(const s of Object.values(__stmtMap.get(this))){
+          if(s?.pointer){
             try{s.finalize()}
-            catch(e){/*ignore*/}
+            catch(ex){/*ignore*/}
           }
-        });
+        }
         __ptrMap.delete(this);
         __stmtMap.delete(this);
         if( !__doesNotOwnHandle.delete(this) ){
           capi.sqlite3_close_v2(pDb);
         }
-        if(this.onclose && (this.onclose.after instanceof Function)){
+        if(this.onclose?.after instanceof Function){
           try{this.onclose.after(this)}
           catch(e){/*ignore*/}
         }
@@ -13884,8 +13959,11 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     selectValues: function(sql,bind,asType){
       const stmt = this.prepare(sql), rc = [];
       try {
+        affirmColIndex(stmt, 0);
         stmt.bind(bind);
-        while(stmt.step()) rc.push(stmt.get(0,asType));
+        while(stmt.step()) rc.push(
+          __stmtGetColumn(stmt, 0, asType)
+        );
         stmt.reset(/*for INSERT...RETURNING locking case*/);
       }finally{
         stmt.finalize();
@@ -14309,6 +14387,11 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
        also called, otherwise any existing bindings, along with
        any memory allocated for them, are retained.
 
+       Clients must not use capi.sqlite3_reset() with this object
+       because this method does book-keeping specific to this class,
+       e.g. the pieces which ensure that the column-fetching methods
+       throw when called without a corresponding step().
+
        In versions 3.42.0 and earlier, this function did not throw if
        sqlite3_reset() returns non-0, but it was discovered that
        throwing (or significant extra client-side code) is necessary
@@ -14325,6 +14408,32 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       checkSqlite3Rc(this.db, rc);
       return this;
     },
+
+    /**
+       Works like reset() except that it returns the underlying
+       C-level result code instead of throwing if that code represents
+       an error.
+
+       Clients must not use capi.sqlite3_reset() for this purpose
+       because this method (like reset()) does book-keeping specific
+       to this class.
+
+       Throws if an exec() is underway.
+
+       The use case this addresses is when a step() fails due to,
+       e.g., a locking error: a following reset() will report that
+       locking error by throwing and that's sometimes inconvenient.
+
+       Added in 3.54.
+    */
+    resetNoThrow: function(alsoClearBinds){
+      affirmNotLockedByExec(this,'reset()');
+      if(alsoClearBinds) this.clearBindings();
+      const rc = capi.sqlite3_reset(affirmStmtOpen(this).pointer);
+      __stmtMayGet.delete(this);
+      return rc;
+    },
+
     /**
        Binds one or more values to its bindable parameters. It
        accepts 1 or 2 arguments:
@@ -14542,14 +14651,16 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
        an exception is thrown.
 
        By default it will determine the data type of the result
-       automatically. If passed a second argument, it must be one
-       of the enumeration values for sqlite3 types, which are
-       defined as members of the sqlite3 module: SQLITE_INTEGER,
-       SQLITE_FLOAT, SQLITE_TEXT, SQLITE_BLOB. Any other value,
-       except for undefined, will trigger an exception. Passing
-       undefined is the same as not passing a value. It is legal
-       to, e.g., fetch an integer value as a string, in which case
-       sqlite3 will convert the value to a string.
+       automatically. If passed a second argument, it must be one of
+       the enumeration values for sqlite3 types, which are defined as
+       members of the sqlite3.capi namespace: SQLITE_INTEGER,
+       SQLITE_FLOAT, SQLITE_TEXT, SQLITE_BLOB. Any other value, except
+       for undefined, will trigger an exception. Passing undefined is
+       the same as not passing a value. It is legal to, e.g., fetch an
+       integer value as a string, in which case sqlite3 will convert
+       the value to a string.
+
+       Blobs are returned as Uint8Array instances.
 
        If ndx is an array, this function behaves a differently: it
        assigns the indexes of the array, from 0 to the number of
@@ -14561,7 +14672,27 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
        the values of their corresponding result columns and returns
        that object.
 
-       Blobs are returned as Uint8Array instances.
+       Performance note: this class does not cache its column names
+       because a reprepare may change them and we have(?) no(?) way of
+       hooking into that to invalidate the cache. A side effect of
+       that is that this function, when ndx is an object, has to copy
+       those names from the WASM side on each call. When fetching many
+       objects, DB.exec() can do so more efficiently by caching those
+       names for the duration of the query. In large result sets the
+       runtime difference is human-perceivable.
+
+       Behavior change notice: prior to 3.54, the asType argument was
+       ignored when ndx is an array or object, the justification being
+       that we're generally fetching rows of mixed data types. As of
+       3.54, it still behaves that way when passed the undefined value
+       resp. is not passed a value, but will coerce each column to the
+       request type of it is not the undefined value. It is not
+       believed that this change adversely affects any existing
+       client-level code because this argument was ignored and
+       applications passing a non-undefined value were not necessarily
+       getting back what they had specified (or did so only because
+       all of the data was of that type, in which case the new
+       behavior is identical for those queries).
 
        Potential TODO: add type ID SQLITE_JSON, which fetches the
        result as a string and passes it (if it's not null) to
@@ -14576,69 +14707,22 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
         let i = 0;
         const n = this.columnCount;
         while(i<n){
-          ndx[i] = this.get(i++);
+          ndx[i] = __stmtGetColumn(this, i, asType);
+          ++i;
         }
         return ndx;
       }else if(ndx && 'object'===typeof ndx){
         let i = 0;
         const n = this.columnCount;
         while(i<n){
-          ndx[capi.sqlite3_column_name(this.pointer,i)] = this.get(i++);
+          ndx[capi.sqlite3_column_name(this.pointer,i)] =
+            __stmtGetColumn(this, i, asType);
+          ++i;
         }
         return ndx;
       }
       affirmColIndex(this, ndx);
-      switch(undefined===asType
-             ? capi.sqlite3_column_type(this.pointer, ndx)
-             : asType){
-          case capi.SQLITE_NULL: return null;
-          case capi.SQLITE_INTEGER:{
-            if(wasm.bigIntEnabled){
-              const rc = capi.sqlite3_column_int64(this.pointer, ndx);
-              if(rc>=Number.MIN_SAFE_INTEGER && rc<=Number.MAX_SAFE_INTEGER){
-                /* Coerce "normal" number ranges to normal number values,
-                   and only return BigInt-type values for numbers out of this
-                   range. */
-                return Number(rc).valueOf();
-              }
-              return rc;
-            }else{
-              const rc = capi.sqlite3_column_double(this.pointer, ndx);
-              if(rc>Number.MAX_SAFE_INTEGER || rc<Number.MIN_SAFE_INTEGER){
-                /* Throwing here is arguable but, since we're explicitly
-                   extracting an SQLITE_INTEGER-type value, it seems fair to throw
-                   if the extracted number is out of range for that type.
-                   This policy may be laxened to simply pass on the number and
-                   hope for the best, as the C API would do. */
-                toss3("Integer is out of range for JS integer range: "+rc);
-              }
-              //sqlite3.config.log("get integer rc=",rc,isInt32(rc));
-              return util.isInt32(rc) ? (rc | 0) : rc;
-            }
-          }
-          case capi.SQLITE_FLOAT:
-            return capi.sqlite3_column_double(this.pointer, ndx);
-          case capi.SQLITE_TEXT:
-            return capi.sqlite3_column_text(this.pointer, ndx);
-          case capi.SQLITE_BLOB: {
-            const n = capi.sqlite3_column_bytes(this.pointer, ndx),
-                  ptr = capi.sqlite3_column_blob(this.pointer, ndx),
-                  rc = new Uint8Array(n);
-            if(n){
-              rc.set(wasm.heap8u().slice(Number(ptr), Number(ptr)+n), 0);
-              if(this.db._blobXfer instanceof Array){
-                /* This is an optimization soley for the Worker1 API. It
-                   will transfer these to the main thread directly
-                   instead of copying them. */
-                this.db._blobXfer.push(rc.buffer);
-              }
-            }
-            return rc;
-          }
-          default: toss3("Don't know how to translate",
-                         "type of result column #"+ndx+".");
-      }
-      toss3("Not reached.");
+      return __stmtGetColumn(this, ndx, asType);
     },
     /** Equivalent to get(ndx) but coerces the result to an
         integer. */
@@ -15559,16 +15643,17 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      "vfs", each of which is itself an object with following properties:
 
      - `struct`: an sqlite3.StructBinder.StructType-type struct. This
-       must be a populated (except for the methods) object of type
+       must be a populated object (except for the methods) of type
        sqlite3_io_methods (for the "io" entry) or sqlite3_vfs (for the
        "vfs" entry).
 
      - `methods`: an object mapping sqlite3_io_methods method names
        (e.g. 'xClose') to JS implementations of those methods. The JS
        implementations must be call-compatible with their native
-       counterparts.
+       counterparts. That is: they must accept and return WASM data
+       types.
 
-     For each of those object, this function passes its (`struct`,
+     For each of those objects, this function passes its (`struct`,
      `methods`, (optional) `applyArgcCheck`) properties to
      installMethods().
 
@@ -15685,8 +15770,23 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
 
   /**
      Internal factory function for xVtab and xCursor impls.
+
+     methodName is the JS-string name of the wrapper.  StructType must
+     be a jaccwabyt StructType constructor.
   */
   const __xWrapFactory = function(methodName,StructType){
+    /**
+       If called with no arguments: creates a new StructType,
+       records its pointer-to-object mapping, and returns
+       it.
+
+       If called with arguments, ptr must (A) be a StructType object
+       or (B) a WASM point (which is assumed to be a native pointer
+       for a StructType instance). For (A), it behaves like the
+       no-args case and returns its first argument. For B then it
+       fetches the associated StructType object and returns it,
+       unmapping that object if removeMapping is true.
+    */
     return function(ptr,removeMapping=false){
       if(0===arguments.length) ptr = new StructType;
       if(ptr instanceof StructType){
@@ -15750,11 +15850,11 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
 
          sqlite3_vtab: to be called from sqlite3_module methods which
          take a (sqlite3_vtab*) pointer _except_ for
-         xDestroy()/xDisconnect(), in which case unget() or dispose().
+         xDestroy()/xDisconnect(), which should use unget() or dispose().
 
          sqlite3_vtab_cursor: to be called from any sqlite3_module methods
          which take a `sqlite3_vtab_cursor*` argument except xClose(),
-         in which case use unget() or dispose().
+         which should use unget() or dispose().
 
          Rule to remember: _never_ call dispose() on an instance
          returned by this function.
@@ -15815,7 +15915,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
 
   /**
      Given an sqlite3_module method name and error object, this
-     function returns sqlite3.capi.SQLITE_NOMEM if (e instanceof
+     function returns sqlite3.capi.SQLITE_NOMEM if (err instanceof
      sqlite3.WasmAllocError), else it returns its second argument. Its
      intended usage is in the methods of a sqlite3_vfs or
      sqlite3_module:
@@ -15856,6 +15956,11 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     else if(err instanceof sqlite3.SQLite3Error) rc = err.resultCode;
     return rc || capi.SQLITE_ERROR;
   };
+  /**
+     Used by vtab.xError to report errors if it is a function. Clients
+     are free to replace this with their own function, or to a
+     non-function to disable it.
+  */
   vtab.xError.errorReporter = 1 ? sqlite3.config.error.bind(sqlite3.config) : false;
 
   /**
@@ -15863,8 +15968,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      implementations. It must be passed the final argument to one of
      those methods (an output pointer to an int64 row ID) and the
      value to store at the output pointer's address. Returns the same
-     as wasm.poke() and will throw if the 1st or 2nd arguments
-     are invalid for that function.
+     as wasm.poke() and will throw if the 1st or 2nd arguments are
+     invalid for that function.
 
      Example xRowid impl:
 
@@ -15893,9 +15998,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
        are not mapped as-is, but are instead wrapped inside wrappers
        which translate exceptions into result codes of SQLITE_ERROR or
        SQLITE_NOMEM, depending on whether the exception is an
-       sqlite3.WasmAllocError. In the case of the xConnect and xCreate
-       methods, the exception handler also sets the output error
-       string to the exception's error string.
+       sqlite3.WasmAllocError.
 
      - OPTIONAL `struct`: a sqlite3.capi.sqlite3_module() instance. If
        not set, one will be created automatically. If the current
@@ -15911,8 +16014,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      If `catchExceptions` is false, it is up to the client to ensure
      that no exceptions escape the methods, as doing so would move
      them through the C API, leading to undefined
-     behavior. (vtab.xError() is intended to assist in reporting
-     such exceptions.)
+     behavior. vtab.xError() is intended to assist in reporting
+     such exceptions.
 
      Certain methods may refer to the same implementation. To simplify
      the definition of such methods:
@@ -15940,7 +16043,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      translated to 0 if the function returns a falsy value (e.g. if it
      does not have an explicit return). If `catchExceptions` is _not_
      active, the method implementations must explicitly return integer
-     values.
+     values (because this method does not wrap such calls to coerce
+     returns to integers).
 
      Throws on error. On success, returns the sqlite3_module object
      (`this` or `opt.struct` or a new sqlite3_module instance,
@@ -16448,7 +16552,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
 
   /**
      Add both store.jzClass and store.jzClass+"-journal"
-     to cache,storagePool.
+     to cache.storagePool.
   */
   const installStorageAndJournal = (store)=>
         cache.storagePool[store.jzClass] =
@@ -16642,6 +16746,35 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
   const pFileHandles = new Map();
 
   /**
+     Map of filename to lock objects with this structure:
+
+     {.lockType: int, .nShared: int}
+
+     Used by xLock(), xUnlock(), and xCheckReservedLock(). Modelled
+     after the "same-process, same-file, different-db-handle" locking
+     in os_unix.c.
+  */
+  const mapPathToLocks = new Map();
+
+  /**
+     Main xUnlock() impl for kvvfs, also used by xClose(). Expects an
+     xOpen()-created file handle object and the second argument to
+     xUnlock(). It returns void.
+  */
+  const unlockFile = function(fh, lockType){
+    if(fh.lockType<=lockType) return;
+    const lk = mapPathToLocks.get(fh.jzClass);
+    if(fh.lockType>capi.SQLITE_LOCK_SHARED){
+      lk.lockType = capi.SQLITE_LOCK_SHARED;
+    }
+    if(lockType===capi.SQLITE_LOCK_NONE && 0===--lk.nShared
+       /* Maintenance reminder: the && ordering is significant */){
+      mapPathToLocks.delete(fh.jzClass);
+    }
+    fh.lockType = lockType;
+  };
+
+  /**
      Original WASM functions for methods we partially override.
   */
   const originalMethods = {
@@ -16725,29 +16858,25 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
           else if(1===nBuf){
             wasm.poke(zBuf, 0);
             return nV;
-          }
-          if( nBuf+1<nV ){
+          }else if( nBuf<nV ){
             toss3(capi.SQLITE_RANGE,
                   "xRcrdRead()",jzClass,jXKey,
                   "input buffer is too small: need",
                   nV,"but have",nBuf);
+          }else if( nBuf > nV + 1 ){
+            nBuf = nV + 1;
           }
           if( 0 ){
             debug("xRcrdRead", nBuf, zClass, wasm.cstrToJs(zClass),
                   wasm.cstrToJs(zKey), nV, jV, store);
           }
-          const zV = cache.memBuffer(0);
-          //if( !zV ) return -3 /*OOM*/;
+          const nCopy = nV<nBuf ? nV : nBuf-1;
           const heap = wasm.heap8();
-          let i;
-          for(i = 0; i < nV; ++i){
-            heap[wasm.ptr.add(zV,i)] = jV.codePointAt(i) & 0xFF;
+          for (let i = 0; i < nCopy; ++i) {
+            heap[wasm.ptr.add(zBuf, i)] = jV.codePointAt(i) & 0xff;
           }
-          heap.copyWithin(
-            Number(zBuf), Number(zV), wasm.ptr.addn(zV, i)
-          );
-          heap[wasm.ptr.add(zBuf, nV)] = 0;
-          return nBuf;
+          heap[wasm.ptr.add(zBuf, nCopy)] = 0;
+          return nCopy;
         }catch(e){
           error("kvrecordRead()",e);
           cache.setError(e);
@@ -16846,7 +16975,12 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
             kvvfs?.log?.xOpen
               && debug("xOpen installed storage handle [",nm, nm+"-journal","]", s);
           }
-          pFileHandles.set(pProtoFile, {store: s, file: f, jzClass});
+          pFileHandles.set(pProtoFile, Object.assign(Object.create(null),{
+            store: s,
+            file: f,
+            jzClass,
+            lockType: 0
+          }));
           s.listeners && notifyListeners('open', s, s.files.length);
           return 0;
         }catch(e){
@@ -16946,7 +17080,16 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
           }
         }
         return 0;
-      }
+      },
+
+      /**
+         This VFS's xSleep() must be a no-op. In this environment,
+         only db handles within the same thread can ever come into
+         contention, and that contention cannot be resolved if
+         one of the handles sleeps in that same thread.
+         See also: forum:3f0794c5d8
+      */
+      xSleep: (pVfs,ms)=>0,
 
     }/*.vfs*/,
 
@@ -16965,6 +17108,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
           kvvfs?.log?.xClose && debug("xClose", pFile, h);
           if( h ){
             pFileHandles.delete(pFile);
+            unlockFile(h, capi.SQLITE_LOCK_NONE);
             const s = h.store;//storageForZClass(h.jzClass);
             s.files = s.files.filter((v)=>v!==h.file);
             if( --s.refc<=0 && s.deleteAtRefc0 ){
@@ -17043,6 +17187,82 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
         }
       },
 
+      xLock: function(pFile, iLock){
+        cache.popError();
+        try{
+          const h = pFileHandles.get(pFile);
+          if( capi.SQLITE_LOCK_NONE!==iLock ){
+            /* Tells the impl to re-read its size. */
+            originalMethods.ioDb.xLock(pFile, iLock);
+          }
+          /**
+             This impl is based off of the one in the opfs-sahpool VFS
+             impl which, in turn, is based off of the impl in
+             os_unix.c.
+          */
+          if(h.lockType>=iLock) return 0;
+          let lk = mapPathToLocks.get(h.jzClass);
+          if(!lk){
+            lk = Object.assign(Object.create(null),{
+              nShared: 0, lockType: capi.SQLITE_LOCK_NONE
+            });
+            mapPathToLocks.set(h.jzClass, lk);
+          }
+          if(h.lockType!==lk.lockType
+             && (lk.lockType>=capi.SQLITE_LOCK_PENDING
+                 || iLock>capi.SQLITE_LOCK_SHARED)){
+            return capi.SQLITE_BUSY;
+          }
+          if(iLock===capi.SQLITE_LOCK_SHARED){
+            ++lk.nShared;
+            if(lk.lockType===capi.SQLITE_LOCK_NONE) lk.lockType = iLock;
+          }else if(iLock===capi.SQLITE_LOCK_EXCLUSIVE && lk.nShared>1){
+            if(h.lockType===capi.SQLITE_LOCK_RESERVED){
+              h.lockType = lk.lockType = capi.SQLITE_LOCK_PENDING;
+            }
+            return capi.SQLITE_BUSY;
+          }else{
+            lk.lockType = iLock;
+          }
+          h.lockType = iLock;
+          return 0;
+        }catch(e){
+          error("xLock", e);
+          return cache.setError(e);
+        }
+      },
+
+      xUnlock: function(pFile, iLock){
+        cache.popError();
+        try{
+          if( capi.SQLITE_LOCK_NONE===iLock ){
+            /* Tells the impl to re-read its size on the next op. */
+            originalMethods.ioDb.xUnlock(pFile, iLock);
+          }
+          const h = pFileHandles.get(pFile);
+          unlockFile(h, iLock);
+          return 0;
+        }catch(e){
+          error("xUnlock", e);
+          return cache.setError(e);
+        }
+      },
+
+      xCheckReservedLock: function(pFile, pOut){
+        cache.popError();
+        try{
+          const h = pFileHandles.get(pFile);
+          const lk = mapPathToLocks.get(h.jzClass);
+          wasm.poke32(pOut,
+                      (!!lk && lk.lockType>capi.SQLITE_LOCK_SHARED)
+                      ? 1 : 0)
+          return 0;
+        }catch(e){
+          error("xCheckReservedLock", e);
+          return cache.setError(e);
+        }
+      },
+
 
     }/*.ioDb*/,
 
@@ -17051,6 +17271,9 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
          are copied as-is from the ioDb objects. Others are specific
          to journal files. */
       xClose: true,
+      xLock: true,
+      xUnlock: true,
+      xCheckReservedLock: true,
     }/*.ioJrnl*/
   }/*methodOverrides*/;
 
@@ -18280,11 +18503,15 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      called this way, the resolved value of the returned Promise is
      the number of bytes written to the target file.
 
-     It very specifically requires the input to be an SQLite3
-     database and throws if that's not the case.  It does so in
-     order to prevent this function from taking on a larger scope
-     than it is specifically intended to. i.e. we do not want it to
-     become a convenience for importing arbitrary files into OPFS.
+     It very specifically requires the input to be an SQLite3 database
+     and throws if that's not the case.  It does so in order to
+     prevent this function from taking on a larger scope than it is
+     specifically intended to. i.e. we do not want it to become a
+     convenience for importing arbitrary files into OPFS.  Caveat: as
+     of 3.54 in SEE builds, the "is this a db?" check is necessarily
+     lax to account for SEE-encrypted databases not having a legible
+     header. In such builds, only the db size is relevant for the
+     check.
 
      This routine rewrites the database header bytes in the output
      file (not the input array) to force disabling of WAL mode.
@@ -18766,6 +18993,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
            so would need to pass it to the async proxy. That would
            make it inordinately expensive considering that it's
            just a hint.
+
+           See: forum:a2f573b00cda1372
         */
         wasm.poke(pOut, 0, 'i32');
         return 0;
@@ -19171,7 +19400,6 @@ const initS11n = function(){
         const options = opfsUtil.options;
         const W = opfsVfs.worker =
               (()=>{
-                /* _Sigh_... */
                 /* Discussion explaining this formulation:
                    https://github.com/sqlite/sqlite-wasm/pull/159 */
                 const url = new URL('sqlite3-opfs-async-proxy.js', import.meta.url);
@@ -19210,7 +19438,7 @@ const initS11n = function(){
             //| capi.SQLITE_OPEN_DELETEONCLOSE
                   | capi.SQLITE_OPEN_MAIN_DB;
             const pOut = wasm.scopedAlloc(8);
-            const dbFile = "/sanity/check/file"+randomFilename(8);
+            const dbFile = "/sanity/check/file"+opfsUtil.randomFilename(8);
             const zDbFile = wasm.scopedAllocCString(dbFile);
             let rc;
             state.s11n.serialize("This is ä string.");
@@ -19299,7 +19527,7 @@ const initS11n = function(){
                 state.sabFileBufView = new Uint8Array(state.sabIO, 0, state.fileBufferSize);
                 state.sabS11nView = new Uint8Array(state.sabIO, state.sabS11nOffset, state.sabS11nSize);
                 opfsVfs.initS11n();
-                delete opfsVfs.initS11n;
+                opfsVfs.initS11n = null;
                 if(options.sanityChecks){
                   warn("Running sanity checks because of opfs-sanity-check URL arg...");
                   sanityCheck();
@@ -19565,6 +19793,9 @@ globalThis.sqlite3ApiBootstrap.initializersAsync.push(async (sqlite3)=>{
   - Also because of that, it does not require the SharedArrayBuffer,
   so can function without the COOP/COEP HTTP response headers.
 
+  - Also because of that, this one is much faster and the performance
+  gap increases as the job sizes increase.
+
   - It can hypothetically support Safari 16.4+, whereas the "opfs" VFS
   requires v17 due to a subworker/storage bug in 16.x which makes it
   incompatible with that VFS.
@@ -19669,7 +19900,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     /* Logging verbosity 3+ == everything, 2 == warnings+errors, 1 ==
        errors only. */
     verbosity: 2,
-    forceReinitIfPreviouslyFailed: false
+    forceReinitIfPreviouslyFailed: false,
+    preserveOnInitFailure: false
   });
 
   /** Logging routines, from most to least serious. */
@@ -19706,7 +19938,17 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       const pool = getPoolForPFile(pFile);
       pool.log('xCheckReservedLock');
       pool.storeErr();
-      wasm.poke32(pOut, 1);
+      const file = pool.getOFileForS3File(pFile);
+      wasm.poke32(
+        pOut,
+        pool.hasReservedLock(file.path) ? 1 : 0
+        /* As forum:b2fbb61642 elaborates on why we cannot simply
+           check file.lockType>=capi.SQLITE_LOCK_RESERVED
+           here. Summary: xOpen() has long allowed multiple handles to
+           the same filename and we need to check if any of them have
+           a lock to avoid a specific corruption case which that forum
+           thread demonstrates. */
+      );
       return 0;
     },
     xClose: function(pFile){
@@ -19716,6 +19958,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       if(file) {
         try{
           pool.log(`xClose ${file.path}`);
+          pool.unlockFile(file, capi.SQLITE_LOCK_NONE);
           pool.mapS3FileToOFile(pFile, false);
           file.sah.flush();
           if(file.flags & capi.SQLITE_OPEN_DELETEONCLOSE){
@@ -19747,8 +19990,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       pool.log(`xLock ${lockType}`);
       pool.storeErr();
       const file = pool.getOFileForS3File(pFile);
-      file.lockType = lockType;
-      return 0;
+      return pool.lockFile(file, lockType);
     },
     xRead: function(pFile,pDest,n,offset64){
       const pool = getPoolForPFile(pFile);
@@ -19802,7 +20044,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       const pool = getPoolForPFile(pFile);
       pool.log('xUnlock');
       const file = pool.getOFileForS3File(pFile);
-      file.lockType = lockType;
+      pool.unlockFile(file, lockType);
       return 0;
     },
     xWrite: function(pFile,pSrc,n,offset64){
@@ -19903,6 +20145,10 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
               ? pool.getPath(zName)
               : getRandomName();
         let sah = pool.getSAHForPath(path);
+        if(sah && (flags & capi.SQLITE_OPEN_CREATE)
+           && (flags & capi.SQLITE_OPEN_EXCLUSIVE)){
+          toss('file already exists:', path);
+        }
         if(!sah && (flags & capi.SQLITE_OPEN_CREATE)) {
           // File not found so try to create it.
           if(pool.getFileCount() < pool.getCapacity()) {
@@ -19969,7 +20215,6 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       /* Inherit certain VFS members from the default VFS,
          if available. */
       opfsVfs.$xRandomness = dVfs.$xRandomness;
-      opfsVfs.$xSleep = dVfs.$xSleep;
       dVfs.dispose();
     }
     if(!opfsVfs.$xRandomness && !vfsMethods.xRandomness){
@@ -19982,9 +20227,14 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
         return i;
       };
     }
-    if(!opfsVfs.$xSleep && !vfsMethods.xSleep){
-      vfsMethods.xSleep = (pVfs,ms)=>0;
-    }
+    /**
+       This VFS's xSleep() must be a no-op. In this environment,
+       only db handles within the same thread can ever come into
+       contention, and that contention cannot be resolved if
+       one of the handles sleeps in that same thread.
+       See also: forum:3f0794c5d8
+    */
+    vfsMethods.xSleep = (pVfs,ms)=>0;
     sqlite3.vfs.installVfs({
       vfs: {struct: opfsVfs, methods: vfsMethods}
     });
@@ -19992,8 +20242,10 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
   };
 
   /**
-     Class for managing OPFS-related state for the
-     OPFS SharedAccessHandle Pool sqlite3_vfs.
+     Class for managing OPFS-related state for the OPFS
+     SharedAccessHandle Pool sqlite3_vfs. This class is
+     internal-use-only, never exposed to the client. OpfsSAHPoolUtil
+     is the public-facing part.
   */
   class OpfsSAHPool {
     /* OPFS dir in which VFS metadata is stored. */
@@ -20015,7 +20267,11 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     /* Set of currently-unused SAHs. */
     #availableSAH = new Set();
     /* Maps (sqlite3_file*) to xOpen's file objects. */
-    #mapS3FileToOFile_ = new Map();
+    #mapS3FileToOFile  = new Map();
+    /* Maps client-side file names to the lock state of the files
+       opened via this pool: {nShared, lockType}, modelled after
+       os_unix.c:unixInodeInfo. */
+    #mapPathToLock = new Map();
 
     /* Maps SAH to an abstract File Object which contains
        various metadata about that handle. */
@@ -20031,6 +20287,9 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     // Logging verbosity. See optionDefaults.verbosity.
     #verbosity;
 
+    /**
+       Options are documented in installOpfsSAHPoolVfs().
+    */
     constructor(options = Object.create(null)){
       this.#verbosity = options.verbosity ?? optionDefaults.verbosity;
       this.vfsName = options.name || optionDefaults.name;
@@ -20057,6 +20316,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     warn(...args){this.#logImpl(1, ...args)};
     error(...args){this.#logImpl(0, ...args)};
 
+    /* Design note: at the time this method was added, the developer
+       was unaware that getter syntax was an option: get vfs(){...} */
     getVfs(){return this.#cVfs}
 
     /* Current pool capacity. */
@@ -20091,22 +20352,32 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     }
 
     /**
-       Reduce capacity by n, but can only reduce up to the limit
-       of currently-available SAHs. Returns a Promise which resolves
-       to the number of slots really removed.
+       Reduce capacity by n, but can only reduce up to the limit of
+       currently-available SAHs. Returns a Promise which resolves to
+       the number of slots really removed. Throws if removal of an
+       OPFS filesystem entry fails for any reason, in which case the
+       VFS itself is left in a well-defined state, possibly partially
+       reduced in capacity compared to before this call, but the file
+       which was unable to be removed is in an undefined state. It may
+       be orphaned and/or later recycled.
+
+       As of 3.54, throws if n is an invalid value. Prior to that
+       an invalid value could cause it to remove all entries.
     */
     async reduceCapacity(n){
+      if(!Number.isSafeInteger(n) || n < 0){
+        toss('Invalid capacity reduction:', n);
+      }
       let nRm = 0;
       for(const ah of Array.from(this.#availableSAH)){
         if(nRm === n || this.getFileCount() === this.getCapacity()){
           break;
         }
         const name = this.#mapSAHToName.get(ah);
-        //this.#unmapFileObject(ah);
         ah.close();
-        await this.#dhOpaque.removeEntry(name);
         this.#mapSAHToName.delete(ah);
         this.#availableSAH.delete(ah);
+        await this.#dhOpaque.removeEntry(name);
         ++nRm;
       }
       return nRm;
@@ -20122,6 +20393,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       this.#mapSAHToName.clear();
       this.#mapFilenameToSAH.clear();
       this.#availableSAH.clear();
+      this.#mapS3FileToOFile.clear();
+      this.#mapPathToLock.clear();
     }
 
     /**
@@ -20131,8 +20404,8 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
        throws, this.$error will contain the corresponding Error
        object.
 
-       If it throws, it releases any SAHs which it may have
-       acquired before the exception was thrown, leaving the VFS in a
+       If it throws, it waits for every pending acquisition to settle,
+       then releases all SAHs it acquired, leaving the VFS in a
        well-defined but unusable state.
 
        If clearFiles is true, the client-stored state of each file is
@@ -20146,27 +20419,31 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
           files.push([name,h]);
         }
       }
-      return Promise.all(files.map(async([name,h])=>{
-        try{
-          const ah = await h.createSyncAccessHandle()
-          this.#mapSAHToName.set(ah, name);
-          if(clearFiles){
-            ah.truncate(HEADER_OFFSET_DATA);
-            this.setAssociatedPath(ah, '', 0);
+      const results = await Promise.allSettled(files.map(async([name,h])=>{
+        const ah = await h.createSyncAccessHandle()
+        this.#mapSAHToName.set(ah, name);
+        if(clearFiles){
+          ah.truncate(HEADER_OFFSET_DATA);
+          this.setAssociatedPath(ah, '', 0);
+        }else{
+          const path = this.getAssociatedPath(ah);
+          if(path){
+            this.#mapFilenameToSAH.set(path, ah);
           }else{
-            const path = this.getAssociatedPath(ah);
-            if(path){
-              this.#mapFilenameToSAH.set(path, ah);
-            }else{
-              this.#availableSAH.add(ah);
-            }
+            this.#availableSAH.add(ah);
           }
-        }catch(e){
-          this.storeErr(e);
-          this.releaseAccessHandles();
-          throw e;
         }
       }));
+      const failure = results.find((r)=>'rejected'===r.status)
+      /* If any failures are found then clean up and re-throw the
+         first one. We "could" record them all but we can only throw
+         one of them (or an exception wrapping all of them, which
+         seems unnecessary). */;
+      if( failure ){
+        this.storeErr(failure.reason);
+        this.releaseAccessHandles();
+        throw failure.reason;
+      }
     }
 
     /**
@@ -20219,8 +20496,12 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
        into the given SAH. If path is an empty string then the file is
        disassociated from the pool but its previous name is preserved
        in the metadata.
+
+       If nameToRemove is truthy then it must be the "old" name when path
+       is falsy. This function removes the mapping of that name to an
+       SAH.
     */
-    setAssociatedPath(sah, path, flags){
+    setAssociatedPath(sah, path, flags, nameToRemove){
       const enc = textEncoder.encodeInto(path, this.#apBody);
       if(HEADER_MAX_PATH_SIZE <= enc.written + 1/*NUL byte*/){
         toss("Path too long:",path);
@@ -20237,6 +20518,17 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       const digest = this.computeDigest(this.#apBody, flags);
       //console.warn("setAssociatedPath(",path,") digest",digest);
       sah.write(this.#apBody, {at: 0});
+      if(nameToRemove){
+        /* The placement of this is very specific: between the above
+           write and the digest. If the above write fails,
+           nameToRemove remains in the mapping pool. If it succeeds,
+           nameToRemove is no longer available and needs to be removed
+           from the SAH mapping. If the write() _below_ fails, that
+           leaves us with a consistent world view.
+
+           Discussion: bugs:432f260aa787a53 */
+        this.#mapFilenameToSAH.delete(nameToRemove);
+      }
       sah.write(digest, {at: HEADER_OFFSET_DIGEST});
       sah.flush();
 
@@ -20326,9 +20618,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     deletePath(path) {
       const sah = this.#mapFilenameToSAH.get(path);
       if(sah) {
-        // Un-associate the name from the SAH.
-        this.#mapFilenameToSAH.delete(path);
-        this.setAssociatedPath(sah, '', 0);
+        this.setAssociatedPath(sah, '', 0, path);
       }
       return !!sah;
     }
@@ -20373,7 +20663,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
        xOpen file object.
     */
     getOFileForS3File(pFile){
-      return this.#mapS3FileToOFile_.get(pFile);
+      return this.#mapS3FileToOFile.get(pFile);
     }
     /**
        Maps or unmaps (if file is falsy) the given (sqlite3_file*)
@@ -20381,10 +20671,10 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     */
     mapS3FileToOFile(pFile,file){
       if(file){
-        this.#mapS3FileToOFile_.set(pFile, file);
+        this.#mapS3FileToOFile.set(pFile, file);
         setPoolForPFile(pFile, this);
       }else{
-        this.#mapS3FileToOFile_.delete(pFile);
+        this.#mapS3FileToOFile.delete(pFile);
         setPoolForPFile(pFile, false);
       }
     }
@@ -20442,7 +20732,6 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       return true;
     }
 
-
     /**
        "Pauses" this VFS by unregistering it from SQLite and
        relinquishing all open SAHs, leaving the associated files
@@ -20464,7 +20753,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
        @see unpauseVfs()
     */
     pauseVfs(){
-      if(this.#mapS3FileToOFile_.size>0){
+      if(this.#mapS3FileToOFile.size>0){
         sqlite3.SQLite3Error.toss(
           capi.SQLITE_MISUSE, "Cannot pause VFS",
           this.vfsName,"because it has opened files."
@@ -20535,7 +20824,11 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
             util.affirmDbHeader(chunk);
             checkedHeader = true;
           }
-          sah.write(chunk, {at:  HEADER_OFFSET_DATA + nWrote});
+          const n = sah.write(chunk, {at: HEADER_OFFSET_DATA + nWrote});
+          if( n!==chunk.byteLength ){
+            toss("Expected to write "+chunk.byteLength+
+                 "bytes but wrote"+n+".");
+          }
           nWrote += chunk.byteLength;
         }
         if( nWrote < 512 || 0!==nWrote % 512 ){
@@ -20543,7 +20836,7 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
         }
         if( !checkedHeader ){
           const header = new Uint8Array(20);
-          sah.read( header, {at: 0} );
+          sah.read( header, {at: HEADER_OFFSET_DATA} );
           util.affirmDbHeader( header );
         }
         sah.write(new Uint8Array([1,1]), {
@@ -20561,24 +20854,19 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     importDb(name, bytes){
       if( bytes instanceof ArrayBuffer ) bytes = new Uint8Array(bytes);
       else if( bytes instanceof Function ) return this.importDbChunked(name, bytes);
+      util.affirmIsDb(bytes);
       const sah = this.#mapFilenameToSAH.get(name)
             || this.nextAvailableSAH()
             || toss("No available handles to import to.");
       const n = bytes.byteLength;
-      if(n<512 || n%512!=0){
-        toss("Byte array size is invalid for an SQLite db.");
-      }
-      const header = "SQLite format 3";
-      for(let i = 0; i < header.length; ++i){
-        if( header.charCodeAt(i) !== bytes[i] ){
-          toss("Input does not contain an SQLite database header.");
-        }
-      }
       const nWrote = sah.write(bytes, {at: HEADER_OFFSET_DATA});
       if(nWrote != n){
         this.setAssociatedPath(sah, '', 0);
         toss("Expected to write "+n+" bytes but wrote "+nWrote+".");
       }else{
+        sah.truncate(HEADER_OFFSET_DATA + n
+                     /* Ensure no trailing junk when overwriting an
+                        existing file with a shorter one. */);
         sah.write(new Uint8Array([1,1]), {at: HEADER_OFFSET_DATA+18}
                    /* force db out of WAL mode */);
         this.setAssociatedPath(sah, name, capi.SQLITE_OPEN_MAIN_DB);
@@ -20586,8 +20874,72 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
       return nWrote;
     }
 
-  }/*class OpfsSAHPool*/;
+    /**
+       Returns true if any (sqlite3_file*) currently opened by this
+       pool using the given client-provided file name (as distinct from
+       its opaque name) holds a RESERVED or greater lock, else false.
+    */
+    hasReservedLock(filename){
+      const lk = this.#mapPathToLock.get(filename);
+      return !!lk && lk.lockType>capi.SQLITE_LOCK_SHARED;
+    }
 
+    /**
+       Implements xLock() for the given xOpen-generated file object.
+       This pool holds its SAHs exclusively, so its xOpen() represent
+       the only connections to a given file. The locks are held
+       separately from their file object in the same thread the same
+       way in which os_unix.c:unixLock() distinguishes multiple
+       connections of a single process which share an inode: a lock
+       which conflicts with another connection's lock fails with
+       SQLITE_BUSY, and a failed attempt to get from RESERVED to
+       EXCLUSIVE leaves a PENDING lock, which admits no new SHARED
+       locks.
+    */
+    lockFile(file, lockType){
+      if(file.lockType>=lockType) return 0;
+      let lk = this.#mapPathToLock.get(file.path);
+      if(!lk){
+        lk = Object.assign(Object.create(null),{
+          nShared: 0, lockType: capi.SQLITE_LOCK_NONE
+        });
+        this.#mapPathToLock.set(file.path, lk);
+      }
+      if(file.lockType!==lk.lockType
+         && (lk.lockType>=capi.SQLITE_LOCK_PENDING
+             || lockType>capi.SQLITE_LOCK_SHARED)){
+        return capi.SQLITE_BUSY;
+      }
+      if(lockType===capi.SQLITE_LOCK_SHARED){
+        ++lk.nShared;
+        if(lk.lockType===capi.SQLITE_LOCK_NONE) lk.lockType = lockType;
+      }else if(lockType===capi.SQLITE_LOCK_EXCLUSIVE && lk.nShared>1){
+        if(file.lockType===capi.SQLITE_LOCK_RESERVED){
+          file.lockType = lk.lockType = capi.SQLITE_LOCK_PENDING;
+        }
+        return capi.SQLITE_BUSY;
+      }else{
+        lk.lockType = lockType;
+      }
+      file.lockType = lockType;
+      return 0;
+    }
+
+    /** Implements xUnlock() for the given xOpen file object. */
+    unlockFile(file, lockType){
+      if(file.lockType<=lockType) return;
+      const lk = this.#mapPathToLock.get(file.path);
+      if(file.lockType>capi.SQLITE_LOCK_SHARED){
+        lk.lockType = capi.SQLITE_LOCK_SHARED;
+      }
+      if(lockType===capi.SQLITE_LOCK_NONE && 0===--lk.nShared
+         /* Maintenance reminder: the && ordering is significant */){
+        this.#mapPathToLock.delete(file.path);
+      }
+      file.lockType = lockType;
+    }
+
+  }/*class OpfsSAHPool*/;
 
   /**
      A OpfsSAHPoolUtil instance is exposed to clients in order to
@@ -20741,8 +21093,18 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      option is truthy _and_ the previous attempt to initialize this
      VFS with the same `name` failed, the VFS will attempt to
      initialize a second time instead of returning the cached
-     failure. See discussion at:
+     failure. See discussion at
      <https://github.com/sqlite/sqlite-wasm/issues/79>
+
+     - `preserveOnInitFailure`: (default=`false`) If truthy,
+     initialization failure unregisters and disposes of the VFS and
+     releases acquired handles without also deleting its storage. This
+     does not undo changes already made during initialization,
+     including `clearOnInit`. Otherwise, initialization failure
+     invokes this.removeVfs(), which attempts to delete the
+     pool. Retrying a cached initialization failure requires
+     `forceReinitIfPreviouslyFailed`. See discussion at
+     <https://sqlite.org/forum/forumpost/5664cd4baee50236>.
 
 
      Peculiarities of this VFS vis a vis other SQLite VFSes:
@@ -20780,16 +21142,17 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
 
      - byteArray exportFile(name)
 
-     Synchronously reads the contents of the given file into a Uint8Array
-     and returns it. This will throw if the given name is not currently
-     in active use or on I/O error. Note that the given name is _not_
-     visible directly in OPFS (or, if it is, it's not from this VFS).
+     Synchronously reads the contents of the given file into a
+     Uint8Array and returns it. This will throw if the given name is
+     not currently in active use or on I/O error. Because of how this
+     VFS maps names to storage, the given name is _not_ visible
+     directly in OPFS (or, if it is, it's not from this VFS).
 
      - number getCapacity()
 
-     Returns the number of files currently contained
-     in the SAH pool. The default capacity is only large enough for one
-     or two databases and their associated temp files.
+     Returns the number of files currently contained in the SAH
+     pool. The default capacity is only large enough for one or two
+     databases and their associated temp files.
 
      - number getFileCount()
 
@@ -20806,11 +21169,14 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      Imports the contents of an SQLite database, provided as a byte
      array or ArrayBuffer, under the given name, overwriting any
      existing content. Throws if the pool has no available file slots,
-     on I/O error, or if the input does not appear to be a
-     database. In the latter case, only a cursory examination is made.
+     on I/O error, or if the input does not appear to be a database.
+     In the latter case, only a cursory examination is made to
+     determine whether the input is a db (and only in non-SEE builds,
+     as we cannot distinguish encrypted DBs from garbage input).
+
      Results are undefined if the given db name refers to an opened
-     db.  Note that this routine is _only_ for importing database
-     files, not arbitrary files, the reason being that this VFS will
+     db.  This routine is _only_ for importing database files, not
+     arbitrary files, the reason being that this VFS will
      automatically clean up any non-database files so importing them
      is pointless.
 
@@ -20825,7 +21191,10 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
      called this way is the size of the resulting database.
 
      On success this routine rewrites the database header bytes in the
-     output file (not the input array) to force disabling of WAL mode.
+     output file (not the input array) to force disabling of WAL mode,
+     (A) for historical reasons and (B) getting WAL to work in this
+     build requires doing a (pragma locking_mode=exclusive) on the db
+     before using it.
 
      On a write error, the handle is removed from the pool and made
      available for re-use.
@@ -20942,6 +21311,24 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
     }
 
     /**
+       An interal detail of OpfsSAHPool, called only by initPromises().
+
+       Unregisters and disposes of OpfsSAHPool thePool, releasing all
+       of its SAHs without deleting its files. Used when
+       initialization fails and the preserveOnInitFailure option is
+       set. This is a no-op if thePool.getVfs().pointer is falsy. Returns the
+       undefined value.
+    */
+    const unregisterVfs = (thePool)=>{
+      const cVfs = thePool.getVfs();
+      if( cVfs?.pointer ){
+        capi.sqlite3_vfs_unregister(cVfs.pointer);
+        cVfs.dispose();
+        thePool.releaseAccessHandles();
+      }
+    };
+
+    /**
        Maintenance reminder: the order of ASYNC ops in this function
        is significant. We need to have them all chained at the very
        end in order to be able to catch a race condition where
@@ -20978,7 +21365,11 @@ globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
         thePool.log("VFS initialized.");
         return poolUtil;
       }).catch(async (e)=>{
-        await thePool.removeVfs().catch(()=>{});
+        if( options.preserveOnInitFailure ){
+          unregisterVfs(thePool);
+        }else{
+          await thePool.removeVfs().catch(()=>{});
+        }
         throw e;
       });
     }).catch((err)=>{
