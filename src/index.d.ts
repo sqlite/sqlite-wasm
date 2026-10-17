@@ -2246,12 +2246,6 @@ export type Sqlite3Static = {
     clearOnInit?: boolean;
 
     /**
-     * Defaults to false. Retry initialization after a previously cached failure
-     * instead of returning that failure again.
-     */
-    forceReinitIfPreviouslyFailed?: boolean;
-
-    /**
      * Defaults to false. On initialization failure, unregister the VFS and
      * release acquired handles without deleting the pool's storage. This does
      * not undo changes already made, including clearOnInit. Retrying a cached
