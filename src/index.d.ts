@@ -354,6 +354,17 @@ export class PreparedStatement {
   reset(alsoClearBinds?: boolean): this;
 
   /**
+   * Resets the statement and returns the SQLite result code instead of throwing
+   * for a SQLite error. Retains bindings unless `alsoClearBinds` is truthy.
+   * Still throws if finalized or locked by a Database.exec() callback.
+   * Preserves OO1 bookkeeping; use this instead of calling sqlite3_reset()
+   * directly on an OO1 statement.
+   *
+   * @since SQLite 3.54
+   */
+  resetNoThrow(alsoClearBinds?: boolean): Sqlite3Result;
+
+  /**
    * Steps the statement one time. If the result indicates that a row of data is
    * available, a truthy value is returned. If no row of data is available, a
    * falsy value is returned. Throws on error.
@@ -1539,6 +1550,8 @@ export class WasmAllocError extends Error {
 /** Exception class used primarily by the oo1 API. */
 export class SQLite3Error extends Error {
   constructor(message: string);
+  /** Creates an error with the given SQLite result code and its error text. */
+  constructor(resultCode: number);
   resultCode: number;
 }
 
@@ -2231,6 +2244,16 @@ export type Sqlite3Static = {
      * not survive a page reload.
      */
     clearOnInit?: boolean;
+
+    /**
+     * Defaults to false. On initialization failure, unregister the VFS and
+     * release acquired handles without deleting the pool's storage. This does
+     * not undo changes already made, including clearOnInit. Retrying a cached
+     * failure also requires forceReinitIfPreviouslyFailed.
+     *
+     * @since SQLite 3.54
+     */
+    preserveOnInitFailure?: boolean;
 
     /**
      * (default=6) Specifies the default capacity of the VFS.
@@ -3648,6 +3671,43 @@ export type CAPI = {
   sqlite3_index_info: typeof sqlite3_index_info;
 
   /**
+   * Starts copying a database between distinct connections. Schema names are
+   * usually "main". Returns 0 on failure; inspect the destination's error code
+   * and message. On success, call sqlite3_backup_finish() exactly once, even
+   * when stepping fails. Do not otherwise use the destination connection until
+   * the backup has been finished.
+   *
+   * See https://sqlite.org/c3ref/backup_finish.html
+   * @since SQLite Wasm 3.54
+   */
+  sqlite3_backup_init: (
+    dest: DbPtr,
+    destName: string | WasmPointer,
+    source: DbPtr,
+    sourceName: string | WasmPointer,
+  ) => WasmPointer;
+
+  /**
+   * Copies up to pageCount pages, or all remaining pages if negative. Returns
+   * SQLITE_DONE when complete, SQLITE_OK when more pages remain, or an error
+   * code. SQLITE_BUSY and SQLITE_LOCKED can be retried later.
+   */
+  sqlite3_backup_step: (backup: WasmPointer, pageCount: number) => Sqlite3Result;
+
+  /**
+   * Releases and invalidates a backup handle, rolling back an incomplete copy.
+   * Returns SQLITE_OK or a prior fatal backup error; SQLITE_OK alone does not
+   * indicate that all pages were copied.
+   */
+  sqlite3_backup_finish: (backup: WasmPointer) => Sqlite3Result;
+
+  /** Returns the pages remaining as of the most recent backup_step() call. */
+  sqlite3_backup_remaining: (backup: WasmPointer) => number;
+
+  /** Returns the total source pages as of the most recent backup_step() call. */
+  sqlite3_backup_pagecount: (backup: WasmPointer) => number;
+
+  /**
    * Returns a string corresponding to the {@link CAPI#SQLITE_VERSION} macro.
    * This function is provided for use in DLLs.
    *
@@ -4414,9 +4474,13 @@ export type CAPI = {
       | CAPI['SQLITE_LIMIT_VARIABLE_NUMBER']
       | CAPI['SQLITE_LIMIT_TRIGGER_DEPTH']
       | CAPI['SQLITE_LIMIT_WORKER_THREADS']
-      | CAPI['SQLITE_LIMIT_PARSER_DEPTH'],
+      | CAPI['SQLITE_LIMIT_PARSER_DEPTH']
+      /** SQLITE_LIMIT_SCHEMA: maximum number of schema objects (since 3.54). */
+      | 13
+      /** SQLITE_LIMIT_TRIGGER_STEPS: maximum statements per trigger (since 3.54). */
+      | 14,
     newVal: number,
-  ) => Sqlite3Result;
+  ) => number;
 
   /**
    * Compiles a prepared statement.
@@ -4643,6 +4707,13 @@ export type CAPI = {
    * See https://www.sqlite.org/c3ref/bind_blob.html
    */
   sqlite3_bind_null: (stmt: StmtPtr, idx: number) => Sqlite3Result;
+
+  /**
+   * Binds a BLOB of n bytes filled with zeroes at the 1-based parameter index.
+   * A negative length produces an empty BLOB.
+   * See https://sqlite.org/c3ref/bind_blob.html
+   */
+  sqlite3_bind_zeroblob: (stmt: StmtPtr, idx: number, n: number) => Sqlite3Result;
 
   /**
    * Bind a `TEXT` value to a parameter in a prepared statement.
@@ -6408,6 +6479,22 @@ export type CAPI = {
   ) => Sqlite3Result;
 
   /**
+   * Configures a virtual table from its xCreate() or xConnect() callback.
+   * The Wasm binding always requires three arguments. Pass 0 for options that
+   * ignore the third argument; CONSTRAINT_SUPPORT uses it as an enable flag.
+   * See https://sqlite.org/c3ref/vtab_config.html
+   */
+  sqlite3_vtab_config: (
+    db: DbPtr,
+    op:
+      | CAPI['SQLITE_VTAB_CONSTRAINT_SUPPORT']
+      | CAPI['SQLITE_VTAB_INNOCUOUS']
+      | CAPI['SQLITE_VTAB_DIRECTONLY']
+      | CAPI['SQLITE_VTAB_USES_ALL_SCHEMAS'],
+    value: number,
+  ) => Sqlite3Result;
+
+  /**
    * Determine The Virtual Table Conflict Policy
    *
    * This function may only be called from within a call to the `xUpdate` method
@@ -7927,6 +8014,34 @@ export type CAPI = {
    */
   sqlite3_js_db_uses_vfs: (db: DbPtr, vfsName: string, dbName: string) => boolean;
 
+  /**
+   * Calls a synchronous callback up to maxTimes total attempts. Retries when
+   * it returns SQLITE_BUSY or throws SQLite3Error with that resultCode.
+   * Returns any other result, propagates other errors, and throws SQLite3Error
+   * when attempts are exhausted. beforeRetry receives the attempt number
+   * starting at 2; its return value is ignored. No sleeping is performed.
+   * Returns undefined if maxTimes permits no attempts.
+   *
+   * @since SQLite 3.53
+   */
+  sqlite3_js_retry_busy: <T>(
+    maxTimes: number,
+    callback: () => T,
+    beforeRetry?: (attempt: number) => void,
+  ) => T | undefined;
+
+  /**
+   * Converts flexible SQL input to a JS string; unsupported inputs yield
+   * undefined. Arrays are joined without separators, byte buffers are decoded
+   * as UTF-8, and WASM pointers refer to NUL-terminated strings.
+   *
+   * Known upstream issue in 3.54.1: non-string inputs throw ReferenceError
+   * because the implementation references an undefined variable.
+   *
+   * @since SQLite 3.44
+   */
+  sqlite3_js_sql_to_string: (sql: FlexibleString) => string | undefined;
+
   /** Returns an array of the names of all currently-registered sqlite3 VFSes. */
   sqlite3_js_vfs_list: () => string[];
 
@@ -8413,6 +8528,12 @@ export type CAPI = {
   SQLITE_DETERMINISTIC: 2048;
   SQLITE_DIRECTONLY: 524_288;
   SQLITE_INNOCUOUS: 2_097_152;
+  /** The function inspects argument subtypes with sqlite3_value_subtype(). */
+  SQLITE_SUBTYPE: 1_048_576;
+  /** The function sets its result subtype with sqlite3_result_subtype(). */
+  SQLITE_RESULT_SUBTYPE: 16_777_216;
+  /** The aggregate internally orders its first argument. */
+  SQLITE_SELFORDER1: 33_554_432;
   SQLITE_VERSION_NUMBER: number;
   SQLITE_VERSION: string;
   SQLITE_SOURCE_ID: string;
