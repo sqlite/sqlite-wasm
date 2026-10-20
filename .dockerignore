@@ -1,0 +1,4 @@
+**
+!Dockerfile
+!scripts/
+!scripts/build-sqlite3-wasm.sh
