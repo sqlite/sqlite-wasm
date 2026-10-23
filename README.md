@@ -28,12 +28,12 @@ npm install @sqlite.org/sqlite-wasm
 
 There are two ways to use SQLite Wasm:
 
-- [in a worker](#in-a-worker-with-opfs-if-available)
+- [in a worker](#in-a-worker-with-opfs)
 - [in the main thread](#in-the-main-thread-without-opfs)
 
 Only the worker versions allow you to use the origin private file system (OPFS) storage back-end.
 
-### In a worker (with OPFS if available):
+### In a worker (with OPFS):
 
 > [!Warning]
 >
@@ -43,41 +43,26 @@ Only the worker versions allow you to use the origin private file system (OPFS) 
 >
 > `Cross-Origin-Embedder-Policy: require-corp`
 
-```js
-// In `main.js`.
-const worker = new Worker('worker.js', { type: 'module' });
+```ts
+// In `main.ts`.
+const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
 ```
 
-```js
-// In `worker.js`.
+```ts
+// In `worker.ts`.
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
-const start = (sqlite3) => {
-  console.log('Running SQLite3 version', sqlite3.version.libVersion);
-  const db =
-    'opfs' in sqlite3
-      ? new sqlite3.oo1.OpfsDb('/mydb.sqlite3')
-      : new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
-  console.log(
-    'opfs' in sqlite3
-      ? `OPFS is available, created persisted database at ${db.filename}`
-      : `OPFS is not available, created transient database ${db.filename}`,
-  );
+const sqlite3 = await sqlite3InitModule();
+
+console.log('Running SQLite3 version', sqlite3.version.libVersion);
+
+const db = new sqlite3.oo1.OpfsDb('/mydb.sqlite3');
+
+try {
   // Your SQLite code here.
-};
-
-const initializeSQLite = async () => {
-  try {
-    console.log('Loading and initializing SQLite3 module...');
-    const sqlite3 = await sqlite3InitModule();
-    console.log('Done initializing. Running demo...');
-    start(sqlite3);
-  } catch (err) {
-    console.error('Initialization error:', err.name, err.message);
-  }
-};
-
-initializeSQLite();
+} finally {
+  db.close();
+}
 ```
 
 The `db` object above implements the
@@ -85,35 +70,29 @@ The `db` object above implements the
 
 ### In the main thread (without OPFS):
 
-```js
+```ts
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
-const start = (sqlite3) => {
-  log('Running SQLite3 version', sqlite3.version.libVersion);
-  const db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
-  // Your SQLite code here.
-};
-const initializeSQLite = async () => {
-  try {
-    console.log('Loading and initializing SQLite3 module...');
-    const sqlite3 = await sqlite3InitModule();
-    console.log('Done initializing. Running demo...');
-    start(sqlite3);
-  } catch (err) {
-    console.error('Initialization error:', err.name, err.message);
-  }
-};
+const sqlite3 = await sqlite3InitModule();
 
-initializeSQLite();
+console.log('Running SQLite3 version', sqlite3.version.libVersion);
+
+const db = new sqlite3.oo1.DB('/mydb.sqlite3', 'ct');
+
+try {
+  // Your SQLite code here.
+} finally {
+  db.close();
+}
 ```
 
 The `db` object above implements the
 [Object-Oriented API #1](https://sqlite.org/wasm/doc/trunk/api-oo1.md).
 
-## Usage with vite
+## Usage with Vite
 
-If you are using [vite](https://vitejs.dev/), you need to add the following config option in
-`vite.config.js`:
+If you are using [Vite](https://vitejs.dev/), you need to add the following config option in
+`vite.config.ts`:
 
 ```js
 import { defineConfig } from 'vite';
@@ -131,97 +110,31 @@ export default defineConfig({
 });
 ```
 
-Check out a [sample project](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=main.js) that shows
-this in action.
+See our [OPFS](https://github.com/sqlite/sqlite-wasm/tree/main/demos/opfs-demo) and
+[SAH pool](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-demo) examples for working
+Vite projects.
 
-## Demo
+## Examples
 
-See the [demo](https://github.com/sqlite/sqlite-wasm/tree/main/demo) folder for examples of how to
-use this in the main thread and in a worker. (Note that the worker variant requires special HTTP
-headers, so it can't be hosted on GitHub Pages.) An example that shows how to use this with vite is
-available on [StackBlitz](https://stackblitz.com/edit/vitejs-vite-ttrbwh?file=main.js).
+- [Main thread](https://github.com/sqlite/sqlite-wasm/tree/main/demos/main-thread-demo)
+- [Worker](https://github.com/sqlite/sqlite-wasm/tree/main/demos/in-worker-demo)
+- [OPFS](https://github.com/sqlite/sqlite-wasm/tree/main/demos/opfs-demo)
+- [OPFS with Web Locks](https://github.com/sqlite/sqlite-wasm/tree/main/demos/opfs-wl-demo)
+- [Key-value storage (kvvfs)](https://github.com/sqlite/sqlite-wasm/tree/main/demos/kvvfs-demo)
+- [SAH pool with Vite](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-demo)
+- [SAH pool with webpack](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-webpack-demo)
+- [SAH pool with Parcel](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-parcel-demo)
+- [SAH pool with Rsbuild](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-rsbuild-demo)
 
 ## Projects using this package
 
 See the list of [npm dependents](https://www.npmjs.com/browse/depended/@sqlite.org/sqlite-wasm) for
 this package.
 
-## Deploying a new version
+## Contributing
 
-(These steps can only be executed by maintainers.)
-
-1. Manually trigger the [GitHub Actions workflow](../../actions/workflows/build-wasm.yml). By
-   default, it uses the latest SQLite tag. This pull request will contain the latest `sqlite3.wasm`
-   and related bindings.
-
-2. Once the above pull request is validated and merged, update the version number in `package.json`,
-   reflecting the current [SQLite version number](https://sqlite.org/download.html) and add a build
-   identifier suffix like `-build1`. The complete version number should read something like
-   `3.41.2-build1`.
-
-## Building the SQLite Wasm locally
-
-1. Build the Docker image:
-
-   ```bash
-   docker build -t sqlite-wasm-builder:env .
-   ```
-
-2. Run the build:
-
-   **Unix (Linux/macOS):**
-
-   ```bash
-   docker run --rm \
-     -e SQLITE_REF="master" \
-     -v "$(pwd)/out":/out \
-     -v "$(pwd)/src/bin":/src/bin \
-     sqlite-wasm-builder:env build
-   ```
-
-   **Windows (PowerShell):**
-
-   ```powershell
-   docker run --rm `
-     -e SQLITE_REF="master" `
-     -v "${PWD}/out:/out" `
-     -v "${PWD}/src/bin:/src/bin" `
-     sqlite-wasm-builder:env build
-   ```
-
-   **Windows (Command Prompt):**
-
-   ```cmd
-   docker run --rm ^
-     -e SQLITE_REF="master" ^
-     -v "%cd%/out:/out" ^
-     -v "%cd%/src/bin:/src/bin" ^
-     sqlite-wasm-builder:env build
-   ```
-
-## Running tests
-
-The test suite consists of Node.js tests and browser-based tests (using Vitest Browser Mode). Tests
-aim to sanity-check the exported scripts. We test for correct exports and **very** basic
-functionality.
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Install Playwright browsers (required for browser tests):
-
-   ```bash
-   npx playwright install chromium --with-deps --no-shell
-   ```
-
-3. Run all tests:
-
-   ```bash
-   npm test
-   ```
+See [CONTRIBUTING.md](https://github.com/sqlite/sqlite-wasm/blob/main/CONTRIBUTING.md) for
+deployment, local build, and testing instructions.
 
 ## Deprecations
 
@@ -229,10 +142,6 @@ The Worker1 and Promiser1 APIs are, as of 2026-04-15, deprecated. They _will not
 they also will not be extended further. It is their author's considered opinion that they are too
 fragile, too imperformant, and too limited for any non-toy software, and their use is _actively
 discouraged_. The "correct" way to use this library is documented in [Usage](#usage) section above.
-
-## License
-
-Apache 2.0.
 
 ## Acknowledgements
 
