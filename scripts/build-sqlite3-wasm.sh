@@ -106,8 +106,56 @@ make sqlite3.c
 
 cd ext/wasm
 
-log "Running make -j4 npm (ext/wasm)"
-make -j4 npm
+# SQLite invokes wasm-opt with --all-features. Newer Binaryen versions then
+# emit compact imports, which are not supported by our browser/Node targets.
+# Append the compatibility flag after SQLite's flags, preserving its passes.
+WASM_OPT_WRAPPER="$(mktemp /tmp/sqlite-wasm-opt.XXXXXX)"
+printf '#!/usr/bin/env bash\nexec %q "$@" --disable-compact-imports\n' \
+  "$(command -v wasm-opt)" > "$WASM_OPT_WRAPPER"
+chmod +x "$WASM_OPT_WRAPPER"
+
+log "Running make -j4 npm with Cross-Origin Storage for the bundler-friendly browser loader"
+make -j4 npm 'emcc.flags.bundler=-sCROSS_ORIGIN_STORAGE' "bin.wasm-opt=$WASM_OPT_WRAPPER"
+
+# SQLite strips the Wasm after emcc embeds its hash. Update only the COS
+# loader's hash to describe the final, shared binary before packaging it.
+log "Updating and verifying the COS hash after Wasm post-processing"
+python3 - <<'PY'
+import hashlib
+from pathlib import Path
+import re
+import zipfile
+
+wasm = Path('jswasm/sqlite3.wasm')
+loader = Path('jswasm/sqlite3-bundler-friendly.mjs')
+digest = hashlib.sha256(wasm.read_bytes()).hexdigest()
+pattern = re.compile(
+    r"(Module\['wasmHash'\]\s*=\s*\{\s*algorithm:\s*'SHA-256',\s*value:\s*')"
+    r"[0-9a-f]{64}('\s*\})"
+)
+source, count = pattern.subn(lambda match: match[1] + digest + match[2], loader.read_text())
+if count != 1:
+    raise SystemExit(f'Expected exactly one COS hash in {loader}, found {count}')
+loader.write_text(source)
+
+# The npm target has already created the archive. Replace its loader so the
+# extracted artifacts and archived binary have the same verified hash.
+with zipfile.ZipFile('npm-bundle.zip') as archive:
+    entries = [(info, archive.read(info)) for info in archive.infolist()]
+with zipfile.ZipFile('npm-bundle.zip', 'w') as archive:
+    for info, data in entries:
+        if info.filename == loader.as_posix():
+            data = loader.read_bytes()
+        archive.writestr(info, data)
+with zipfile.ZipFile('npm-bundle.zip') as archive:
+    packaged_loader = archive.read(loader.as_posix()).decode()
+    packaged_digest = hashlib.sha256(archive.read(wasm.as_posix())).hexdigest()
+    if packaged_digest != digest or not pattern.search(packaged_loader):
+        raise SystemExit('Packaged COS loader or Wasm hash verification failed')
+    if pattern.search(packaged_loader)[0] != pattern.search(source)[0]:
+        raise SystemExit('Packaged COS hash differs from the final Wasm hash')
+print(f'COS SHA-256: {digest}')
+PY
 
 # ensure artifact exists
 if [ ! -f npm-bundle.zip ]; then

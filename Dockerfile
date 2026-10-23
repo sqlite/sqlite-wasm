@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG EMSDK_VERSION=5.0.5
+ARG EMSDK_VERSION=6.0.13
 FROM emscripten/emsdk:${EMSDK_VERSION} AS wasm-tools
 
 # The SDK already supplies the build dependencies. SQLite's release build
