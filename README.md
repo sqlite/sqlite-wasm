@@ -110,8 +110,8 @@ export default defineConfig({
 });
 ```
 
-See our [OPFS](./demos/opfs-demo) and [SAH pool](./demos/sahpool-demo) examples for working
-Vite projects.
+See our [OPFS](./demos/opfs-demo) and [SAH pool](./demos/sahpool-demo) examples for working Vite
+projects.
 
 ## Examples
 
