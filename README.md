@@ -110,21 +110,20 @@ export default defineConfig({
 });
 ```
 
-See our [OPFS](https://github.com/sqlite/sqlite-wasm/tree/main/demos/opfs-demo) and
-[SAH pool](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-demo) examples for working
+See our [OPFS](./demos/opfs-demo) and [SAH pool](./demos/sahpool-demo) examples for working
 Vite projects.
 
 ## Examples
 
-- [Main thread](https://github.com/sqlite/sqlite-wasm/tree/main/demos/main-thread-demo)
-- [Worker](https://github.com/sqlite/sqlite-wasm/tree/main/demos/in-worker-demo)
-- [OPFS](https://github.com/sqlite/sqlite-wasm/tree/main/demos/opfs-demo)
-- [OPFS with Web Locks](https://github.com/sqlite/sqlite-wasm/tree/main/demos/opfs-wl-demo)
-- [Key-value storage (kvvfs)](https://github.com/sqlite/sqlite-wasm/tree/main/demos/kvvfs-demo)
-- [SAH pool with Vite](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-demo)
-- [SAH pool with webpack](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-webpack-demo)
-- [SAH pool with Parcel](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-parcel-demo)
-- [SAH pool with Rsbuild](https://github.com/sqlite/sqlite-wasm/tree/main/demos/sahpool-rsbuild-demo)
+- [Main thread](./demos/main-thread-demo)
+- [Worker](./demos/in-worker-demo)
+- [OPFS](./demos/opfs-demo)
+- [OPFS with Web Locks](./demos/opfs-wl-demo)
+- [Key-value storage (kvvfs)](./demos/kvvfs-demo)
+- [SAH pool with Vite](./demos/sahpool-demo)
+- [SAH pool with webpack](./demos/sahpool-webpack-demo)
+- [SAH pool with Parcel](./demos/sahpool-parcel-demo)
+- [SAH pool with Rsbuild](./demos/sahpool-rsbuild-demo)
 
 ## Projects using this package
 
@@ -133,8 +132,7 @@ this package.
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/sqlite/sqlite-wasm/blob/main/CONTRIBUTING.md) for
-deployment, local build, and testing instructions.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for deployment, local build, and testing instructions.
 
 ## Deprecations
 
