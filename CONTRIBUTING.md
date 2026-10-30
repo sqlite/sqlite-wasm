@@ -38,7 +38,6 @@ To rebuild the underlying SQLite Wasm binaries, use Docker:
    ```bash
    docker run --rm \
      -e SQLITE_REF="master" \
-     -v "$(pwd)/out":/out \
      -v "$(pwd)/src/bin":/src/bin \
      sqlite-wasm-builder:env build
    ```
@@ -48,7 +47,6 @@ To rebuild the underlying SQLite Wasm binaries, use Docker:
    ```powershell
    docker run --rm `
      -e SQLITE_REF="master" `
-     -v "${PWD}/out:/out" `
      -v "${PWD}/src/bin:/src/bin" `
      sqlite-wasm-builder:env build
    ```
@@ -58,7 +56,6 @@ To rebuild the underlying SQLite Wasm binaries, use Docker:
    ```cmd
    docker run --rm ^
      -e SQLITE_REF="master" ^
-     -v "%cd%/out:/out" ^
      -v "%cd%/src/bin:/src/bin" ^
      sqlite-wasm-builder:env build
    ```
