@@ -174,7 +174,6 @@ this package.
    ```bash
    docker run --rm \
      -e SQLITE_REF="master" \
-     -v "$(pwd)/out":/out \
      -v "$(pwd)/src/bin":/src/bin \
      sqlite-wasm-builder:env build
    ```
@@ -184,7 +183,6 @@ this package.
    ```powershell
    docker run --rm `
      -e SQLITE_REF="master" `
-     -v "${PWD}/out:/out" `
      -v "${PWD}/src/bin:/src/bin" `
      sqlite-wasm-builder:env build
    ```
@@ -194,7 +192,6 @@ this package.
    ```cmd
    docker run --rm ^
      -e SQLITE_REF="master" ^
-     -v "%cd%/out:/out" ^
      -v "%cd%/src/bin:/src/bin" ^
      sqlite-wasm-builder:env build
    ```

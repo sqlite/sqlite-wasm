@@ -96,7 +96,7 @@ if (ENVIRONMENT_IS_NODE) {
 /**
    This file was preprocessed using:
 
-   ./c-pp -o ./bld/pre-js.node.js -Dtarget:node -Dtarget:es6-module -Dtarget:es6-bundler-friendly -Dunsupported-build -Dsqlite3.wasm.base64=./jswasm/sqlite3.wasm -DModule.instantiateWasm api/pre-js.c-pp.js
+   ./c-pp -o ./bld/pre-js.node.js -Dtarget:node -Dtarget:es6-module -Dtarget:es6-bundler-friendly -Dunsupported-build api/pre-js.c-pp.js
 */
 /**
    UNSUPPORTED BUILD:
@@ -16484,7 +16484,7 @@ const toExportForESM =
 
       Module.instantiateWasm() is found in pre-js.c-pp.js.
     */
-    wasmFilename: 'sqlite3.wasm' /* replaced by the build process */
+    wasmFilename: '<<<sqlite3.wasm>>>' /* replaced by the build process */
   });
   sIMS.debugModule =
     sIMS.urlParams.has('sqlite3.debugModule')

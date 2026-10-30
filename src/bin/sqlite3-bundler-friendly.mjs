@@ -90,7 +90,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 /**
    This file was preprocessed using:
 
-   ./c-pp -o ./bld/pre-js.bundler.js -Dtarget:es6-module -Dtarget:es6-bundler-friendly -Dsqlite3.wasm.base64=./jswasm/sqlite3.wasm -DModule.instantiateWasm api/pre-js.c-pp.js
+   ./c-pp -o ./bld/pre-js.bundler.js -Dtarget:es6-module -Dtarget:es6-bundler-friendly api/pre-js.c-pp.js
 */
 /* END FILE: api/pre-js.js. */
 // end include: ./bld/pre-js.bundler.js
@@ -21837,7 +21837,7 @@ const toExportForESM =
 
       Module.instantiateWasm() is found in pre-js.c-pp.js.
     */
-    wasmFilename: 'sqlite3.wasm' /* replaced by the build process */
+    wasmFilename: '<<<sqlite3.wasm>>>' /* replaced by the build process */
   });
   sIMS.debugModule =
     sIMS.urlParams.has('sqlite3.debugModule')

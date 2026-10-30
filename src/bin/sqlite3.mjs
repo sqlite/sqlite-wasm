@@ -90,7 +90,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 /**
    This file was preprocessed using:
 
-   ./c-pp -o ./bld/pre-js.esm.js -Dtarget:es6-module -Dsqlite3.wasm.base64=./jswasm/sqlite3.wasm -DModule.instantiateWasm api/pre-js.c-pp.js
+   ./c-pp -o ./bld/pre-js.esm.js -Dtarget:es6-module api/pre-js.c-pp.js
 */
 (function(Module){
   const sIMS =
@@ -140,48 +140,6 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
     return new URL(path, import.meta.url).href;
   }.bind(sIMS);
 
-  /**
-     Override Module.instantiateWasm().
-
-     A custom Module.instantiateWasm() does not work in WASMFS builds:
-
-     https://github.com/emscripten-core/emscripten/issues/17951
-
-     In such builds we must disable this.
-
-     It's disabled in the (unsupported/untested) node builds because
-     node does not do fetch().
-  */
-  Module['instantiateWasm'] = function callee(imports, onSuccess){
-    if( this.emscriptenInstantiateWasm instanceof Function ){
-      /* See [tag:locateFile]. Same story here */
-      return this.emscriptenInstantiateWasm(imports, onSuccess);
-    }
-    const sims = this;
-    const finalThen = (arg)=>{
-      arg.imports = imports;
-      sims.instantiateWasm = arg; /* used by sqlite3-api-prologue.c-pp.js */
-      onSuccess(arg.instance, arg.module);
-    };
-    const uri = Module.locateFile(
-      sims.wasmFilename, (
-        ('undefined'===typeof scriptDirectory/*var defined by Emscripten glue*/)
-          ? "" : scriptDirectory)
-    );
-    sims.debugModule("instantiateWasm() uri =", uri, "sIMS =",this);
-    const wfetch = ()=>fetch(uri, {credentials: 'same-origin'});
-    const loadWasm = WebAssembly.instantiateStreaming
-          ? async ()=>
-          WebAssembly
-          .instantiateStreaming(wfetch(), imports)
-          .then(finalThen)
-          : async ()=>// Safari < v15
-          wfetch()
-          .then(response => response.arrayBuffer())
-          .then(bytes => WebAssembly.instantiate(bytes, imports))
-          .then(finalThen)
-    return loadWasm();
-  }.bind(sIMS);
 })(Module);
 /* END FILE: api/pre-js.js. */
 // end include: ./bld/pre-js.esm.js
@@ -485,7 +443,68 @@ async function instantiateArrayBuffer(binaryFile, imports) {
   }
 }
 
+// Stream Wasm bytes into the compiler. A fixed `application/wasm` type is
+// used rather than any server-supplied MIME type: on a cache hit the bytes
+// were hash-verified when written into COS, and on a cache miss the store
+// branch is already consuming the body, so the standard path's re-download
+// fallback for a bad MIME type is not available. A wrong file still fails
+// compilation and falls through to the standard path.
+function cosInstantiateStream(stream, imports) {
+  var response = new Response(stream, { headers: { 'Content-Type': 'application/wasm' } });
+  return WebAssembly.instantiateStreaming(response, imports);
+}
+
 async function instantiateAsync(binary, binaryFile, imports) {
+  // Cross-Origin Storage (COS) progressive enhancement.
+  // https://github.com/WICG/cross-origin-storage
+  // Any error (not found, not allowed, network failure, …) falls through
+  // to the standard Emscripten streaming path so the page always loads.
+  if (globalThis.navigator?.crossOriginStorage?.getFileHandle) {
+    var cosHash = Module['wasmHash'];
+    try {
+      var cosHandle = await navigator.crossOriginStorage.getFileHandle(cosHash);
+      // Cache hit. getFile() resolves to a lazy File reference; no bytes are
+      // read until the stream is consumed by the compiler below.
+      var cosFile = await cosHandle.getFile();
+      return cosInstantiateStream(cosFile.stream(), imports);
+    } catch {
+      // Any error (not found, not allowed, …) — fetch from the network and
+      // attempt to store in COS for future page loads.
+      try {
+        var networkResponse = await fetch(binaryFile, { credentials: 'same-origin' });
+        if (!networkResponse.ok) {
+          throw new Error(`HTTP ${networkResponse.status}`);
+        }
+        // Split the body so that one branch feeds streaming compilation while
+        // the other is written into COS in the background. This keeps the
+        // download/compile overlap of the standard instantiateStreaming()
+        // path instead of waiting for the whole file to arrive first.
+        var [compileStream, storeStream] = networkResponse.body.tee();
+        // Fire-and-forget store; never block instantiation on the write.
+        // pipeTo() closes the writable, and COS verifies the hash on close.
+        (async () => {
+          try {
+            var writeHandle = await navigator.crossOriginStorage.getFileHandle(
+              cosHash,
+              { create: true, origins: '*' },
+            );
+            var writable = await writeHandle.createWritable();
+            await storeStream.pipeTo(writable);
+          } catch (storeErr) {
+            err(`COS store failed: ${storeErr}`);
+            // Release the tee branch so the body is not buffered indefinitely
+            // on behalf of a writer that will never consume it.
+            storeStream.cancel().catch(() => {});
+          }
+        })();
+        return cosInstantiateStream(compileStream, imports);
+      } catch (fetchErr) {
+        // Network fetch failed; fall through to the standard path below.
+        err(`COS fallback fetch failed: ${fetchErr}`);
+      }
+      // Fall through to the standard streaming path below.
+    }
+  }
   if (!binary
      ) {
     try {
@@ -536,6 +555,10 @@ async function createWasm() {
   }
 
   var info = getWasmImports();
+
+  // Expose the build-time hash so that custom Module['instantiateWasm']
+  // callbacks can implement their own COS-aware loading path.
+  Module['wasmHash'] = { algorithm: 'SHA-256', value: 'ceb5f93d05868430e1eabb2633ea1c1aceb2bf4e6e0ad1d82e3244e437310843' };
 
   // User shell pages can write their own Module.instantiateWasm = function(imports, successCallback) callback
   // to manually instantiate the Wasm module themselves. This allows pages to
@@ -21861,7 +21884,7 @@ const toExportForESM =
 
       Module.instantiateWasm() is found in pre-js.c-pp.js.
     */
-    wasmFilename: 'sqlite3.wasm' /* replaced by the build process */
+    wasmFilename: '<<<sqlite3.wasm>>>' /* replaced by the build process */
   });
   sIMS.debugModule =
     sIMS.urlParams.has('sqlite3.debugModule')
