@@ -18,6 +18,7 @@ const tsdownConfig: UserConfig[] = [
       },
     },
     onSuccess: () => {
+      copyFileSync('./LICENSE.md', './dist/LICENSE.md');
       copyFileSync('./src/bin/sqlite3.wasm', './dist/sqlite3.wasm');
     },
   }),
