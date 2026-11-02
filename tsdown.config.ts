@@ -8,6 +8,7 @@ const tsdownConfig: UserConfig[] = [
       index: 'src/browser.ts',
       node: 'src/node.ts',
       'sqlite3-worker1': 'src/bin/sqlite3-worker1.mjs',
+      'sqlite3-worker1-promiser': 'src/bin/sqlite3-worker1-promiser.mjs',
     },
     format: ['esm'],
     dts: false,

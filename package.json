@@ -30,6 +30,12 @@
   "main": "./dist/index.mjs",
   "node": "./dist/node.mjs",
   "types": "./dist/index.d.mts",
+  "sideEffects": [
+    "./dist/index.mjs",
+    "./dist/node.mjs",
+    "./dist/sqlite3-worker1.mjs",
+    "./dist/sqlite3-opfs-async-proxy.js"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
