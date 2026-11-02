@@ -226,6 +226,10 @@ export class PreparedStatement {
    * non-0 because this function is effectively a destructor and "destructors do
    * not throw." This function will throw if it is called while the statement is
    * in active use via a {@link Database#exec} callback.
+   *
+   * Since SQLite 3.55.0, native disposal via `capi.sqlite3_finalize()` also
+   * disconnects this OO1 object and shared wrappers. That low-level call
+   * bypasses this method's statement-locking checks.
    */
   finalize(): number | undefined;
 
@@ -1045,6 +1049,10 @@ export class Database {
    * Note that garbage collection of a db handle, if it happens at all, will
    * never trigger `close()`, so {@link onclose} handlers are not a reliable way
    * to implement close-time cleanup or maintenance of a db.
+   *
+   * Since SQLite 3.55.0, native disposal via `capi.sqlite3_close_v2()` also
+   * disconnects this OO1 object and shared wrappers, without calling `onclose`
+   * handlers. Calling `close()` after native disposal is a no-op.
    */
   close(): void; // ✓
 
@@ -4658,7 +4666,7 @@ export type CAPI = {
   sqlite3_bind_blob: (
     stmt: StmtPtr,
     idx: number,
-    blob: WasmPointer | string | readonly string[] | Int8Array | Uint8Array | ArrayBuffer,
+    blob: WasmPointer | null | string | readonly string[] | Int8Array | Uint8Array | ArrayBuffer,
     n: number,
     dtor: DtorType,
   ) => Sqlite3Result;
@@ -4734,7 +4742,7 @@ export type CAPI = {
   sqlite3_bind_text: (
     stmt: StmtPtr,
     idx: number,
-    text: string | WasmPointer | readonly string[] | Int8Array | Uint8Array | ArrayBuffer,
+    text: string | WasmPointer | null | readonly string[] | Int8Array | Uint8Array | ArrayBuffer,
     n: number,
     dtor: DtorType,
   ) => Sqlite3Result;
@@ -5435,7 +5443,7 @@ export type CAPI = {
     ctx: WasmPointer,
     n: number,
     pAux: WasmPointer,
-    xDelete: (() => void) | WasmPointer,
+    xDelete: WasmPointer,
   ) => void;
 
   /**
@@ -8013,6 +8021,44 @@ export type CAPI = {
    * See https://sqlite.org/wasm/doc/trunk/api-c-style.md#sqlite3_js_db_uses_vfs
    */
   sqlite3_js_db_uses_vfs: (db: DbPtr, vfsName: string, dbName: string) => boolean;
+
+  /**
+   * Registers a callback for when the library finalizes the given non-0 WASM
+   * pointer. This lets JS code map state to native pointers and clean up that
+   * state regardless of how the native objects get finalized. `typeName` must
+   * identify the pointer's native type: `sqlite3*`, `sqlite3_stmt*`, or
+   * `sqlite3_context*`.
+   * The callback receives the pointer during native finalization, regardless
+   * of how it is finalized. WASM callbacks have signature `void(void*)`;
+   * JS functions are more efficient.
+   *
+   * Repeated registrations of the same callback reference for the same pointer
+   * are deduplicated; distinct callback references are all queued. In loops,
+   * user-defined SQL functions, or functions which may encounter the same
+   * pointer repeatedly, avoid function literals: each creates a distinct
+   * callback instance. Assign the callback to a symbol and reuse it instead.
+   *
+   * @example
+   * ```ts
+   * const cleanup = (ptr: WasmPointer) => state.delete(ptr);
+   * // Reuse this reference whenever registering cleanup for a pointer:
+   * sqlite3.capi.sqlite3_js_on_pointer_dispose('sqlite3*', ptr, cleanup);
+   * ```
+   *
+   * Callbacks run once on disposal, then the pointer's queue is cleared.
+   *
+   * Use the pointer as an opaque cleanup key. Do not finalize it again, step
+   * statements, fetch columns, or leave it unusable for other listeners.
+   * Context pointers may only be used as opaque keys. Callback exceptions are
+   * ignored but may be logged via `sqlite3.config.error()`.
+   *
+   * @since SQLite 3.55.0
+   */
+  sqlite3_js_on_pointer_dispose: (
+    typeName: 'sqlite3*' | 'sqlite3_stmt*' | 'sqlite3_context*',
+    ptr: WasmPointer,
+    callback: ((ptr: WasmPointer) => void) | WasmPointer,
+  ) => boolean | null | undefined;
 
   /**
    * Calls a synchronous callback up to maxTimes total attempts. Retries when
