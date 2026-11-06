@@ -73,16 +73,13 @@ jobs:
       - name: Run build
         if: steps.check-branch.outputs.skip != 'true'
         run: |
-          mkdir -p out src/bin
+          mkdir -p src/bin
           docker run --rm \
             -e SQLITE_REF="${{ steps.resolve-ref.outputs.sqlite_ref }}" \
             -e HOST_UID="$(id -u)" \
             -e HOST_GID="$(id -g)" \
-            -v "$(pwd)/out":/out \
             -v "$(pwd)/src/bin":/src/bin \
             sqlite-wasm-builder:env build
-          # Fallback fix for permissions if chown inside docker failed or was incomplete
-          sudo chown -R $(id -u):$(id -g) out src/bin
 
       - name: Check for changes
         if: steps.check-branch.outputs.skip != 'true'
