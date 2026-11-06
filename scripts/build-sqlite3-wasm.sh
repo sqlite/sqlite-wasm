@@ -119,6 +119,14 @@ node_source = Path('sqlite3-node.mjs').read_text()
 if 'crossOriginStorage' in node_source or 'wasmHash' in node_source:
     raise SystemExit('Node loader must not include COS')
 
+# With WASM_CUSTOM_INSTANTIATE=0, SQLite's extern-post-js leaves the
+# `wasmFilename` placeholder unfilled. Fill it with the file all loaders use.
+for loader in [*loaders, Path('sqlite3-node.mjs')]:
+    source = loader.read_text().replace("'<<<sqlite3.wasm>>>'", "'sqlite3.wasm'")
+    if re.search(r"'<<<[^'\n]*>>>'", source):
+        raise SystemExit(f'Unfilled build placeholder in {loader}')
+    loader.write_text(source)
+
 # Verify the files we will actually publish, after SQLite's Wasm post-processing.
 for loader in loaders:
     match = pattern.search(loader.read_text())
